@@ -22,7 +22,7 @@ defineProps({
             <div class="relative w-full max-w-2xl px-6 lg:max-w-7xl">
                 <footer class="py-16 text-center text-sm text-black dark:text-white/70">
                     <p>
-                        AdmissionHubs Api Service Version: <span class="font-semibold"> v1.0.0 </span>
+                        Apex365 Api Service Version: <span class="font-semibold"> v1.0.0 </span>
                     </p>
                 </footer>
             </div>
