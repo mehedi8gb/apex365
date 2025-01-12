@@ -1,6 +1,6 @@
-# AdmissionHub Backend API
+# Apex365 Backend API
 
-This is the backend API for the AdmissionHub project built with Laravel 11, providing features like authentication, role-based access, and various resource management systems for handling institutions, courses, academic years, and more.
+This is the backend API for the Apex365 project built with Laravel 11, providing features like authentication, role-based access, and various resource management systems for handling institutions, courses, academic years, and more.
 
 ## Prerequisites
 
@@ -20,8 +20,8 @@ Before getting started, ensure you have the following installed on your machine:
 Clone the project repository to your local machine.
 
 ```bash
-git clone https://github.com/your-username/admissionhub-backend.git
-cd admissionhub-backend
+git clone https://github.com/mehedi8gb/apex365.git
+cd apex365
 ```
 
 ### 2. Install Dependencies
@@ -54,7 +54,7 @@ Then, configure the database, mail, and JWT settings in the `.env` file:
 DB_CONNECTION=mysql
 DB_HOST=127.0.0.1
 DB_PORT=3306
-DB_DATABASE=admissionhub_db
+DB_DATABASE=Apex365_db
 DB_USERNAME=root
 DB_PASSWORD=
 
