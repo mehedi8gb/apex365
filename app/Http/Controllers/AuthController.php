@@ -14,16 +14,21 @@ use Illuminate\Support\Facades\Hash;
 use App\Models\User;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Str;
+use libphonenumber\NumberParseException;
+use libphonenumber\PhoneNumberFormat;
+use libphonenumber\PhoneNumberUtil;
 use Tymon\JWTAuth\Exceptions\JWTException;
 use Tymon\JWTAuth\Facades\JWTAuth;
 
 class AuthController extends Controller
 {
+    private static string $phone = '';
+
     public function register(Request $request): JsonResponse
     {
         $validated = $request->validate([
             'name' => 'required|string|max:255',
-            'email' => 'nullable|email|unique:users,email|required_without:phone',
+            'email' => 'nullable|email:rfc,dns|unique:users,email|required_without:phone',
             'phone' => 'nullable|string|unique:users,phone|max:15|required_without:email',
             'password' => 'required|string|min:6',
             'referralId' => 'required|string',
@@ -35,10 +40,14 @@ class AuthController extends Controller
             return sendErrorResponse('Referral ID not found', 404);
         }
 
+        if (!$this->validatePhone($validated['phone'])) {
+            return sendErrorResponse('Invalid phone number', 422);
+        }
+
         $user = User::create([
             'name' => $validated['name'],
             'email' => $validated['email'],
-            'phone' => $validated['phone'],
+            'phone' => self::$phone,
             'password' => Hash::make($validated['password']),
         ]);
 
@@ -215,6 +224,22 @@ class AuthController extends Controller
             'role' => $user->getRoleNames(),
         ];
         return sendSuccessResponse('User details', $data);
+    }
+
+    private function validatePhone($phone): false|string
+    {
+        try {
+            $phoneUtil = PhoneNumberUtil::getInstance();
+            $numberProto = $phoneUtil->parse($phone, "BD"); // BD = Bangladesh
+            if ($phoneUtil->isValidNumber($numberProto)) {
+                self::$phone = $phoneUtil->format($numberProto, PhoneNumberFormat::E164); // +8801XXXXXXXXX
+
+                return true;
+            }
+            return false;
+        } catch (NumberParseException $e) {
+            return false;
+        }
     }
 }
 
