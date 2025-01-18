@@ -4,6 +4,7 @@ namespace App\Models;
 
 // use Illuminate\Contracts\Auth\MustVerifyEmail;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
@@ -24,8 +25,10 @@ class User extends Authenticatable implements JWTSubject
      */
     protected $fillable = [
         'name',
+        'phone',
         'email',
         'password',
+        'referralId'
     ];
 
     /**
@@ -81,5 +84,10 @@ class User extends Authenticatable implements JWTSubject
         return $this->profile_photo_path
             ? url('storage/' . $this->profile_photo_path)
             : null;
+    }
+
+    public function referrals(): BelongsToMany
+    {
+        return $this->belongsToMany(Referral::class, 'referral_user', 'user_id', 'referralId');
     }
 }

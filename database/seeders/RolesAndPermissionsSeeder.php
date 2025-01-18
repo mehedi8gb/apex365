@@ -17,6 +17,7 @@ class RolesAndPermissionsSeeder extends Seeder
         // Define permissions
         $permissions = [
             'view_users',
+            'view_orders',
             'create_users',
             'edit_users',
             'delete_users',
@@ -36,7 +37,7 @@ class RolesAndPermissionsSeeder extends Seeder
 
         // Define roles and assign permissions
         $roles = [
-            'super_agent' => [
+            'admin' => [
                 'view_users',
                 'create_users',
                 'edit_users',
@@ -46,18 +47,8 @@ class RolesAndPermissionsSeeder extends Seeder
                 'edit_institutions',
                 'delete_institutions',
             ],
-            'agent' => [
-                'view_users',
-                'view_institutions',
-            ],
-            'student' => [
-                'view_courses',
-            ],
-            'university' => [
-                'view_institutions',
-                'create_institutions',
-                'edit_institutions',
-                'view_courses',
+            'customer' => [
+                'view_orders',
             ],
             'staff' => [
                 'view_courses',

@@ -3,6 +3,8 @@
 namespace App\Http\Controllers;
 
 use App\Mail\OTPMail;
+use App\Models\Referral;
+use App\Models\ReferralUser;
 use Carbon\Carbon;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -12,30 +14,50 @@ use Illuminate\Support\Facades\Hash;
 use App\Models\User;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Str;
+use libphonenumber\NumberParseException;
+use libphonenumber\PhoneNumberFormat;
+use libphonenumber\PhoneNumberUtil;
 use Tymon\JWTAuth\Exceptions\JWTException;
 use Tymon\JWTAuth\Facades\JWTAuth;
 
 class AuthController extends Controller
 {
+    private static string $phone = '';
+
     public function register(Request $request): JsonResponse
     {
         $validated = $request->validate([
-            'email' => 'required|email|unique:users,email',
             'name' => 'required|string|max:255',
-            'phone' => 'required|string|max:15',
+            'email' => 'nullable|email:rfc,dns|unique:users,email|required_without:phone',
+            'phone' => 'nullable|string|unique:users,phone|max:15|required_without:email',
             'password' => 'required|string|min:6',
-            'role' => 'required|string|in:agent,student,university,staff',
+            'referralId' => 'required|string',
         ]);
+
+        $referral = Referral::where('referralId', $validated['referralId']);
+
+        if (!$referral->exists()) {
+            return sendErrorResponse('Referral ID not found', 404);
+        }
+
+        if (!$this->validatePhone($validated['phone'])) {
+            return sendErrorResponse('Invalid phone number', 422);
+        }
 
         $user = User::create([
             'name' => $validated['name'],
             'email' => $validated['email'],
-            'phone' => $validated['phone'],
+            'phone' => self::$phone,
             'password' => Hash::make($validated['password']),
         ]);
 
+        ReferralUser::create([
+            'referralId' => $referral->first()->id,
+            'user_id' => $user->id,
+        ]);
+
         // Assign the role to the user
-        $user->assignRole($validated['role']);
+        $user->assignRole('customer');
 
         Auth::attempt($request->only('email', 'password'));
 
@@ -43,10 +65,10 @@ class AuthController extends Controller
         $refreshToken = JWTAuth::claims(['refresh' => true])->fromUser(Auth::user());
 
         $data = [
-            'access_token' => $refreshToken,
+            'access_token' => $refreshToken ?? 'null',
         ];
 
-        return $this->sendSuccessResponse('User registered successfully', $data, 201);
+        return sendSuccessResponse('Customer registered successfully', $data, 201);
     }
 
     /**
@@ -72,7 +94,7 @@ class AuthController extends Controller
             'access_token' => $refreshToken,
         ];
 
-        return $this->sendSuccessResponse('Login successful', $data);
+        return sendSuccessResponse('Login successful', $data);
     }
 
     /**
@@ -94,7 +116,7 @@ class AuthController extends Controller
         // Send OTP via email (simulated here)
         Mail::to($user->email)->send(new OTPMail($otp));
 
-        return $this->sendSuccessResponse('OTP sent successfully');
+        return sendSuccessResponse('OTP sent successfully');
     }
 
     /**
@@ -126,7 +148,7 @@ class AuthController extends Controller
         $user->password_reset_code = null;
         $user->save();
 
-        return $this->sendSuccessResponse('OTP validated successfully', ['token' => $token]);
+        return sendSuccessResponse('OTP validated successfully', ['token' => $token]);
     }
 
     /**
@@ -144,22 +166,22 @@ class AuthController extends Controller
         where('email', $validated['email'])->where('token', $validated['token']);
 
         if (!$user && $token->doesntExist()) {
-            return $this->sendErrorResponse('Unauthorized', 401);
+            return sendErrorResponse('Unauthorized', 401);
         }
 
         if (Hash::check($validated['newPassword'], $user->password)) {
-            return $this->sendErrorResponse('New password cannot be the same as the old password', 400);
+            return sendErrorResponse('New password cannot be the same as the old password', 400);
         }
 
         if (Carbon::parse($token->first()->created_at)->diffInMinutes(now()) > 30) {
-            return $this->sendErrorResponse('Token expired', 401);
+            return sendErrorResponse('Token expired', 401);
         }
 
         $user = User::where('email', $validated['email'])->first();
         $user->password = bcrypt($validated['newPassword']);
         $user->save();
 
-        return $this->sendSuccessResponse('Password reset successfully');
+        return sendSuccessResponse('Password reset successfully');
     }
 
     /**
@@ -185,9 +207,9 @@ class AuthController extends Controller
     {
         try {
             auth('api')->logout();
-            return $this->sendSuccessResponse('User logged out successfully');
+            return sendSuccessResponse('User logged out successfully');
         } catch (JWTException $e) {
-            return $this->sendErrorResponse('Unable to logout', 401);
+            return sendErrorResponse('Unable to logout', 401);
         }
     }
 
@@ -201,7 +223,23 @@ class AuthController extends Controller
             'user' => $user,
             'role' => $user->getRoleNames(),
         ];
-        return $this->sendSuccessResponse('User details', $data);
+        return sendSuccessResponse('User details', $data);
+    }
+
+    private function validatePhone($phone): false|string
+    {
+        try {
+            $phoneUtil = PhoneNumberUtil::getInstance();
+            $numberProto = $phoneUtil->parse($phone, "BD"); // BD = Bangladesh
+            if ($phoneUtil->isValidNumber($numberProto)) {
+                self::$phone = $phoneUtil->format($numberProto, PhoneNumberFormat::E164); // +8801XXXXXXXXX
+
+                return true;
+            }
+            return false;
+        } catch (NumberParseException $e) {
+            return false;
+        }
     }
 }
 
