@@ -46,19 +46,13 @@ jobs:
           destination: build-output
 
   deploy:
-    docker:
-      - image: cimg/php:8.2-node
+    machine:
+      enabled: true
     steps:
       - checkout
       - run:
-          name: Pull latest changes
-          command: git pull origin main
-      - run:
-          name: Set execute permission for deploy.sh
-          command: chmod +x ./deploy.sh
-      - run:
-          name: Run deploy script
-          command: ./deploy.sh
+          name: Deploy over SSH
+          command: ssh  root@y128.199.246.194 "cd /var/www/apex365; git pull;
 
 workflows:
   version: 2
