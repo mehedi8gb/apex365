@@ -55,7 +55,7 @@ jobs:
           command: git pull origin main
       - run:
           name: Run deploy script
-          command: /var/www/apex365/deploy.sh
+          command: ./deploy.sh
 
 workflows:
   version: 2
