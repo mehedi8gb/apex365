@@ -54,6 +54,9 @@ jobs:
           name: Pull latest changes
           command: git pull origin main
       - run:
+          name: Set execute permission for deploy.sh
+          command: chmod +x ./deploy.sh
+      - run:
           name: Run deploy script
           command: ./deploy.sh
 
