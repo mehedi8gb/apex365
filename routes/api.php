@@ -39,3 +39,8 @@ Route::middleware([JwtMiddleware::class])->group(function () {
 });
 
 // role based route system has to be integrated
+
+// write a test route to test the role based route system
+Route::get('/test', function () {
+    return response()->json(['message' => 'This is a test route']);
+});
