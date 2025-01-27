@@ -77,6 +77,7 @@ class AuthController extends Controller
         $refreshToken = JWTAuth::claims(['refresh' => true])->fromUser(Auth::user());
 
         $data = [
+            'transaction_id_required' => !(bool)auth()->user()->transaction_id,
             'access_token' => $refreshToken ?? 'null',
         ];
 
@@ -111,7 +112,7 @@ class AuthController extends Controller
         $refreshToken = JWTAuth::fromUser(Auth::user());
 
         $data = [
-            'transaction_id_required' => (bool)auth()->user()->transaction_id,
+            'transaction_id_required' => !(bool)auth()->user()->transaction_id,
             'access_token' => $refreshToken,
         ];
 
