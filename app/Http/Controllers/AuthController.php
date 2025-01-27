@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Mail\OTPMail;
 use App\Models\Referral;
+use App\Models\ReferralCode;
 use App\Models\ReferralUser;
 use Carbon\Carbon;
 use Illuminate\Http\JsonResponse;
@@ -30,11 +31,13 @@ class AuthController extends Controller
             'name' => 'required|string|max:255',
             'email' => 'nullable|email:rfc,dns|unique:users,email|required_without:phone',
             'phone' => 'nullable|string|unique:users,phone|max:15|required_without:email',
+            'nid' => 'required|string|min:10|max:17',
+            'address' => 'required|string|max:255',
             'password' => 'required|string|min:6',
             'referralId' => 'required|string',
         ]);
 
-        $referral = Referral::where('referralId', $validated['referralId']);
+        $referral = ReferralCode::where('code', $request->referralId);
 
         if (!$referral->exists()) {
             return sendErrorResponse('Referral ID not found', 404);
@@ -45,10 +48,15 @@ class AuthController extends Controller
         }
 
         $user = User::create([
-            'name' => $validated['name'],
-            'email' => $validated['email'],
-            'phone' => self::$phone,
-            'password' => Hash::make($validated['password']),
+            'username' => $request->name,
+            'name' => $request->name,
+            'email' => $request->email,
+            'phone' => $request->phone,
+            'nid' => $request->nid,
+            'address' => $request->address,
+            'account_type' => 'new',
+            'role' => 'customer',
+            'password' => Hash::make($request->password),
         ]);
 
         ReferralUser::create([
@@ -59,12 +67,21 @@ class AuthController extends Controller
         // Assign the role to the user
         $user->assignRole('customer');
 
-        Auth::attempt($request->only('email', 'password'));
+        if ($request->filled('email')) {
+            $credentials = $request->only(['email', 'password']);
+        } elseif ($request->filled('phone')) {
+            $credentials = $request->only(['phone', 'password']);
+        } else {
+            return  sendErrorResponse('Email or Phone is required', 422);
+        }
+
+        Auth::attempt($credentials);
 
         // Generate refresh token (optional: store securely if needed)
         $refreshToken = JWTAuth::claims(['refresh' => true])->fromUser(Auth::user());
 
         $data = [
+            'transaction_id_required' => !(bool)auth()->user()->transaction_id,
             'access_token' => $refreshToken ?? 'null',
         ];
 
@@ -77,20 +94,29 @@ class AuthController extends Controller
     public function login(Request $request): JsonResponse
     {
         $request->validate([
-            'email' => 'required|email',
+            'email' => 'nullable|email:rfc,dns|required_without:phone',
+            'phone' => 'nullable|string|max:15|required_without:email',
             'password' => 'required|string',
         ]);
 
-        $credentials = $request->only(['email', 'password']);
 
-        if (!$token = Auth::attempt($credentials)) {
-            return response()->json(['error' => 'Invalid credentials'], 401);
+        if ($request->filled('email')) {
+            $credentials = $request->only(['email', 'password']);
+        } elseif ($request->filled('phone')) {
+            $credentials = $request->only(['phone', 'password']);
+        } else {
+            return sendErrorResponse('Email or Phone is required', 422);
+        }
+
+        if (!Auth::attempt($credentials)) {
+            return sendErrorResponse('Invalid credentials', 401);
         }
 
         // Generate refresh token (optional: store securely if needed)
         $refreshToken = JWTAuth::fromUser(Auth::user());
 
         $data = [
+            'transaction_id_required' => !(bool)auth()->user()->transaction_id,
             'access_token' => $refreshToken,
         ];
 

@@ -35,5 +35,13 @@ class UsersSeeder extends Seeder
             ->each(function ($user) {
                 $user->assignRole('staff');
             });
+
+        $users = User::factory()
+            ->count(10)
+            ->create();
+
+        $users->each(function ($user) {
+            $user->assignRole('customer');
+        });
     }
 }

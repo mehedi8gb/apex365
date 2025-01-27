@@ -2,6 +2,7 @@
 
 namespace Database\Factories;
 
+use App\Models\ReferralCode;
 use App\Models\User;
 use Illuminate\Database\Eloquent\Factories\Factory;
 use Illuminate\Support\Facades\Hash;
@@ -25,23 +26,15 @@ class UserFactory extends Factory
     public function definition(): array
     {
         return [
-            'name' => fake()->name(),
-            'email' => fake()->unique()->safeEmail(),
-            'phone' => fake()->unique()->phoneNumber(),
-            'email_verified_at' => now(),
-            'password' => static::$password ??= Hash::make('password'),
-            'remember_token' => Str::random(10),
-            'profile_photo_path' => null,
+            'username' => $this->faker->userName,
+            'email' => $this->faker->unique()->safeEmail,
+            'password' => bcrypt(self::$password),
+            'role' => 'customer',
+            'nid' => rand(1000000000, 9999999999),
+            'address' => $this->faker->address,
+            'account_type' => 'new', // Default to new
+            'referral_code_id' => ReferralCode::inRandomOrder()->first()->id,
+            'metadata' => json_encode(['profile' => 'basic']),
         ];
-    }
-
-    /**
-     * Indicate that the model's email address should be unverified.
-     */
-    public function unverified(): static
-    {
-        return $this->state(fn (array $attributes) => [
-            'email_verified_at' => null,
-        ]);
     }
 }

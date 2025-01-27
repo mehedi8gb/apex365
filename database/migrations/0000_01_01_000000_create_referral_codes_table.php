@@ -11,10 +11,11 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('referrals', function (Blueprint $table) {
+        Schema::create('referral_codes', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('user_id')->constrained('users')->onDelete('cascade');
-            $table->foreignId('referred_by')->constrained('users', 'id')->onDelete('cascade');
+            $table->string('code')->unique();
+            $table->boolean('is_active')->default(true);
+            $table->json('metadata')->nullable();
             $table->timestamps();
         });
     }
@@ -24,6 +25,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('referrals');
+        Schema::dropIfExists('referral_codes');
     }
 };
