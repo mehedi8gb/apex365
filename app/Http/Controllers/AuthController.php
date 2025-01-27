@@ -72,7 +72,7 @@ class AuthController extends Controller
         } elseif ($request->filled('phone')) {
             $credentials = $request->only(['phone', 'password']);
         } else {
-            return response()->json(['error' => 'Email or Phone is required'], 422);
+            return  sendErrorResponse('Email or Phone is required', 422);
         }
 
         Auth::attempt($credentials);
@@ -105,11 +105,11 @@ class AuthController extends Controller
         } elseif ($request->filled('phone')) {
             $credentials = $request->only(['phone', 'password']);
         } else {
-            return response()->json(['error' => 'Email or Phone is required'], 422);
+            return sendErrorResponse('Email or Phone is required', 422);
         }
 
         if (!Auth::attempt($credentials)) {
-            return response()->json(['error' => 'Invalid credentials'], 401);
+            return sendErrorResponse('Invalid credentials', 401);
         }
 
         // Generate refresh token (optional: store securely if needed)
