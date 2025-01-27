@@ -18,6 +18,8 @@ return new class extends Migration
             $table->string('phone')->nullable()->unique();
             $table->string('password');
             $table->string('role');
+            $table->unsignedBigInteger('nid');
+            $table->string('address');
             $table->string('account_type');
             $table->foreignId('referral_code_id')->nullable()->constrained('referral_codes');
             $table->json('metadata')->nullable();

@@ -31,6 +31,8 @@ class AuthController extends Controller
             'name' => 'required|string|max:255',
             'email' => 'nullable|email:rfc,dns|unique:users,email|required_without:phone',
             'phone' => 'nullable|string|unique:users,phone|max:15|required_without:email',
+            'nid' => 'required|integer|max:17|min:10',
+            'address' => 'required|string|max:255',
             'password' => 'required|string|min:6',
             'referralId' => 'required|string',
         ]);
@@ -50,6 +52,8 @@ class AuthController extends Controller
             'name' => $request->name,
             'email' => $request->email,
             'phone' => $request->phone,
+            'nid' => $request->nid,
+            'address' => $request->address,
             'account_type' => 'new',
             'role' => 'customer',
             'password' => Hash::make($request->password),
