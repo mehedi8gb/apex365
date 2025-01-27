@@ -18,18 +18,37 @@ class User extends Authenticatable implements JWTSubject
     use HasFactory;
     use Notifiable;
 
-    /**
-     * The attributes that are mass assignable.
-     *
-     * @var array<int, string>
-     */
     protected $fillable = [
-        'name',
-        'phone',
+        'username',
         'email',
+        'phone',
         'password',
-        'referralId'
+        'role',
+        'account_type',
+        'transaction_id',
+        'referral_code_id',
+        'metadata'
     ];
+
+    public function referralCode()
+    {
+        return $this->belongsTo(ReferralCode::class, 'referral_code_id');
+    }
+
+    public function referrals()
+    {
+        return $this->hasMany(Referral::class);
+    }
+
+    public function transactions()
+    {
+        return $this->hasMany(Transaction::class, 'buyer_id');
+    }
+
+    public function directReferrals()
+    {
+        return $this->hasMany(Referral::class, 'referred_by');
+    }
 
     /**
      * The attributes that should be hidden for serialization.
@@ -84,10 +103,5 @@ class User extends Authenticatable implements JWTSubject
         return $this->profile_photo_path
             ? url('storage/' . $this->profile_photo_path)
             : null;
-    }
-
-    public function referrals(): BelongsToMany
-    {
-        return $this->belongsToMany(Referral::class, 'referral_user', 'user_id', 'referralId');
     }
 }

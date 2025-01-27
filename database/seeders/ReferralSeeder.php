@@ -3,9 +3,10 @@
 namespace Database\Seeders;
 
 use App\Models\Referral;
+use App\Models\User;
+use Database\Factories\TransactionFactory;
+use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 use Illuminate\Database\Seeder;
-use Illuminate\Support\Str;
-
 
 class ReferralSeeder extends Seeder
 {
@@ -14,19 +15,23 @@ class ReferralSeeder extends Seeder
      */
     public function run(): void
     {
-        // Predefined UUID for testing
-        $testUuid = '123e4567-e89b-12d3-a456-426614174000';
 
-        // Create the referral with the predefined UUID
-        Referral::create([
-            'referralId' => $testUuid,
-        ]);
+        // Seed Users with Referral Logic
+        $users = User::get();
 
-        // Generate 99 random unique referral codes
-        for ($i = 0; $i < 99; $i++) {
-            Referral::create([
-                'referralId' => Str::uuid(),
-            ]);
-        }
+        // Seed Referrals
+        $users->each(function ($user) {
+            if ($user->referral_code_id) {
+                Referral::create([
+                    'user_id' => $user->id,
+                    'referred_by' => User::where('referral_code_id', '!=', $user->referral_code_id)->inRandomOrder()->first()->id,
+                ]);
+            }
+        });
+
+        // Seed Transactions
+        TransactionFactory::times(100)->create();
+
+        $this->command->info('Database seeded with Referral Codes, Users, Referrals, and Transactions.');
     }
 }
