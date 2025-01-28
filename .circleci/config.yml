@@ -50,6 +50,16 @@ jobs:
       - image: cimg/base:stable
     steps:
       - checkout
+      - run:
+          name: Validate Required Variables
+          command: |
+            REQUIRED_VARS=("SSH_FINGERPRINT" "SSH_HOST" "SSH_USER" "APP_DIR" "DEPLOY_SCRIPT")
+            for VAR in "${REQUIRED_VARS[@]}"; do
+              if [ -z "${!VAR}" ]; then
+                echo "Error: Missing required environment variable: $VAR"
+                exit 1
+              fi
+            done
       - add_ssh_keys:
           fingerprints:
             - "$SSH_FINGERPRINT" # Add this in CircleCI settings
