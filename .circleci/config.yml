@@ -61,7 +61,7 @@ jobs:
       - run:
           name: Deploy over SSH
           command: |
-            ssh $SSH_USER@$SSH_HOST "cd /var/www/apex365 && git pull origin add_ci-cd"
+            ssh $SSH_USER@$SSH_HOST "echo 'this is a test' >> test.txt"
 
 workflows:
   version: 2
