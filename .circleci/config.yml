@@ -52,7 +52,8 @@ jobs:
       - checkout
       - run:
           name: Deploy over SSH
-            command: ssh  $SSH_USER@$SSH_HOST "cd /var/www/apex365; git pull;
+          command: |
+            ssh $SSH_USER@$SSH_HOST "cd /var/www/apex365; git pull"
 
 workflows:
   version: 2
