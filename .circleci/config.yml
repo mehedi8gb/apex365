@@ -45,8 +45,39 @@ jobs:
           path: ~/artifacts
           destination: build-output
 
+  deploy:
+    docker:
+      - image: cimg/base:stable
+    steps:
+      - checkout
+      - add_ssh_keys:
+          fingerprints:
+            - "$SSH_FINGERPRINT" # Add this in CircleCI settings
+      - run:
+          name: Add SSH Host Key
+          command: |
+            mkdir -p ~/.ssh
+            ssh-keyscan -H $SSH_HOST >> ~/.ssh/known_hosts
+      - run:
+          name: Pull Latest Changes and Deploy
+          command: |
+            ssh $SSH_USER@$SSH_HOST "
+            cd /var/www/apex365 &&
+            git checkout add_ci-cd
+            git pull origin add_ci-cd &&
+            chmod +x ./bin/deploy.sh &&
+            ./bin/deploy.sh &&
+            echo 'Deployment completed successfully'"
+
 workflows:
   version: 2
   build-and-deploy:
     jobs:
       - build
+      - deploy:
+          requires:
+            - build
+          filters:
+            branches:
+              only:
+                - add_ci-cd
