@@ -46,14 +46,22 @@ jobs:
           destination: build-output
 
   deploy:
-    machine:
-      enabled: true
+    docker:
+      - image: cimg/base:stable
     steps:
       - checkout
+      - add_ssh_keys:
+          fingerprints:
+            - "SHA256:Ir4cOFcvJXvPGIrQT+Ii+ZfmWUSuEN+R5MoakTgAGfg" # You'll add this in CircleCI settings
+      - run:
+          name: Add SSH Host Key
+          command: |
+            mkdir -p ~/.ssh
+            ssh-keyscan -H $SSH_HOST >> ~/.ssh/known_hosts
       - run:
           name: Deploy over SSH
           command: |
-            ssh $SSH_USER@$SSH_HOST "cd /var/www/apex365; git pull"
+            ssh $SSH_USER@$SSH_HOST "cd /var/www/apex365 && git pull origin add_ci-cd"
 
 workflows:
   version: 2
