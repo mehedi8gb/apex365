@@ -63,7 +63,7 @@ jobs:
           command: |
             ssh $SSH_USER@$SSH_HOST "
             cd /var/www/apex365 &&
-            git checkout add_ci-cd
+            git fetch
             git pull origin add_ci-cd &&
             chmod +x ./bin/deploy.sh &&
             ./bin/deploy.sh &&
