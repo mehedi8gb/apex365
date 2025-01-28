@@ -64,6 +64,7 @@ jobs:
             ssh $SSH_USER@$SSH_HOST "
             cd /var/www/apex365 &&
             git fetch
+            git checkout main
             git pull &&
             chmod +x ./bin/deploy_prod.sh &&
             ./bin/deploy_prod.sh &&
