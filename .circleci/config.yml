@@ -163,9 +163,11 @@ workflows:
           requires:
             - build
       - deploy-to-dev:
-          requires: -build
+          requires:
+            - build
       - deploy-to-staging:
-          requires: -build
+          requires:
+            - build
           filters:
             branches:
               only:
