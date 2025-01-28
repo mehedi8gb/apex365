@@ -74,10 +74,14 @@ workflows:
   build-and-deploy:
     jobs:
       - build
-      - deploy:
+      - approve-deploy:
+          type: approval
           requires:
             - build
+      - deploy:
+          requires:
+            - approve-deploy
           filters:
             branches:
               only:
-                - add_ci-cd
+                - main
