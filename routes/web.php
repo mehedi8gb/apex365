@@ -12,6 +12,9 @@ Route::get('/', function () {
         'phpVersion' => PHP_VERSION,
     ]);
 });
+Route::get('/test', function () {
+    return response()->json(['message' => 'This is a test route']);
+});
 
 //Route::middleware([
 //    'auth:sanctum',
