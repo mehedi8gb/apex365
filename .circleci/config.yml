@@ -162,8 +162,10 @@ workflows:
           type: approval
           requires:
             - build
-      - deploy-to-dev
+      - deploy-to-dev:
+          requires: -build
       - deploy-to-staging:
+          requires: -build
           filters:
             branches:
               only:
