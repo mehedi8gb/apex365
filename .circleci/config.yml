@@ -81,6 +81,78 @@ jobs:
             $DEPLOY_SCRIPT &&
             echo 'Deployment completed successfully'"
 
+  deploy-to-staging:
+    docker:
+      - image: cimg/base:stable
+    steps:
+      - checkout
+      - run:
+          name: Validate Required Variables
+          command: |
+            REQUIRED_VARS=("STAGING_SSH_FINGERPRINT" "STAGING_SSH_HOST" "STAGING_SSH_USER" "STAGING_APP_DIR" "STAGING_DEPLOY_SCRIPT")
+            for VAR in "${REQUIRED_VARS[@]}"; do
+              if [ -z "${!VAR}" ]; then
+                echo "Error: Missing required environment variable: $VAR"
+                exit 1
+              fi
+            done
+      - add_ssh_keys:
+          fingerprints:
+            - "$STAGING_SSH_FINGERPRINT"
+      - run:
+          name: Add SSH Host Key
+          command: |
+            mkdir -p ~/.ssh
+            ssh-keyscan -H $STAGING_SSH_HOST >> ~/.ssh/known_hosts
+      - run:
+          name: Pull Latest Changes and Deploy to Staging
+          command: |
+            ssh $STAGING_SSH_USER@$STAGING_SSH_HOST "
+            cd $STAGING_APP_DIR &&
+            git reset --hard &&
+            git fetch &&
+            git checkout staging &&
+            git pull &&
+            chmod +x $STAGING_DEPLOY_SCRIPT &&
+            $STAGING_DEPLOY_SCRIPT &&
+            echo 'Staging deployment completed successfully'"
+
+  deploy-to-dev:
+    docker:
+      - image: cimg/base:stable
+    steps:
+      - checkout
+      - run:
+          name: Validate Required Variables
+          command: |
+            REQUIRED_VARS=("DEV_SSH_FINGERPRINT" "DEV_SSH_HOST" "DEV_SSH_USER" "DEV_APP_DIR" "DEV_DEPLOY_SCRIPT")
+            for VAR in "${REQUIRED_VARS[@]}"; do
+              if [ -z "${!VAR}" ]; then
+                echo "Error: Missing required environment variable: $VAR"
+                exit 1
+              fi
+            done
+      - add_ssh_keys:
+          fingerprints:
+            - "$DEV_SSH_FINGERPRINT"
+      - run:
+          name: Add SSH Host Key
+          command: |
+            mkdir -p ~/.ssh
+            ssh-keyscan -H $DEV_SSH_HOST >> ~/.ssh/known_hosts
+      - run:
+          name: Pull Latest Changes and Deploy to Dev
+          command: |
+            ssh $DEV_SSH_USER@$DEV_SSH_HOST "
+            cd $DEV_APP_DIR &&
+            git reset --hard &&
+            git fetch &&
+            git checkout dev &&
+            git pull &&
+            chmod +x $DEV_DEPLOY_SCRIPT &&
+            $DEV_DEPLOY_SCRIPT &&
+            echo 'Dev deployment completed successfully'"
+
 workflows:
   version: 2
   build-and-deploy:
@@ -90,6 +162,12 @@ workflows:
           type: approval
           requires:
             - build
+      - deploy-to-dev
+      - deploy-to-staging:
+          filters:
+            branches:
+              only:
+                - staging
       - deploy:
           requires:
             - approve-deploy
