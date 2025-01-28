@@ -52,16 +52,22 @@ jobs:
       - checkout
       - add_ssh_keys:
           fingerprints:
-            - "$SSH_FINGERPRINT" # You'll add this in CircleCI settings
+            - "$SSH_FINGERPRINT" # Add this in CircleCI settings
       - run:
           name: Add SSH Host Key
           command: |
             mkdir -p ~/.ssh
             ssh-keyscan -H $SSH_HOST >> ~/.ssh/known_hosts
       - run:
-          name: Deploy over SSH
+          name: Pull Latest Changes and Deploy
           command: |
-            ssh $SSH_USER@$SSH_HOST "echo 'this is a test' >> test.txt"
+            ssh $SSH_USER@$SSH_HOST "
+            cd /var/www/apex365 &&
+            git checkout add_ci-cd
+            git pull origin add_ci-cd &&
+            chmod +x ./bin/deploy.sh &&
+            ./bin/deploy.sh &&
+            echo 'Deployment completed successfully'"
 
 workflows:
   version: 2
