@@ -52,7 +52,7 @@ jobs:
       - checkout
       - run:
           name: Deploy over SSH
-          # command: ssh  root@128.199.246.194 "cd /var/www/apex365; git pull;
+            command: ssh  $SSH_USER@$SSH_HOST "cd /var/www/apex365; git pull;
 
 workflows:
   version: 2
