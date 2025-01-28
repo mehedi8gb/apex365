@@ -61,15 +61,14 @@ jobs:
       - run:
           name: Pull Latest Changes and Deploy
           command: |
-          ssh $SSH_USER@$SSH_HOST "
-          cd /var/www/apex365 &&
-          git reset --hard &&
-          git fetch &&
-          git pull &&
-          chmod +x ./bin/deploy_prod.sh &&
-          ./bin/deploy_prod.sh &&
-          echo 'Deployment completed successfully'"
-
+            ssh $SSH_USER@$SSH_HOST "
+            cd /var/www/apex365 &&
+            git reset --hard &&
+            git fetch &&
+            git pull &&
+            chmod +x ./bin/deploy_prod.sh &&
+            ./bin/deploy_prod.sh &&
+            echo 'Deployment completed successfully'"
 
 workflows:
   version: 2
