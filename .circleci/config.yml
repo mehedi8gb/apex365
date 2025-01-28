@@ -64,7 +64,7 @@ jobs:
             ssh $SSH_USER@$SSH_HOST "
             cd /var/www/apex365 &&
             git fetch
-            git pull origin add_ci-cd &&
+            git pull main &&
             chmod +x ./bin/deploy.sh &&
             ./bin/deploy.sh &&
             echo 'Deployment completed successfully'"
