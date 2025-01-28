@@ -63,9 +63,8 @@ jobs:
           command: |
             ssh $SSH_USER@$SSH_HOST "
             cd /var/www/apex365 &&
-            git fetch
-            git checkout main
-            git pull &&
+            git fetch --verbose
+            git pull --verbose &&
             chmod +x ./bin/deploy_prod.sh &&
             ./bin/deploy_prod.sh &&
             echo 'Deployment completed successfully'"
