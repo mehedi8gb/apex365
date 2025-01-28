@@ -52,7 +52,7 @@ jobs:
       - checkout
       - add_ssh_keys:
           fingerprints:
-            - "SHA256:Ir4cOFcvJXvPGIrQT+Ii+ZfmWUSuEN+R5MoakTgAGfg" # You'll add this in CircleCI settings
+            - "$SSH_FINGERPRINT" # You'll add this in CircleCI settings
       - run:
           name: Add SSH Host Key
           command: |
