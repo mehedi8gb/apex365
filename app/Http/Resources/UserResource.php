@@ -4,6 +4,7 @@ namespace App\Http\Resources;
 
 use App\Models\Commission;
 use App\Models\Leaderboard;
+use App\Models\ReferralCode;
 use Illuminate\Http\Resources\Json\JsonResource;
 
 class UserResource extends JsonResource
@@ -12,6 +13,7 @@ class UserResource extends JsonResource
     {
         $leaderboard = Leaderboard::where('user_id', $this->id)->first();
         $commissions = Commission::where('user_id', $this->id)->get();
+        $referralCode = ReferralCode::where('user_id', $this->id)->first();
 
         return [
             'id' => $this->id,
@@ -20,7 +22,7 @@ class UserResource extends JsonResource
             'phone' => $this->phone,
             'nid' => $this->nid,
             'address' => $this->address,
-            'referral_code' => new ReferralCodeResource($this->referralCode),
+            'referral_code' => $referralCode->code,
             'referral_chain' => ReferralUserResource::collection($this->referralUsers),  // assuming relationship
             'leaderboard' => new LeaderboardResource($leaderboard),  // assuming relationship
             'commissions' => CommissionResource::collection($commissions),
