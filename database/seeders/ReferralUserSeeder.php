@@ -3,6 +3,7 @@
 namespace Database\Seeders;
 
 use App\Models\ReferralUser;
+use Database\Factories\ReferralUserFactory;
 use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 use Illuminate\Database\Seeder;
 
@@ -13,8 +14,6 @@ class ReferralUserSeeder extends Seeder
      */
     public function run(): void
     {
-    ReferralUser::factory()
-        ->count(50)
-        ->create();
+        ReferralUserFactory::times(50)->create();
     }
 }

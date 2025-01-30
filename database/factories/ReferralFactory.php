@@ -2,15 +2,10 @@
 
 namespace Database\Factories;
 
-use App\Models\Referral;
-use App\Models\ReferralUser;
 use App\Models\User;
 use Illuminate\Database\Eloquent\Factories\Factory;
 
-/**
- * @extends Factory<ReferralUser>
- */
-class ReferralUserFactory extends Factory
+class ReferralFactory extends Factory
 {
     /**
      * Define the model's default state.
@@ -20,8 +15,8 @@ class ReferralUserFactory extends Factory
     public function definition(): array
     {
         return [
-            'referral_id' => Referral::inRandomOrder()->first()->id,
-            'user_id' => User::factory(),
+            'user_id' => User::inRandomOrder()->first()->id,
+            'referred_by' => User::inRandomOrder()->first()->id,
         ];
     }
 }
