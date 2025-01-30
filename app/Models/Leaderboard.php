@@ -2,14 +2,11 @@
 
 namespace App\Models;
 
-use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
-class ReferralCode extends Model
+class Leaderboard extends Model
 {
-    use HasFactory;
-
-    protected $fillable = ['code', 'user_id', 'type'];
+    protected $fillable = ['user_id', 'total_commission', 'total_nodes'];
 
     public function user(): BelongsTo
     {

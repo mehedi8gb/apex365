@@ -26,15 +26,12 @@ class UserFactory extends Factory
     public function definition(): array
     {
         return [
-            'username' => $this->faker->userName,
+            'name' => $this->faker->name,
             'email' => $this->faker->unique()->safeEmail,
             'password' => bcrypt(self::$password),
-            'role' => 'customer',
             'nid' => rand(1000000000, 9999999999),
             'address' => $this->faker->address,
-            'account_type' => 'new', // Default to new
-            'referral_code_id' => ReferralCode::inRandomOrder()->first()->id,
-            'metadata' => json_encode(['profile' => 'basic']),
+//            'referral_code_id' => ReferralCode::inRandomOrder()->first()->id,
         ];
     }
 }

@@ -13,9 +13,15 @@ return new class extends Migration
     {
         Schema::create('referrals', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('user_id')->constrained('users')->onDelete('cascade');
-            $table->foreignId('referred_by')->constrained('users', 'id')->onDelete('cascade');
+            $table->foreignId('user_id')->unique()->constrained('users');
+            $table->foreignId('referrer_id')->constrained('users');
+            $table->foreignId('referral_code_id')->constrained();
+            $table->unsignedTinyInteger('level');
             $table->timestamps();
+
+            // Optimized indexes
+            $table->index(['referrer_id', 'level']);
+            $table->index('referral_code_id');
         });
     }
 

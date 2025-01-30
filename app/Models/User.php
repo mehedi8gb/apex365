@@ -5,6 +5,8 @@ namespace App\Models;
 // use Illuminate\Contracts\Auth\MustVerifyEmail;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
+use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
@@ -19,37 +21,28 @@ class User extends Authenticatable implements JWTSubject
     use Notifiable;
 
     protected $fillable = [
-        'username',
+        'name',
         'email',
         'phone',
         'password',
-        'role',
         'nid',
         'address',
-        'account_type',
-        'transaction_id',
-        'referral_code_id',
-        'metadata'
+        'points',             // points associated with the user
     ];
 
     public function referralCode()
     {
-        return $this->belongsTo(ReferralCode::class, 'referral_code_id');
+        return $this->hasOne(ReferralUser::class, 'user_id', 'id');
+    }
+
+    public function referralUsers(): HasMany
+    {
+        return $this->hasMany(ReferralUser::class);
     }
 
     public function referrals()
     {
-        return $this->hasMany(Referral::class);
-    }
-
-    public function transactions()
-    {
-        return $this->hasMany(Transaction::class, 'buyer_id');
-    }
-
-    public function directReferrals()
-    {
-        return $this->hasMany(Referral::class, 'referred_by');
+        return $this->hasMany(ReferralUser::class, 'referrer_id'); // Referrals made by this user
     }
 
     /**
@@ -62,15 +55,6 @@ class User extends Authenticatable implements JWTSubject
         'remember_token',
         'two_factor_recovery_codes',
         'two_factor_secret',
-    ];
-
-    /**
-     * The accessors to append to the model's array form.
-     *
-     * @var array<int, string>
-     */
-    protected $appends = [
-        'profile_photo_url',
     ];
 
     /**

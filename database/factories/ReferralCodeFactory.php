@@ -14,8 +14,8 @@ class ReferralCodeFactory extends Factory
     {
         return [
             'code' => strtoupper($this->faker->unique()->lexify('REF???')),
-            'is_active' => true,
-            'metadata' => json_encode(['description' => 'Referral Code']),
+            'type' => 'admin',
+            'user_id' => 1,
         ];
     }
 }

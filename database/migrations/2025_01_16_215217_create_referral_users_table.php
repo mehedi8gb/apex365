@@ -13,11 +13,14 @@ return new class extends Migration
     {
         Schema::create('referral_users', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('referralId')->constrained('referrals')->onDelete('cascade');
             $table->foreignId('user_id')->constrained('users')->onDelete('cascade');
+            $table->foreignId('referrer_id')->constrained('users')->onDelete('cascade');  // Referrer user
+            $table->foreignId('referral_code_id')->constrained('referral_codes')->onDelete('cascade');
+            $table->integer('level');  // Level in the referral chain (1, 2, 3)
             $table->timestamps();
         });
     }
+
 
     /**
      * Reverse the migrations.

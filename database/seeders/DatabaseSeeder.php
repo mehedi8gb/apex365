@@ -21,7 +21,7 @@ class DatabaseSeeder extends Seeder
             RolesAndPermissionsSeeder::class,
             ReferralCodeSeeder::class,
             UsersSeeder::class,
-            ReferralSeeder::class,
+//            ReferralSeeder::class,
         ]);
     }
 }

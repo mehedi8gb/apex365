@@ -14,7 +14,7 @@ class CommissionController extends Controller
         $query = Transaction::query();
         $results = handleApiRequest($request, $query);
 
-        return sendSuccessResponse('Commissions retrieved successfully', CommissionResource::collection($results));
+        return sendSuccessResponse('Commission retrieved successfully', CommissionResource::collection($results));
     }
 
     public function show($userId): JsonResponse

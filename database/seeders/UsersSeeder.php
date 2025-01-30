@@ -22,26 +22,26 @@ class UsersSeeder extends Seeder
         ]);
         $superAgent->assignRole('admin');
 
-        // Create Super Admin
-        $superAgent = User::factory()->create([
-            'email' => 'customer@demo.com',
-        ]);
-        $superAgent->assignRole('customer');
-
-        // Create Staff
-        User::factory()
-            ->count(5)
-            ->create()
-            ->each(function ($user) {
-                $user->assignRole('staff');
-            });
-
-        $users = User::factory()
-            ->count(10)
-            ->create();
-
-        $users->each(function ($user) {
-            $user->assignRole('customer');
-        });
+//        // Create Super Admin
+//        $superAgent = User::factory()->create([
+//            'email' => 'customer@demo.com',
+//        ]);
+//        $superAgent->assignRole('customer');
+//
+//        // Create Staff
+//        User::factory()
+//            ->count(5)
+//            ->create()
+//            ->each(function ($user) {
+//                $user->assignRole('staff');
+//            });
+//
+//        $users = User::factory()
+//            ->count(10)
+//            ->create();
+//
+//        $users->each(function ($user) {
+//            $user->assignRole('customer');
+//        });
     }
 }

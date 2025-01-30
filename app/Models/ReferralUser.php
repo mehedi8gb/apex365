@@ -8,15 +8,15 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 class ReferralUser extends Model
 {
     use HasFactory;
-    protected $fillable = ['referralId', 'user_id'];
+    protected $fillable = ['user_id', 'referrer_id', 'referral_code_id', 'level'];
 
     public function user(): BelongsTo
     {
         return $this->belongsTo(User::class);
     }
 
-    public function referral(): BelongsTo
+    public function referrer(): BelongsTo
     {
-        return $this->belongsTo(Referral::class, 'referralId');
+        return $this->belongsTo(User::class, 'referrer_id');
     }
 }

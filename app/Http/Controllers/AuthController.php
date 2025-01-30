@@ -2,17 +2,26 @@
 
 namespace App\Http\Controllers;
 
+use App\Http\Resources\CommissionResource;
+use App\Http\Resources\ReferralResource;
+use App\Http\Resources\TransactionResource;
+use App\Http\Resources\UserResource;
 use App\Mail\OTPMail;
+use App\Models\Commission;
+use App\Models\Leaderboard;
 use App\Models\Referral;
 use App\Models\ReferralCode;
 use App\Models\ReferralUser;
 use Carbon\Carbon;
+use Exception;
+use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
 use App\Models\User;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Str;
 use libphonenumber\NumberParseException;
@@ -23,70 +32,169 @@ use Tymon\JWTAuth\Facades\JWTAuth;
 
 class AuthController extends Controller
 {
-    private static string $phone = '';
-
     public function register(Request $request): JsonResponse
     {
         $validated = $request->validate([
             'name' => 'required|string|max:255',
             'email' => 'nullable|email:rfc,dns|unique:users,email|required_without:phone',
             'phone' => 'nullable|string|unique:users,phone|max:15|required_without:email',
+            'password' => 'required|string|min:6',
             'nid' => 'required|string|min:10|max:17',
             'address' => 'required|string|max:255',
-            'password' => 'required|string|min:6',
-            'referralId' => 'required|string',
+            'referralId' => 'required|string|exists:referral_codes,code', // Must exist in referral_codes table
         ]);
 
-        $referral = ReferralCode::where('code', $request->referralId);
+        try {
+            DB::beginTransaction();
 
-        if (!$referral->exists()) {
-            return sendErrorResponse('Referral ID not found', 404);
+            // 1. Find the referral code
+            $referralCode = ReferralCode::where('code', $validated['referralId'])->firstOrFail();
+
+            // 2. Get the referrer based on the code
+            $referrer = User::find($referralCode->user_id); // Admin or user
+
+            // 3. Create new user
+            $user = User::create([
+                'name' => $request->name,
+                'email' => $request->email,
+                'phone' => $request->phone,
+                'nid' => $request->nid,
+                'address' => $request->address,
+                'password' => Hash::make($request->password),
+            ]);
+
+            // 4. Create the referral chain and link user to referrers
+            $this->createReferralChain($user, $referralCode, $referrer);
+
+            // 5. Distribute points based on the referral chain
+            $this->distributeReferralPoints($user, $referralCode);
+
+            // 6. Update leaderboard for each referrer (based on points)
+            $this->updateLeaderboard($user, $referralCode);
+
+            $newReferralCode = $this->generateReferralCode($user);
+
+            DB::commit();
+
+            // Assign the role to the user
+            $user->assignRole('customer');
+
+            if ($request->filled('email')) {
+                $credentials = $request->only(['email', 'password']);
+            } elseif ($request->filled('phone')) {
+                $credentials = $request->only(['phone', 'password']);
+            } else {
+                return sendErrorResponse('Email or Phone is required', 422);
+            }
+
+            Auth::attempt($credentials);
+
+            // Generate refresh token (optional: store securely if needed)
+            $refreshToken = JWTAuth::claims(['refresh' => true])->fromUser(Auth::user());
+
+            $data = [
+                'transaction_id_required' => !(bool)auth()->user()->transaction_id,
+                'access_token' => $refreshToken ?? 'null'
+            ];
+
+            return sendSuccessResponse('Customer registered successfully', $data, 201);
+
+        } catch (\Exception $e) {
+            DB::rollBack();
+            return response()->json(['error' => 'Registration failed', 'message' => $e->getMessage()], 500);
         }
+    }
 
-        if (!$this->validatePhone($validated['phone'])) {
-            return sendErrorResponse('Invalid phone number', 422);
+    public function createReferralChain(User $user, $referralCode, $referrer = null): void
+    {
+        $currentReferrer = $referrer ?? User::find(1); // If no referrer, assign Admin (ID 1)
+        $level = 1;
+
+        while ($currentReferrer && $level <= 3) {
+            // Ensure each referral entry is stored uniquely for the user
+            ReferralUser::create([
+                'user_id' => $user->id,         // New user
+                'referrer_id' => $currentReferrer->id, // Who referred this user
+                'referral_code_id' => $referralCode->id,
+                'level' => $level,
+            ]);
+
+            // Move to the next referrer (up the chain)
+            $currentReferrer = $currentReferrer->referrer;
+            $level++;
         }
+    }
 
-        $user = User::create([
-            'username' => $request->name,
-            'name' => $request->name,
-            'email' => $request->email,
-            'phone' => $request->phone,
-            'nid' => $request->nid,
-            'address' => $request->address,
-            'account_type' => 'new',
-            'role' => 'customer',
-            'password' => Hash::make($request->password),
-        ]);
 
-        ReferralUser::create([
-            'referralId' => $referral->first()->id,
+
+    public function distributeReferralPoints(User $user): void
+    {
+        // Fetch the referral chain (up to 3 levels)
+        $referralUsers = ReferralUser::where('user_id', $user->id)
+            ->orderBy('level')
+            ->limit(3) // Ensure max 3 levels
+            ->get();
+
+        // Points distribution per level
+        $commissionAmounts = [30, 20, 10];
+
+        foreach ($referralUsers as $referralUser) {
+            $level = $referralUser->level;
+            $referrerId = $referralUser->referrer_id; // Referrer should get points
+            $amount = $commissionAmounts[$level - 1];
+
+            // Store each commission entry (ensures 100 entries if user refers 100 times)
+            Commission::create([
+                'user_id' => $referrerId, // Referrer who gets the points
+                'from_user_id' => $user->id, // User who triggered the commission
+                'level' => $level,
+                'amount' => $amount,
+            ]);
+        }
+    }
+
+
+
+    public function updateLeaderboard(User $user): void
+    {
+        // Fetch the referral chain (up to 3 levels)
+        $referralUsers = ReferralUser::where('user_id', $user->id)
+            ->orderBy('level')
+            ->limit(3) // Ensure max 3 levels
+            ->get();
+
+        // Points distribution per level
+        $pointsDistribution = [30, 20, 10];
+
+        foreach ($referralUsers as $referralUser) {
+            $level = $referralUser->level;
+            $referrerId = $referralUser->referrer_id; // Referrer should get points
+            $points = $pointsDistribution[$level - 1];
+
+            // Update leaderboard (insert or update points)
+            Leaderboard::updateOrCreate(
+                ['user_id' => $referrerId],
+                [
+                    'total_commission' => DB::raw("IFNULL(total_commission, 0) + {$points}"),
+                    'total_nodes' => DB::raw("IFNULL(total_nodes, 0) + 1"),
+                ]
+            );
+        }
+    }
+
+
+
+    private function generateReferralCode($user)
+    {
+        $referralCode = ReferralCode::create([
+            'code' => Str::random(8),
+            'type' => 'user',
             'user_id' => $user->id,
         ]);
 
-        // Assign the role to the user
-        $user->assignRole('customer');
-
-        if ($request->filled('email')) {
-            $credentials = $request->only(['email', 'password']);
-        } elseif ($request->filled('phone')) {
-            $credentials = $request->only(['phone', 'password']);
-        } else {
-            return  sendErrorResponse('Email or Phone is required', 422);
-        }
-
-        Auth::attempt($credentials);
-
-        // Generate refresh token (optional: store securely if needed)
-        $refreshToken = JWTAuth::claims(['refresh' => true])->fromUser(Auth::user());
-
-        $data = [
-            'transaction_id_required' => !(bool)auth()->user()->transaction_id,
-            'access_token' => $refreshToken ?? 'null',
-        ];
-
-        return sendSuccessResponse('Customer registered successfully', $data, 201);
+        return $referralCode->code;
     }
+
 
     /**
      * Login a user and issue tokens
@@ -245,9 +353,9 @@ class AuthController extends Controller
     public function me(): JsonResponse
     {
         $user = auth('api')->user();
+
         $data = [
-            'user' => $user,
-            'role' => $user->getRoleNames(),
+            'user' => new UserResource($user),
         ];
         return sendSuccessResponse('User details', $data);
     }
@@ -267,5 +375,6 @@ class AuthController extends Controller
             return false;
         }
     }
+
 }
 

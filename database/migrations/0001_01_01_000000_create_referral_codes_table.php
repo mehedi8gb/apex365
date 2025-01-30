@@ -13,11 +13,12 @@ return new class extends Migration
     {
         Schema::create('referral_codes', function (Blueprint $table) {
             $table->id();
-            $table->string('code')->unique();
-            $table->boolean('is_active')->default(true);
-            $table->json('metadata')->nullable();
+            $table->string('code')->unique(); // Referral code
+            $table->enum('type', ['admin', 'user'])->default('user'); // "admin" for initial codes
+            $table->unsignedBigInteger('user_id')->nullable(); // Null if it's an admin code
             $table->timestamps();
         });
+
     }
 
     /**
