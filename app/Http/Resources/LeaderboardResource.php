@@ -15,9 +15,9 @@ class LeaderboardResource extends JsonResource
     public function toArray(Request $request): array
     {
         return [
-            'user_id' => $this->user_id,
-            'total_commission' => $this->total_commission,
-            'total_nodes' => $this->total_nodes,
+//            'user_id' => $this->user_id,
+            'total_commission' => $this->total_commission ?? 30,
+            'total_nodes' => $this->total_nodes ?? 1,
         ];
     }
 }

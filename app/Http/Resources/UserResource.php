@@ -24,7 +24,7 @@ class UserResource extends JsonResource
             'address' => $this->address,
             'referral_code' => $referralCode->code,
             'referral_chain' => ReferralUserResource::collection($this->referralUsers),  // assuming relationship
-            'leaderboard' => new LeaderboardResource($leaderboard) ?? 30,  // assuming relationship
+            'leaderboard' => new LeaderboardResource($leaderboard),  // assuming relationship
             'commissions' => CommissionResource::collection($commissions),
         ];
     }
