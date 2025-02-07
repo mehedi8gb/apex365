@@ -7,6 +7,7 @@ use App\Http\Resources\ReferralResource;
 use App\Http\Resources\TransactionResource;
 use App\Http\Resources\UserResource;
 use App\Mail\OTPMail;
+use App\Models\Account;
 use App\Models\Commission;
 use App\Models\Leaderboard;
 use App\Models\Referral;
@@ -63,14 +64,19 @@ class AuthController extends Controller
                 'password' => Hash::make($request->password),
             ]);
 
+            Account::create([
+                'user_id' => $user->id,
+                'balance' => 1000.00,
+            ]);
+
             // 4. Create the referral chain and link user to referrers
-            $this->createReferralChain($user, $referralCode, $referrer);
+            $referralUsers = $this->createReferralChain($user, $referralCode, $referrer);
 
             // 5. Distribute points based on the referral chain
-            $this->distributeReferralPoints($user, $referralCode);
+            $this->distributeReferralPoints($user, $referralUsers);
 
             // 6. Update leaderboard for each referrer (based on points)
-            $this->updateLeaderboard($user, $referralCode);
+            $this->updateLeaderboard($user, $referralUsers);
 
             $newReferralCode = $this->generateReferralCode($user);
 
@@ -105,14 +111,15 @@ class AuthController extends Controller
         }
     }
 
-    public function createReferralChain(User $user, $referralCode, $referrer = null): void
+    public function createReferralChain(User $user, $referralCode, $referrer = null): array
     {
+        $referralUsers = [];
         $currentReferrer = $referrer ?? User::find(1); // If no referrer, assign Admin (ID 1)
         $level = 1;
 
-        while ($currentReferrer && $level <= 3) {
+        while ($currentReferrer && $level <= 4) {
             // Ensure each referral entry is stored uniquely for the user
-            ReferralUser::create([
+            $referralUsers[$level] = ReferralUser::create([
                 'user_id' => $user->id,         // New user
                 'referrer_id' => $currentReferrer->id, // Who referred this user
                 'referral_code_id' => $referralCode->id,
@@ -123,62 +130,73 @@ class AuthController extends Controller
             $currentReferrer = $currentReferrer->referrer;
             $level++;
         }
+        return $referralUsers;
     }
 
 
 
-    public function distributeReferralPoints(User $user): void
+    public function distributeReferralPoints(User $user, array $referralUsers): array
     {
-        // Fetch the referral chain (up to 3 levels)
-        $referralUsers = ReferralUser::where('user_id', $user->id)
-            ->orderBy('level')
-            ->limit(3) // Ensure max 3 levels
-            ->get();
-
         // Points distribution per level
-        $commissionAmounts = [30, 20, 10];
+        $commissionAmounts = [30, 20, 10, 5];
+        $commissions = [];
+        $currentReferrer = $referralUsers[1];
+        $level = $currentReferrer->level;
 
-        foreach ($referralUsers as $referralUser) {
-            $level = $referralUser->level;
-            $referrerId = $referralUser->referrer_id; // Referrer should get points
-            $amount = $commissionAmounts[$level - 1];
+        while ($currentReferrer && $level <= 4) {
 
-            // Store each commission entry (ensures 100 entries if user refers 100 times)
-            Commission::create([
-                'user_id' => $referrerId, // Referrer who gets the points
-                'from_user_id' => $user->id, // User who triggered the commission
-                'level' => $level,
-                'amount' => $amount,
-            ]);
+                $commissions[$level] = Commission::create([
+                    'user_id' => $user->id, // User who triggered the commission
+                    'from_user_id' => $currentReferrer->id,  // Referrer who gets the points
+                    'level' => $level,
+                    'amount' => $commissionAmounts[$level - 1],
+                ]);
+            $currentReferrer = $currentReferrer->referrer;
+            $level++;
         }
+            return $commissions;
     }
 
 
 
-    public function updateLeaderboard(User $user): void
+    public function updateLeaderboard(User $user, array $referralUsers): void
     {
-        // Fetch the referral chain (up to 3 levels)
-        $referralUsers = ReferralUser::where('user_id', $user->id)
-            ->orderBy('level')
-            ->limit(3) // Ensure max 3 levels
-            ->get();
-
         // Points distribution per level
-        $pointsDistribution = [30, 20, 10];
+        $pointsDistribution = [30, 20, 10, 5];
+        $currentReferrer = $referralUsers[1];
+        $level = $currentReferrer->level;
+        $leaderBoards = [];
 
-        foreach ($referralUsers as $referralUser) {
-            $level = $referralUser->level;
-            $referrerId = $referralUser->referrer_id; // Referrer should get points
+        while ($currentReferrer && $level <= 4) {
+            $referrerId = $currentReferrer->id; // Referrer should get points
             $points = $pointsDistribution[$level - 1];
-
             // Update leaderboard (insert or update points)
-            Leaderboard::updateOrCreate(
-                ['user_id' => $referrerId],
-                [
-                    'total_commission' => DB::raw("IFNULL(total_commission, 0) + {$points}"),
-                    'total_nodes' => DB::raw("IFNULL(total_nodes, 0) + 1"),
-                ]
-            );
+            $leaderboard = Leaderboard::firstOrNew(['user_id' => $user->id]);
+
+            $leaderboard->total_commission = ($leaderboard->total_commission ?? 0) + $points;
+            $leaderboard->total_nodes = ($leaderboard->total_nodes ?? 0) + 0;
+
+            $leaderboard->save();
+            $leaderBoards[$level] = $leaderboard; // Store updated record in the array
+
+
+            if ($referrerId){
+                $commission = Commission::where('user_id', $user->id)
+                                    ->where('from_user_id', $referrerId)->first();
+
+                if ($commission){
+                    $leaderboard = Leaderboard::firstOrNew(['user_id' => $referrerId]);
+
+                    $leaderboard->total_commission = ($leaderboard->total_commission ?? 0) + $commission->amount;
+                    $leaderboard->total_nodes = ($leaderboard->total_nodes ?? 0) + 1;
+
+                    $leaderboard->save();
+
+                    $leaderBoards[$level + 1] = $leaderboard;
+                }
+            }
+            $currentReferrer = $currentReferrer->referrer;
+            $level++;
         }
     }
 

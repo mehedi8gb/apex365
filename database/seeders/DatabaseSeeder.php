@@ -22,6 +22,8 @@ class DatabaseSeeder extends Seeder
             ReferralCodeSeeder::class,
             UsersSeeder::class,
 //            ReferralSeeder::class,
+            AccountSeeder::class,
+            WithdrawSeeder::class,
         ]);
     }
 }
