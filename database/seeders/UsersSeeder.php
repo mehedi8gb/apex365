@@ -22,6 +22,8 @@ class UsersSeeder extends Seeder
         ]);
         $superAgent->assignRole('admin');
 
+        UserFactory::times(20)->create();
+
 //        // Create Super Admin
 //        $superAgent = User::factory()->create([
 //            'email' => 'customer@demo.com',
