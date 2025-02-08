@@ -11,8 +11,8 @@ class UserResource extends JsonResource
 {
     public function toArray($request): array
     {
-        $leaderboard = Leaderboard::where('user_id', $this->id)->first();
-        $commissions = Commission::where('user_id', $this->id)->get();
+//        $leaderboard = Leaderboard::where('user_id', $this->id)->first();
+//        $commissions = Commission::where('user_id', $this->id)->get();
         $referralCode = ReferralCode::where('user_id', $this->id)->first();
 
         return [
@@ -23,9 +23,9 @@ class UserResource extends JsonResource
             'nid' => $this->nid,
             'address' => $this->address,
             'referral_code' => $referralCode->code,
-            'referral_chain' => ReferralUserResource::collection($this->referralUsers),  // assuming relationship
-            'leaderboard' => new LeaderboardResource($leaderboard),  // assuming relationship
-            'commissions' => CommissionResource::collection($commissions),
+//            'referral_chain' => ReferralUserResource::collection($this->referralUsers),  // assuming relationship
+            'leaderboard' => new LeaderboardResource($this->leaderboard),  // assuming relationship
+            'commissions' => CommissionResource::collection($this->commissions),
         ];
     }
 }

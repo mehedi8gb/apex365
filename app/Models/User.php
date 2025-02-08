@@ -43,11 +43,16 @@ class User extends Authenticatable implements JWTSubject
     {
         return $this->hasMany(ReferralUser::class, 'referrer_id'); // Referrals made by this user
     }
-//
-//    public function referrer(): HasOne
-//    {
-//        return $this->hasOne(ReferralUser::class, 'user_id'); // Referrer of this user
-//    }
+
+    public function leaderboard(): HasOne
+    {
+        return $this->hasOne(Leaderboard::class);
+    }
+
+    public function commissions(): HasMany
+    {
+        return $this->hasMany(Commission::class);
+    }
 
     /**
      * The attributes that should be hidden for serialization.

@@ -55,18 +55,21 @@ class AuthController extends Controller
                 'password' => Hash::make($request->password),
             ]);
 
+            DB::commit();
+
             // 4. Create the referral chain and link user to referrers
             ReferralHelper::createReferralChain($user, $referrerAndCode);
 
             // 5. Distribute points based on the referral chain
-            ReferralHelper::distributeReferralPoints($user, $referrerAndCode);
+            ReferralHelper::distributeReferralPoints();
 
             // 6. Update leaderboard for each referrer (based on points)
-            //  $this->updateLeaderboard($user, $referralCode);
+            ReferralHelper::updateLeaderboard();
 
-            $newReferralCode = ReferralHelper::generateReferralCode($user);
+            // Generate a referral code for the user
+            ReferralHelper::generateReferralCode($user);
 
-            DB::commit();
+
 
             // Assign the role to the user
             $user->assignRole('customer');
