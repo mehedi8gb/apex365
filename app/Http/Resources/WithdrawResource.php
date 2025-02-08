@@ -11,11 +11,10 @@ class WithdrawResource extends JsonResource
     {
         return [
             'id' => $this->id,
-            'user_id' => $this->user_id,
             'amount' => $this->amount,
             'payment_method' => $this->payment_method,
             'status' => $this->status,
-            'created_at' => $this->created_at->toDateTimeString(),
+            'created_at' => $this->created_at->format('Y-m-d H:i:s'),
         ];
     }
 }

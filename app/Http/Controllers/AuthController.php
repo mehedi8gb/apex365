@@ -71,12 +71,6 @@ class AuthController extends Controller
             // Generate a referral code for the user
             ReferralHelper::generateReferralCode($user);
 
-            Account::create([
-                'user_id' => $user->id,
-                'balance' => 1000.00,
-            ]);
-
-
             // Assign the role to the user
             $user->assignRole('customer');
 

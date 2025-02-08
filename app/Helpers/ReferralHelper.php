@@ -2,6 +2,7 @@
 
 namespace App\Helpers;
 
+use App\Models\Account;
 use App\Models\Commission;
 use App\Models\Leaderboard;
 use App\Models\ReferralCode;
@@ -14,6 +15,7 @@ use Illuminate\Support\Str;
 class ReferralHelper
 {
     private static $referralUser;
+
     private static $commissions = [];
 
     public static function createReferralChain(User $user, $referrerAndCode): void
@@ -82,8 +84,6 @@ class ReferralHelper
                 throw new Exception('Infinite loop detected in the referral chain.');
             }
         }
-
-        DB::commit();
     }
 
     public static function updateLeaderboard(): void
@@ -96,6 +96,12 @@ class ReferralHelper
                 ->first();
 
             if ($commissionData) {
+                Account::updateOrCreate([
+                    'user_id' => $commissionData->user_id,
+                ], [
+                    'balance' => $commissionData->total_commissions,
+                ]);
+
                 // Insert or update the leaderboard entry
                 Leaderboard::updateOrCreate(
                     ['user_id' => $commissionData->user_id], // Find existing record by user_id
@@ -105,6 +111,8 @@ class ReferralHelper
                     ]
                 );
             }
+
+            DB::commit();
         }
     }
 

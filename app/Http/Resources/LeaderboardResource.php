@@ -16,7 +16,7 @@ class LeaderboardResource extends JsonResource
     {
         return [
 //            'user_id' => $this->user_id,
-            'total_commission' => $this->total_commission ?? 30,
+            'total_commissions' => $this->total_commissions,
             'total_nodes' => $this->total_nodes ?? 1,
         ];
     }
