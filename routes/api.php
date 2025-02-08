@@ -1,10 +1,13 @@
 <?php
 
 use App\Http\Controllers\AcademicYearController;
+use App\Http\Controllers\CommissionController;
 use App\Http\Controllers\CourseController;
 use App\Http\Controllers\InstitutionController;
+use App\Http\Controllers\ReferralController;
 use App\Http\Controllers\ResourceController;
 use App\Http\Controllers\TermController;
+use App\Http\Controllers\TransactionController;
 use App\Http\Controllers\UserController;
 
 use App\Http\Middleware\JwtMiddleware;
@@ -31,16 +34,19 @@ Route::group(['prefix' => 'auth'], function () {
 Route::middleware([JwtMiddleware::class])->group(function () {
     Route::get('me', [AuthController::class, 'me']);
     Route::post('image/upload', [ResourceController::class, 'uploadImage']);
-    Route::apiResource('institutions', InstitutionController::class);
-    Route::apiResource('courses', CourseController::class);
-    Route::apiResource('terms', TermController::class);
-    Route::apiResource('academic-years', AcademicYearController::class);
     Route::apiResource('users', UserController::class);
+
+
+        Route::get('/referrals', [ReferralController::class, 'index']); // All referrals
+        Route::get('/referrals/{userId}', [ReferralController::class, 'show']); // Specific user referrals
+        Route::get('/referrals/tree/{userId}', [ReferralController::class, 'getReferralNodes']); // Specific user referrals
+
+        Route::get('/transactions', [TransactionController::class, 'index']); // All transactions
+        Route::get('/transactions/{userId}', [TransactionController::class, 'show']); // Specific user transactions
+
+        Route::get('/commissions', [CommissionController::class, 'index']); // All commissions
+        Route::get('/commissions/{userId}', [CommissionController::class, 'show']); // User commission earnings
+
 });
 
 // role based route system has to be integrated
-
-// write a test route to test the role based route system
-Route::get('/test', function () {
-    return response()->json(['message' => 'This is a test route']);
-});

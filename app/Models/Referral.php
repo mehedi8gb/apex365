@@ -3,21 +3,22 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Support\Str;
 
 class Referral extends Model
 {
     use HasFactory;
-    protected $fillable = ['referralId'];
+    protected $fillable = ['user_id', 'referred_by'];
 
-    public static function generateReferralCode(): string
+    public function user(): BelongsTo
     {
-        return Str::uuid();
+        return $this->belongsTo(User::class);
     }
 
-    public function users(): BelongsToMany
+    public function referrer(): BelongsTo
     {
-        return $this->belongsToMany(User::class, 'referral_user');
+        return $this->belongsTo(User::class, 'referred_by');
     }
 }
