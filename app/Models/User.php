@@ -4,7 +4,6 @@ namespace App\Models;
 
 // use Illuminate\Contracts\Auth\MustVerifyEmail;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
-use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Foundation\Application;
@@ -44,6 +43,11 @@ class User extends Authenticatable implements JWTSubject
     {
         return $this->hasMany(ReferralUser::class, 'referrer_id'); // Referrals made by this user
     }
+//
+//    public function referrer(): HasOne
+//    {
+//        return $this->hasOne(ReferralUser::class, 'user_id'); // Referrer of this user
+//    }
 
     /**
      * The attributes that should be hidden for serialization.

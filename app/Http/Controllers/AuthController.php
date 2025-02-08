@@ -2,9 +2,7 @@
 
 namespace App\Http\Controllers;
 
-use App\Http\Resources\CommissionResource;
-use App\Http\Resources\ReferralResource;
-use App\Http\Resources\TransactionResource;
+use App\Helpers\ReferralHelper;
 use App\Http\Resources\UserResource;
 use App\Mail\OTPMail;
 use App\Models\Commission;
@@ -12,16 +10,13 @@ use App\Models\Leaderboard;
 use App\Models\Referral;
 use App\Models\ReferralCode;
 use App\Models\ReferralUser;
+use App\Models\User;
 use Carbon\Carbon;
-use Exception;
-use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
-use App\Models\User;
-use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Str;
 use libphonenumber\NumberParseException;
@@ -47,11 +42,8 @@ class AuthController extends Controller
         try {
             DB::beginTransaction();
 
-            // 1. Find the referral code
-            $referralCode = ReferralCode::where('code', $validated['referralId'])->firstOrFail();
-
-            // 2. Get the referrer based on the code
-            $referrer = User::find($referralCode->user_id); // Admin or user
+            // 1. Find the referrer user
+            $referrerAndCode = ReferralCode::where('code', $validated['referralId'])->firstOrFail();
 
             // 3. Create new user
             $user = User::create([
@@ -64,15 +56,15 @@ class AuthController extends Controller
             ]);
 
             // 4. Create the referral chain and link user to referrers
-            $this->createReferralChain($user, $referralCode, $referrer);
+            ReferralHelper::createReferralChain($user, $referrerAndCode);
 
             // 5. Distribute points based on the referral chain
-            $this->distributeReferralPoints($user, $referralCode);
+            ReferralHelper::distributeReferralPoints($user, $referrerAndCode);
 
             // 6. Update leaderboard for each referrer (based on points)
-            $this->updateLeaderboard($user, $referralCode);
+            //  $this->updateLeaderboard($user, $referralCode);
 
-            $newReferralCode = $this->generateReferralCode($user);
+            $newReferralCode = ReferralHelper::generateReferralCode($user);
 
             DB::commit();
 
@@ -93,108 +85,18 @@ class AuthController extends Controller
             $refreshToken = JWTAuth::claims(['refresh' => true])->fromUser(Auth::user());
 
             $data = [
-                'transaction_id_required' => !(bool)auth()->user()->transaction_id,
-                'access_token' => $refreshToken ?? 'null'
+                'transaction_id_required' => ! (bool) auth()->user()->transaction_id,
+                'access_token' => $refreshToken ?? 'null',
             ];
 
             return sendSuccessResponse('Customer registered successfully', $data, 201);
 
         } catch (\Exception $e) {
             DB::rollBack();
+
             return response()->json(['error' => 'Registration failed', 'message' => $e->getMessage()], 500);
         }
     }
-
-    public function createReferralChain(User $user, $referralCode, $referrer = null): void
-    {
-        $currentReferrer = $referrer ?? User::find(1); // If no referrer, assign Admin (ID 1)
-        $level = 1;
-
-        while ($currentReferrer && $level <= 3) {
-            // Ensure each referral entry is stored uniquely for the user
-            ReferralUser::create([
-                'user_id' => $user->id,         // New user
-                'referrer_id' => $currentReferrer->id, // Who referred this user
-                'referral_code_id' => $referralCode->id,
-                'level' => $level,
-            ]);
-
-            // Move to the next referrer (up the chain)
-            $currentReferrer = $currentReferrer->referrer;
-            $level++;
-        }
-    }
-
-
-
-    public function distributeReferralPoints(User $user): void
-    {
-        // Fetch the referral chain (up to 3 levels)
-        $referralUsers = ReferralUser::where('user_id', $user->id)
-            ->orderBy('level')
-            ->limit(3) // Ensure max 3 levels
-            ->get();
-
-        // Points distribution per level
-        $commissionAmounts = [30, 20, 10];
-
-        foreach ($referralUsers as $referralUser) {
-            $level = $referralUser->level;
-            $referrerId = $referralUser->referrer_id; // Referrer should get points
-            $amount = $commissionAmounts[$level - 1];
-
-            // Store each commission entry (ensures 100 entries if user refers 100 times)
-            Commission::create([
-                'user_id' => $referrerId, // Referrer who gets the points
-                'from_user_id' => $user->id, // User who triggered the commission
-                'level' => $level,
-                'amount' => $amount,
-            ]);
-        }
-    }
-
-
-
-    public function updateLeaderboard(User $user): void
-    {
-        // Fetch the referral chain (up to 3 levels)
-        $referralUsers = ReferralUser::where('user_id', $user->id)
-            ->orderBy('level')
-            ->limit(3) // Ensure max 3 levels
-            ->get();
-
-        // Points distribution per level
-        $pointsDistribution = [30, 20, 10];
-
-        foreach ($referralUsers as $referralUser) {
-            $level = $referralUser->level;
-            $referrerId = $referralUser->referrer_id; // Referrer should get points
-            $points = $pointsDistribution[$level - 1];
-
-            // Update leaderboard (insert or update points)
-            Leaderboard::updateOrCreate(
-                ['user_id' => $referrerId],
-                [
-                    'total_commission' => DB::raw("IFNULL(total_commission, 0) + {$points}"),
-                    'total_nodes' => DB::raw("IFNULL(total_nodes, 0) + 1"),
-                ]
-            );
-        }
-    }
-
-
-
-    private function generateReferralCode($user)
-    {
-        $referralCode = ReferralCode::create([
-            'code' => Str::random(8),
-            'type' => 'user',
-            'user_id' => $user->id,
-        ]);
-
-        return $referralCode->code;
-    }
-
 
     /**
      * Login a user and issue tokens
@@ -207,7 +109,6 @@ class AuthController extends Controller
             'password' => 'required|string',
         ]);
 
-
         if ($request->filled('email')) {
             $credentials = $request->only(['email', 'password']);
         } elseif ($request->filled('phone')) {
@@ -216,7 +117,7 @@ class AuthController extends Controller
             return sendErrorResponse('Email or Phone is required', 422);
         }
 
-        if (!Auth::attempt($credentials)) {
+        if (! Auth::attempt($credentials)) {
             return sendErrorResponse('Invalid credentials', 401);
         }
 
@@ -224,7 +125,7 @@ class AuthController extends Controller
         $refreshToken = JWTAuth::fromUser(Auth::user());
 
         $data = [
-            'transaction_id_required' => !(bool)auth()->user()->transaction_id,
+            'transaction_id_required' => ! (bool) auth()->user()->transaction_id,
             'access_token' => $refreshToken,
         ];
 
@@ -278,7 +179,6 @@ class AuthController extends Controller
             ]
         );
 
-
         $user->password_reset_code = null;
         $user->save();
 
@@ -299,7 +199,7 @@ class AuthController extends Controller
         $token = DB::table('password_reset_tokens')->
         where('email', $validated['email'])->where('token', $validated['token']);
 
-        if (!$user && $token->doesntExist()) {
+        if (! $user && $token->doesntExist()) {
             return sendErrorResponse('Unauthorized', 401);
         }
 
@@ -325,6 +225,7 @@ class AuthController extends Controller
     {
         try {
             $newAccessToken = JWTAuth::refresh();
+
             return response()->json([
                 'access_token' => $newAccessToken,
                 'expires_in' => auth('api')->factory()->getTTL() * 60,
@@ -341,6 +242,7 @@ class AuthController extends Controller
     {
         try {
             auth('api')->logout();
+
             return sendSuccessResponse('User logged out successfully');
         } catch (JWTException $e) {
             return sendErrorResponse('Unable to logout', 401);
@@ -357,6 +259,7 @@ class AuthController extends Controller
         $data = [
             'user' => new UserResource($user),
         ];
+
         return sendSuccessResponse('User details', $data);
     }
 
@@ -364,17 +267,16 @@ class AuthController extends Controller
     {
         try {
             $phoneUtil = PhoneNumberUtil::getInstance();
-            $numberProto = $phoneUtil->parse($phone, "BD"); // BD = Bangladesh
+            $numberProto = $phoneUtil->parse($phone, 'BD'); // BD = Bangladesh
             if ($phoneUtil->isValidNumber($numberProto)) {
                 self::$phone = $phoneUtil->format($numberProto, PhoneNumberFormat::E164); // +8801XXXXXXXXX
 
                 return true;
             }
+
             return false;
         } catch (NumberParseException $e) {
             return false;
         }
     }
-
 }
-
