@@ -10,6 +10,7 @@ use App\Http\Controllers\TermController;
 use App\Http\Controllers\TransactionController;
 use App\Http\Controllers\UserController;
 
+use App\Http\Controllers\WithdrawController;
 use App\Http\Middleware\JwtMiddleware;
 use App\Http\Middleware\RefreshTokenMiddleware;
 use Illuminate\Support\Facades\Route;
@@ -47,6 +48,9 @@ Route::middleware([JwtMiddleware::class])->group(function () {
         Route::get('/commissions', [CommissionController::class, 'index']); // All commissions
         Route::get('/commissions/{userId}', [CommissionController::class, 'show']); // User commission earnings
 
+        Route::get('/withdraws', [WithdrawController::class, 'index']);
+        Route::post('/withdraws', [WithdrawController::class, 'store']);
+        Route::post('/withdraws/{id}/approve', [WithdrawController::class, 'approve']);
 });
 
 // role based route system has to be integrated

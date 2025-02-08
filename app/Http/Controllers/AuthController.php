@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Helpers\ReferralHelper;
 use App\Http\Resources\UserResource;
 use App\Mail\OTPMail;
+use App\Models\Account;
 use App\Models\Commission;
 use App\Models\Leaderboard;
 use App\Models\Referral;
@@ -55,6 +56,7 @@ class AuthController extends Controller
                 'password' => Hash::make($request->password),
             ]);
 
+
             DB::commit();
 
             // 4. Create the referral chain and link user to referrers
@@ -69,6 +71,10 @@ class AuthController extends Controller
             // Generate a referral code for the user
             ReferralHelper::generateReferralCode($user);
 
+            Account::create([
+                'user_id' => $user->id,
+                'balance' => 1000.00,
+            ]);
 
 
             // Assign the role to the user
@@ -96,7 +102,6 @@ class AuthController extends Controller
 
         } catch (\Exception $e) {
             DB::rollBack();
-
             return response()->json(['error' => 'Registration failed', 'message' => $e->getMessage()], 500);
         }
     }
