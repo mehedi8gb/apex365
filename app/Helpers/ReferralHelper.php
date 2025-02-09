@@ -20,7 +20,6 @@ class ReferralHelper
 
     public static function createReferralChain(User $user, $referrerAndCode): void
     {
-        DB::beginTransaction();
         $currentReferrer = $referrerAndCode->user ?? User::find(1); // If no referrer, assign Admin (ID 1)
 
         // Ensure each referral entry is stored uniquely for the user
@@ -95,11 +94,19 @@ class ReferralHelper
                 ->groupBy('user_id')
                 ->first();
 
+            $withdrawnAmount = DB::table('withdraws')
+                ->selectRaw('SUM(amount) AS total_withdrawn')
+                ->where('user_id', $commission->user_id)
+                ->where('status', 'paid')
+                ->groupBy('user_id')
+                ->first();
+
             if ($commissionData) {
+
                 Account::updateOrCreate([
                     'user_id' => $commissionData->user_id,
                 ], [
-                    'balance' => $commissionData->total_commissions,
+                    'balance' => $commissionData->total_commissions - ($withdrawnAmount->total_withdrawn ?? 0),
                 ]);
 
                 // Insert or update the leaderboard entry
@@ -111,8 +118,6 @@ class ReferralHelper
                     ]
                 );
             }
-
-            DB::commit();
         }
     }
 

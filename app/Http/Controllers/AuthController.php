@@ -56,9 +56,6 @@ class AuthController extends Controller
                 'password' => Hash::make($request->password),
             ]);
 
-
-            DB::commit();
-
             // 4. Create the referral chain and link user to referrers
             ReferralHelper::createReferralChain($user, $referrerAndCode);
 
@@ -73,6 +70,8 @@ class AuthController extends Controller
 
             // Assign the role to the user
             $user->assignRole('customer');
+
+            DB::commit();
 
             if ($request->filled('email')) {
                 $credentials = $request->only(['email', 'password']);
