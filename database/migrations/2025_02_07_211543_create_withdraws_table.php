@@ -15,6 +15,7 @@ return new class extends Migration
             $table->id();
             $table->foreignId('user_id')->constrained()->onDelete('cascade');
             $table->decimal('amount', 10, 2);
+            $table->string('mobile_number');
             $table->enum('payment_method', ['bkash', 'nagad', 'rocket']);
             $table->enum('status', ['due', 'paid'])->default('due');
             $table->timestamps();

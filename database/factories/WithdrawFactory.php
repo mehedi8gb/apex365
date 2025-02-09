@@ -18,6 +18,7 @@ class WithdrawFactory extends Factory
         return [
             'user_id' => User::inRandomOrder()->first()->id,
             'amount' => $this->faker->randomFloat(2, 10, 500),
+            'mobile_number' => $this->faker->phoneNumber,
             'payment_method' => $this->faker->randomElement(['bkash', 'nagad', 'rocket']),
             'status' => 'due',
         ];

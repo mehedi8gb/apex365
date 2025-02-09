@@ -25,6 +25,7 @@ class WithdrawController extends Controller
         $validatedData = $request->validate([
             'amount' => 'required|numeric|min:10',
             'payment_method' => 'required|in:bkash,nagad,rocket',
+            'mobile_number' => 'required_if:payment_method,bkash,nagad,rocket',
         ]);
 
         $account = Account::where('user_id', auth()->id())->first();
@@ -36,6 +37,7 @@ class WithdrawController extends Controller
             'user_id' => auth()->id(),
             'amount' => $validatedData['amount'],
             'payment_method' => $validatedData['payment_method'],
+            'mobile_number' => $validatedData['mobile_number'],
             'status' => 'due',
         ]);
 

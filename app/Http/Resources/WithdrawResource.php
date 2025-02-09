@@ -13,6 +13,7 @@ class WithdrawResource extends JsonResource
             'id' => $this->id,
             'amount' => $this->amount,
             'payment_method' => $this->payment_method,
+            'mobile_number' => $this->mobile_number,
             'status' => $this->status,
             'created_at' => $this->created_at->format('Y-m-d H:i:s'),
         ];
