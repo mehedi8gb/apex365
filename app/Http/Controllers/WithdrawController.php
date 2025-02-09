@@ -33,6 +33,10 @@ class WithdrawController extends Controller
             return sendErrorResponse('Insufficient balance', 400);
         }
 
+        if ($account->balance <= 10) {
+            return sendErrorResponse('Account balance must be more then 10 to withdraw', 400);
+        }
+
         $withdraw = Withdraw::create([
             'user_id' => auth()->id(),
             'amount' => $validatedData['amount'],
@@ -40,6 +44,8 @@ class WithdrawController extends Controller
             'mobile_number' => $validatedData['mobile_number'],
             'status' => 'due',
         ]);
+
+        $account->update(['balance' => $account->balance - $validatedData['amount']]);
 
         return sendSuccessResponse(
             'Withdraw request created successfully',
@@ -56,12 +62,6 @@ class WithdrawController extends Controller
                 return sendErrorResponse('Withdraw request is already processed', 400);
             }
 
-            $account = Account::where('user_id', $withdraw->user_id)->first();
-            if (!$account || $account->balance < $withdraw->amount) {
-                return sendErrorResponse('Insufficient balance in user account', 400);
-            }
-
-            $account->update(['balance' => $account->balance - $withdraw->amount]);
             $withdraw->update(['status' => 'paid']);
 
             return sendSuccessResponse('Withdraw request approved successfully',
