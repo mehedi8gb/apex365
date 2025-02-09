@@ -6,6 +6,7 @@ use App\Http\Controllers\CourseController;
 use App\Http\Controllers\InstitutionController;
 use App\Http\Controllers\ReferralController;
 use App\Http\Controllers\ResourceController;
+use App\Http\Controllers\SpinnerController;
 use App\Http\Controllers\TermController;
 use App\Http\Controllers\TransactionController;
 use App\Http\Controllers\UserController;
@@ -51,6 +52,8 @@ Route::middleware([JwtMiddleware::class])->group(function () {
         Route::get('/withdraws', [WithdrawController::class, 'index']);
         Route::post('/withdraws', [WithdrawController::class, 'store']);
         Route::post('/withdraws/{id}/approve', [WithdrawController::class, 'approve']);
+
+        Route::apiResource('spinner', SpinnerController::class);
 });
 
 // role based route system has to be integrated
