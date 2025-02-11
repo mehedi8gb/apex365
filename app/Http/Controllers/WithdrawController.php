@@ -33,7 +33,7 @@ class WithdrawController extends Controller
             return sendErrorResponse('Insufficient balance', 400);
         }
 
-        if ($account->balance <= 10) {
+        if ($account->balance <= 10 || ($account->balance - $validatedData['amount']) <= 10) {
             return sendErrorResponse('Account balance must be more then 10 to withdraw', 400);
         }
 

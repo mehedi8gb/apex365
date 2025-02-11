@@ -2,6 +2,8 @@
 
 namespace App\Exceptions;
 
+use ErrorException;
+use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Illuminate\Foundation\Exceptions\Handler as ExceptionHandler;
 use Illuminate\Http\Request;
 use Symfony\Component\HttpFoundation\Response;
@@ -20,6 +22,16 @@ class Handler extends ExceptionHandler
      */
     public function render($request, Throwable $e): Response
     {
+        // Check for ErrorException related to roles access
+        if ($e instanceof ErrorException && str_contains($e->getMessage(), "Attempt to read property \"roles\" on false")) {
+            return sendErrorResponse($e, 403); // Forbidden or 401 for Unauthorized
+        }
+
+        // Check for ModelNotFoundException and format the error
+        if ($e instanceof ModelNotFoundException) {
+            return sendErrorResponse($e, 404);
+        }
+
         // Check for ValidationException
         if ($e instanceof ValidationException) {
             $errors = $e->errors();

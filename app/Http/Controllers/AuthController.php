@@ -5,12 +5,9 @@ namespace App\Http\Controllers;
 use App\Helpers\ReferralHelper;
 use App\Http\Resources\UserResource;
 use App\Mail\OTPMail;
-use App\Models\Account;
-use App\Models\Commission;
 use App\Models\Leaderboard;
 use App\Models\Referral;
 use App\Models\ReferralCode;
-use App\Models\ReferralUser;
 use App\Models\User;
 use Carbon\Carbon;
 use Illuminate\Http\JsonResponse;
@@ -95,6 +92,7 @@ class AuthController extends Controller
 
         } catch (\Exception $e) {
             DB::rollBack();
+
             return response()->json(['error' => 'Registration failed', 'message' => $e->getMessage()], 500);
         }
     }
@@ -139,19 +137,37 @@ class AuthController extends Controller
     public function forget(Request $request): JsonResponse
     {
         $validated = $request->validate([
-            'email' => 'required|email|exists:users,email',
+            'email' => 'nullable|email:rfc,dns|required_without:phone',
+            'phone' => 'nullable|string|max:15|required_without:email',
         ]);
+
+        if ($request->filled('email')) {
+            $user = User::where('email', $validated['email'])->first();
+        } elseif ($request->filled('phone')) {
+            $user = User::where('phone', $validated['phone'])->first();
+        } else {
+            return sendErrorResponse('Email or Phone is required', 422);
+        }
 
         $otp = rand(1000, 9999); // Generate a 4-digit OTP
 
         // Ideally store OTP in the database or cache
-        $user = User::where('email', $validated['email'])->first();
+
         $user->password_reset_code = $otp; // Add an `otp` column in the `users` table
         $user->save();
 
         // Send OTP via email (simulated here)
-        Mail::to($user->email)->send(new OTPMail($otp));
+        if ($request->filled('email')) {
+            Mail::to($validated['email'])->send(new OTPMail($otp));
+        } elseif ($request->filled('phone')) {
+            // Send OTP via SMS (simulated here)
+            if (! $this->validatePhone($validated['phone'])) {
+                return sendErrorResponse('Invalid phone number', 400);
+            }
 
+            // Send OTP via SMS
+            $this->sendSMS($otp);
+        }
         return sendSuccessResponse('OTP sent successfully');
     }
 
@@ -161,19 +177,28 @@ class AuthController extends Controller
     public function validateCode(Request $request): JsonResponse
     {
         $validated = $request->validate([
-            'email' => 'required|email|exists:users,email',
+            'email' => 'nullable|email:rfc,dns|required_without:phone',
+            'phone' => 'nullable|string|max:15|required_without:email',
             'otp' => 'required',
         ]);
 
-        $user = User::where('email', $validated['email'])->first();
+        if ($request->filled('email')) {
+            $user = User::where('email', $validated['email'])->first();
+        } elseif ($request->filled('phone')) {
+            $user = User::where('phone', $validated['phone'])->first();
+        } else {
+            return sendErrorResponse('Email or Phone is required', 422);
+        }
 
         if ($user->password_reset_code != $validated['otp']) {
             return response()->json(['error' => 'Invalid OTP'], 400);
         }
 
         $token = Str::random(60);
-        DB::table('password_reset_tokens')->updateOrInsert(
-            ['email' => $validated['email']], // Condition to check if the record already exists
+        DB::table('password_reset_tokens')->updateOrInsert([
+            'email' => $request->email,
+            'phone' => $request->phone,
+        ],
             [
                 'token' => $token,               // New token to insert or update
                 'created_at' => now(),           // Update the timestamp to current time
@@ -193,12 +218,22 @@ class AuthController extends Controller
     {
         $validated = $request->validate([
             'token' => 'required',
-            'email' => 'required|email|exists:users,email',
+            'email' => 'nullable|email:rfc,dns|required_without:phone',
+            'phone' => 'nullable|string|max:15|required_without:email',
             'newPassword' => 'required|string|min:6',
         ]);
-        $user = User::where('email', $validated['email'])->first();
-        $token = DB::table('password_reset_tokens')->
-        where('email', $validated['email'])->where('token', $validated['token']);
+
+        if ($request->filled('email')) {
+            $user = User::where('email', $validated['email'])->first();
+            $token = DB::table('password_reset_tokens')->
+            where('phone', $validated['phone'])->where('token', $validated['token']);
+        } elseif ($request->filled('phone')) {
+            $user = User::where('phone', $validated['phone'])->first();
+            $token = DB::table('password_reset_tokens')->
+            where('phone', $validated['phone'])->where('token', $validated['token']);
+        } else {
+            return sendErrorResponse('Email or Phone is required', 422);
+        }
 
         if (! $user && $token->doesntExist()) {
             return sendErrorResponse('Unauthorized', 401);
@@ -212,7 +247,6 @@ class AuthController extends Controller
             return sendErrorResponse('Token expired', 401);
         }
 
-        $user = User::where('email', $validated['email'])->first();
         $user->password = bcrypt($validated['newPassword']);
         $user->save();
 
@@ -279,5 +313,11 @@ class AuthController extends Controller
         } catch (NumberParseException $e) {
             return false;
         }
+    }
+
+    private function sendSMS(int $otp)
+    {
+        // Send OTP via SMS
+
     }
 }
