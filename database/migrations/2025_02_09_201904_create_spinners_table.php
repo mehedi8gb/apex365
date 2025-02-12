@@ -14,7 +14,7 @@ return new class extends Migration
         Schema::create('spinners', function (Blueprint $table) {
             $table->id();
             $table->integer('rotation_point'); // Lucky spinner value
-            $table->timestamp('spin_time');
+            $table->time('spin_time');
             $table->timestamps();
         });
     }
