@@ -23,7 +23,7 @@ class SpinnerController extends Controller
     {
         $validated = $request->validate([
             'rotation_point' => 'required|integer',
-            'spin_time' => 'required|date|unique:spinners,spin_time',
+            'spin_time' => 'required|unique:spinners,spin_time',
         ]);
 
         $spinner = Spinner::create($validated);
