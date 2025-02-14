@@ -11,11 +11,10 @@ class CustomerController extends Controller
 {
     public function index(Request $request): JsonResponse
     {
-        $user = User::role('customer')
-            ->orderBy('created_at', 'desc')
-            ->paginate(10);
+        $user = User::role('customer');
+        $results = handleApiRequest($request, $user);
 
-        return sendSuccessResponse('Customer records retrieved successfully', CustomerResource::collection($user));
+        return sendSuccessResponse('Customer records retrieved successfully', $results);
     }
 
     // make store function to store the data
@@ -23,8 +22,8 @@ class CustomerController extends Controller
     {
         $validated = $request->validate([
             'name' => 'required|string',
-            'email' => 'required|email|unique:users,email',
-            'phone' => 'required|string',
+            'email' => 'nullable|email|unique:users,email|required_without:phone',
+            'phone' => 'nullable|string|unique:users,phone|required_without:email',
             'nid' => 'required|string',
             'address' => 'required|string',
             'password' => 'required|string',
@@ -34,7 +33,7 @@ class CustomerController extends Controller
         $user = User::create($validated);
         $user->assignRole('customer');
 
-        return sendSuccessResponse('Customer created successfully', new CustomerResource($user));
+        return sendSuccessResponse('Customer created successfully', CustomerResource::make($user));
     }
 
     // show function to show the data
@@ -42,7 +41,7 @@ class CustomerController extends Controller
     {
         $user = User::role('customer')->find($id);
 
-        if (!$user) {
+        if (! $user) {
             return sendErrorResponse('Customer not found', 404);
         }
 
@@ -54,14 +53,14 @@ class CustomerController extends Controller
     {
         $user = User::role('customer')->find($id);
 
-        if (!$user) {
+        if (! $user) {
             return sendErrorResponse('Customer not found', 404);
         }
 
         $validated = $request->validate([
             'name' => 'nullable|string',
-            'email' => 'nullable|email|unique:users,email,' . $user->id,
-            'phone' => 'nullable|unique:users,phone' . $user->id,
+            'email' => 'nullable|email|unique:users,email,'.$user->id,
+            'phone' => 'nullable|unique:users,phone'.$user->id,
             'nid' => 'nullable|string',
             'address' => 'nullable|string',
             'password' => 'nullable|string',
@@ -81,7 +80,7 @@ class CustomerController extends Controller
     {
         $user = User::role('customer')->find($id);
 
-        if (!$user) {
+        if (! $user) {
             return sendErrorResponse('Customer not found', 404);
         }
 
