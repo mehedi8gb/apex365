@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Http\Resources\CustomerResource;
+use App\Models\Customer;
 use App\Models\User;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -11,7 +12,7 @@ class CustomerController extends Controller
 {
     public function index(Request $request): JsonResponse
     {
-        $user = User::role('customer');
+        $user = User::query();
         $results = handleApiRequest($request, $user);
 
         return sendSuccessResponse('Customer records retrieved successfully', $results);
@@ -40,19 +41,19 @@ class CustomerController extends Controller
     // show function to show the data
     public function show($id): JsonResponse
     {
-        $user = User::role('customer')->find($id);
+        $user = User::find($id);
 
         if (! $user) {
             return sendErrorResponse('Customer not found', 404);
         }
 
-        return sendSuccessResponse('Customer record retrieved successfully', new CustomerResource($user));
+        return sendSuccessResponse('Customer record retrieved successfully', Customer::show($user));
     }
 
     // update function to update the data
     public function update(Request $request, $id): JsonResponse
     {
-        $user = User::role('customer')->find($id);
+        $user = User::find($id);
 
         if (! $user) {
             return sendErrorResponse('Customer not found', 404);
@@ -84,7 +85,7 @@ class CustomerController extends Controller
     // destroy function to delete the data
     public function destroy($id): JsonResponse
     {
-        $user = User::role('customer')->find($id);
+        $user = User::find($id);
 
         if (! $user) {
             return sendErrorResponse('Customer not found', 404);
