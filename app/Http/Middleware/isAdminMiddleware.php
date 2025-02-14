@@ -14,6 +14,9 @@ class isAdminMiddleware
             return $next($request);
         }
 
-        return sendErrorResponse('Permission denied', 403);
+        return response()->json([
+            'status' => 'false',
+            'message' => 'Permission denied',
+        ], 403);
     }
 }
