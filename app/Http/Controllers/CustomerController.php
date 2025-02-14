@@ -27,11 +27,12 @@ class CustomerController extends Controller
             'nid' => 'required|string',
             'address' => 'required|string',
             'password' => 'required|string',
+            'role' => 'required|string|in:customer,staff,admin',
         ]);
 
         $validated['password'] = bcrypt($validated['password']);
         $user = User::create($validated);
-        $user->assignRole('customer');
+        $user->assignRole($validated['role']);
 
         return sendSuccessResponse('Customer created successfully', CustomerResource::make($user));
     }
@@ -64,10 +65,15 @@ class CustomerController extends Controller
             'nid' => 'nullable|string',
             'address' => 'nullable|string',
             'password' => 'nullable|string',
+            'role' => 'nullable|string|in:customer,staff,admin',
         ]);
 
         if ($request->has('password')) {
             $validated['password'] = bcrypt($validated['password']);
+        }
+
+        if ($request->has('role')) {
+            $user->syncRoles($validated['role']);
         }
 
         $user->update($validated);
