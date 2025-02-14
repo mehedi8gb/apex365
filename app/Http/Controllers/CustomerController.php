@@ -59,11 +59,12 @@ class CustomerController extends Controller
         }
 
         $validated = $request->validate([
-            'name' => 'required|string',
-            'email' => 'required|email|unique:users,email,' . $user->id,
-            'phone' => 'required|string',
-            'nid' => 'required|string',
-            'address' => 'required|string',
+            'name' => 'nullable|string',
+            'email' => 'nullable|email|unique:users,email,' . $user->id,
+            'phone' => 'nullable|unique:users,phone' . $user->id,
+            'nid' => 'nullable|string',
+            'address' => 'nullable|string',
+            'password' => 'nullable|string',
         ]);
 
         if ($request->has('password')) {
