@@ -7,6 +7,7 @@ use App\Http\Controllers\ReferralController;
 use App\Http\Controllers\SpinnerController;
 use App\Http\Controllers\TransactionController;
 use App\Http\Controllers\WithdrawController;
+use App\Http\Middleware\isAdminMiddleware;
 use App\Http\Middleware\JwtMiddleware;
 use App\Http\Middleware\RefreshTokenMiddleware;
 use Illuminate\Support\Facades\Route;
@@ -41,7 +42,7 @@ Route::middleware([JwtMiddleware::class])->group(function () {
 
     Route::get('/withdraws', [WithdrawController::class, 'index']);
     Route::post('/withdraws', [WithdrawController::class, 'store']);
-    Route::post('/withdraws/{id}/approve', [WithdrawController::class, 'approve']);
+    Route::post('/withdraws/{id}/approve', [WithdrawController::class, 'approve'])->middleware([isAdminMiddleware::class]);
 
     Route::apiResource('spinner', SpinnerController::class);
     Route::apiResource('customers', CustomerController::class);
