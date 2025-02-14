@@ -45,7 +45,7 @@ Route::middleware([JwtMiddleware::class])->group(function () {
     Route::post('/withdraws/{id}/approve', [WithdrawController::class, 'approve'])->middleware([isAdminMiddleware::class]);
 
     Route::apiResource('spinner', SpinnerController::class);
-    Route::apiResource('users', CustomerController::class);
+    Route::apiResource('users', CustomerController::class)->middleware([isAdminMiddleware::class]);
     Route::patch('spinner-items', [SpinnerController::class, 'updateItems']);
     Route::post('spinner-items', [SpinnerController::class, 'storeItems']);
 });
