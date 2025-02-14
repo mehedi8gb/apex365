@@ -12,7 +12,6 @@ class CustomerController extends Controller
     public function index(Request $request): JsonResponse
     {
         $user = User::role('customer')
-            ->where('status', 'active')
             ->orderBy('created_at', 'desc')
             ->paginate(10);
 
