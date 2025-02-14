@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\CommissionController;
+use App\Http\Controllers\CustomerController;
 use App\Http\Controllers\ReferralController;
 use App\Http\Controllers\SpinnerController;
 use App\Http\Controllers\TransactionController;
@@ -43,6 +44,7 @@ Route::middleware([JwtMiddleware::class])->group(function () {
     Route::post('/withdraws/{id}/approve', [WithdrawController::class, 'approve']);
 
     Route::apiResource('spinner', SpinnerController::class);
+    Route::apiResource('customers', CustomerController::class);
     Route::patch('spinner-items', [SpinnerController::class, 'updateItems']);
     Route::post('spinner-items', [SpinnerController::class, 'storeItems']);
 });
