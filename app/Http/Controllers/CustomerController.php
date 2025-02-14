@@ -15,7 +15,7 @@ class CustomerController extends Controller
         $user = User::query();
         $results = handleApiRequest($request, $user);
 
-        return sendSuccessResponse('Customer records retrieved successfully', $results);
+        return sendSuccessResponse('Records retrieved successfully', $results);
     }
 
     // make store function to store the data
