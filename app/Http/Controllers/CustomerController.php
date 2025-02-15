@@ -53,6 +53,7 @@ class CustomerController extends Controller
     // update function to update the data
     public function update(Request $request, $id): JsonResponse
     {
+//        dd($request->all());
         $user = User::find($id);
 
         if (! $user) {
@@ -61,8 +62,8 @@ class CustomerController extends Controller
 
         $validated = $request->validate([
             'name' => 'nullable|string',
-            'email' => 'nullable|email|unique:users,email,'.$user->id,
-            'phone' => 'nullable|unique:users,phone'.$user->id,
+            'email' => 'nullable|email|unique:users,email,' . $user->id,
+            'phone' => 'nullable|unique:users,phone,' . $user->id,
             'nid' => 'nullable|string',
             'address' => 'nullable|string',
             'password' => 'nullable|string',

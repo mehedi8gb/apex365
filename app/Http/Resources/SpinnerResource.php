@@ -15,24 +15,33 @@ class SpinnerResource extends JsonResource
     public function toArray(Request $request): array
     {
         $todaySpinTime = now();
+
         $todaySpinTime->setTime(
             $this->spin_time->hour,
             $this->spin_time->minute,
             $this->spin_time->second
-        )->format('Y-m-d H:i:s');
+        );
+
+        // Convert 24-hour time to milliseconds
+        $spinTimeInMs = ($todaySpinTime->hour * 3600000) + // Hours to ms
+            ($todaySpinTime->minute * 60000) + // Minutes to ms
+            ($todaySpinTime->second * 1000);  // Seconds to ms
 
         return [
             'id' => $this->id,
             'rotation_point' => $this->rotation_point,
 
-            // Format time with AM/PM
-            'spin_time' => $this->spin_time->format('h:i:s A'),
+            // 12-hour format with AM/PM
+            'spin_time' => $todaySpinTime->format('h:i:s A'),
+
+            // 24-hour format
+            'spin_time_24h' => $todaySpinTime->format('H:i:s'),
 
             // Set today's date but keep the time from spin_time
-            'spin_time_with_today_date' => $todaySpinTime,
+            'spin_time_with_today_date' => $todaySpinTime->format('Y-m-d H:i:s'),
 
-            // Convert time to milliseconds without date
-            'spin_time_in_ms' => $todaySpinTime->timestamp * 1000,
+            // Convert time to milliseconds based on 24-hour format
+            'spin_time_in_ms' => $spinTimeInMs,
 
             'created_at' => $this->created_at,
         ];
