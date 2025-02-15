@@ -26,6 +26,8 @@ class SpinnerResource extends JsonResource
         $spinTimeInMs = ($todaySpinTime->hour * 3600000) + // Hours to ms
             ($todaySpinTime->minute * 60000) + // Minutes to ms
             ($todaySpinTime->second * 1000);  // Seconds to ms
+        // Get the complete milliseconds including the date
+        $spinTimeInMs = $todaySpinTime->timestamp * 1000;
 
         return [
             'id' => $this->id,
