@@ -256,3 +256,14 @@ function handleApiRequest(Request $request, Builder $query, array $with = []): a
     ];
 
 }
+
+/**
+ * Get the current authenticated user.
+ *
+ * @return bool
+ */
+
+function isAdmin(): bool
+{
+    return auth()->user()?->hasRole('admin');
+}
