@@ -14,16 +14,15 @@ use Illuminate\Support\Str;
 
 class ReferralHelper
 {
-    private static $referralUser;
+    private $referralUser;
+    private array $commissions = [];
 
-    private static $commissions = [];
-
-    public static function createReferralChain(User $user, $referrerAndCode): void
+    public function createReferralChain(User $user, $referrerAndCode): void
     {
         $currentReferrer = $referrerAndCode->user ?? User::find(1); // If no referrer, assign Admin (ID 1)
 
         // Ensure each referral entry is stored uniquely for the user
-        self::$referralUser = ReferralUser::create([
+        $this->referralUser = ReferralUser::create([
             'user_id' => $user->id,        // New user
             'referrer_id' => $currentReferrer->id, // Who referred this user
             'referral_code_id' => $referrerAndCode->id, // Referral code id
@@ -33,10 +32,10 @@ class ReferralHelper
     /**
      * @throws Exception
      */
-    public static function distributeReferralPoints(): void
+    public function distributeReferralPoints(): void
     {
         // Ensure the referral user and their referrer exist
-        if (! self::$referralUser || ! self::$referralUser->referrer || ! self::$referralUser->user) {
+        if (!$this->referralUser || !$this->referralUser->referrer || !$this->referralUser->user) {
             throw new Exception('Invalid referral user or referrer.');
         }
 
@@ -44,10 +43,10 @@ class ReferralHelper
         $commissionAmounts = config('commissions.levels'); // Commission amounts for levels 1 to 4
         $maxLevel = count($commissionAmounts); // Dynamically determine the max level
         $level = 1; // Start from level 1
-        $currentReferrer = self::$referralUser->referrer; // The first referrer in the chain
-        $currentUser = self::$referralUser->user; // The user who triggered the referral
+        $currentReferrer = $this->referralUser->referrer; // The first referrer in the chain
+        $currentUser = $this->referralUser->user; // The user who triggered the referral
 
-        self::$commissions[$level] = Commission::create([
+        $this->commissions[$level] = Commission::create([
             'user_id' => $currentUser->id, // The signed-up user getting commission
             'from_user_id' => $currentReferrer->id, // The referrer
             'level' => $level, // The level of the referral
@@ -59,17 +58,16 @@ class ReferralHelper
         // Traverse the referral chain up to the max level
         while ($currentReferrer && $level <= $maxLevel) {
             // Ensure the commission amount exists for the current level
-            if (! isset($commissionAmounts[$level])) {
+            if (!isset($commissionAmounts[$level])) {
                 throw new Exception("Commission amount not defined for level $level.");
             }
-            $amount = $commissionAmounts[$level]; // Get the commission amount for the current level
 
             // Create a commission record for the current referrer
-            self::$commissions[$level] = Commission::create([
+            $this->commissions[$level] = Commission::create([
                 'user_id' => $currentReferrer->id, // The referrer receiving the commission
                 'from_user_id' => $currentUser->id, // The user who triggered the commission
                 'level' => $level, // The level of the referral
-                'amount' => $amount, // The commission amount
+                'amount' => $commissionAmounts[$level], // The commission amount
             ]);
 
             // Move to the next referrer in the chain
@@ -85,9 +83,9 @@ class ReferralHelper
         }
     }
 
-    public static function updateLeaderboard(): void
+    public function updateLeaderboard(): void
     {
-        foreach (self::$commissions as $commission) {
+        foreach ($this->commissions as $commission) {
             $commissionData = DB::table('commissions')
                 ->selectRaw('user_id, COUNT(from_user_id) AS total_nodes, SUM(amount) AS total_commissions')
                 ->where('user_id', $commission->user_id)
@@ -102,7 +100,6 @@ class ReferralHelper
                 ->first();
 
             if ($commissionData) {
-
                 Account::updateOrCreate([
                     'user_id' => $commissionData->user_id,
                 ], [
@@ -121,7 +118,7 @@ class ReferralHelper
         }
     }
 
-    public static function generateReferralCode($user)
+    public function generateReferralCode(User $user): string
     {
         $referralCode = ReferralCode::create([
             'code' => Str::random(8),
