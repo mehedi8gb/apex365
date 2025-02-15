@@ -53,7 +53,6 @@ class CustomerController extends Controller
     // update function to update the data
     public function update(Request $request, $id): JsonResponse
     {
-//        dd($request->all());
         $user = User::find($id);
 
         if (! $user) {
