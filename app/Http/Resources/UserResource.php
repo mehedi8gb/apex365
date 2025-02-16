@@ -7,7 +7,7 @@ use Illuminate\Http\Resources\Json\JsonResource;
 
 class UserResource extends JsonResource
 {
-    protected $commissions;
+    protected mixed $commissions;
 
     public function __construct($resource, $commissions = null)
     {
@@ -22,20 +22,21 @@ class UserResource extends JsonResource
             'name' => $this->name,
             'email' => $this->email,
             'phone' => $this->phone,
-            'balance' => optional($this->account)->balance,
+            'balance' => $this->whenLoaded('account', fn() => $this->account->balance),
             'nid' => $this->nid,
             'address' => $this->address,
-            'referral_code' => optional($this->referralCode?->referralCode)?->code ?? ReferralCode::where('user_id', $this->id)->first()->code,
+            'referral_code' => $this->theReferralCode->code,
             'leaderboard' => new LeaderboardResource($this->whenLoaded('leaderboard')),
             'commissions' => CommissionResource::collection($this->commissions),
-            'pagination' => [
-                'total' => $this->commissions->total(),
-                'per_page' => $this->commissions->perPage(),
-                'current_page' => $this->commissions->currentPage(),
-                'last_page' => $this->commissions->lastPage(),
-                'next_page_url' => $this->commissions->nextPageUrl(),
-                'prev_page_url' => $this->commissions->previousPageUrl(),
-            ],
+            'pagination' => $this->when($this->commissions, function () {
+                return [
+                    'total' => $this->commissions->total(),
+                    'per_page' => $this->commissions->perPage(),
+                    'current_page' => $this->commissions->currentPage(),
+                    'last_page' => $this->commissions->lastPage(),
+                ];
+            }),
         ];
     }
 }
+
