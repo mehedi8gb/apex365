@@ -1,4 +1,5 @@
 <?php
+
 namespace App\Http\Controllers;
 
 use App\Http\Resources\WithdrawResource;
@@ -10,13 +11,19 @@ use Illuminate\Support\Facades\DB;
 
 class WithdrawController extends Controller
 {
-    public function index(): JsonResponse
+    public function index(Request $request): JsonResponse
     {
-        $withdraws = Withdraw::where('user_id', auth()->id())->latest()->get();
+        $withdraws = Withdraw::query();
+
+        if (! isAdmin()) {
+            $withdraws->where('user_id', auth()->id());
+        }
+
+        $results = handleApiRequest($request, $withdraws);
 
         return sendSuccessResponse(
             'Withdraw requests retrieved successfully',
-            WithdrawResource::collection($withdraws)
+            $results
         );
     }
 
@@ -29,7 +36,7 @@ class WithdrawController extends Controller
         ]);
 
         $account = Account::where('user_id', auth()->id())->first();
-        if (!$account || $account->balance < $validatedData['amount']) {
+        if (! $account || $account->balance < $validatedData['amount']) {
             return sendErrorResponse('Insufficient balance', 400);
         }
 
