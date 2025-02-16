@@ -129,7 +129,7 @@ class ReferralHelper
                         ->sum('amount');
 
                     // Use INSERT ... ON DUPLICATE KEY UPDATE for atomic operation
-                    DB::table('accounts')->updateOrCreate(
+                    (new Account)->updateOrCreate(
                         [
                             'user_id' => $stats->user_id,
                             'balance' => $stats->total_commissions - ($withdrawn ?? 0),
@@ -138,7 +138,7 @@ class ReferralHelper
                     );
 
                     // Update leaderboard using insertOrUpdate for atomicity
-                    DB::table('leaderboards')->updateOrCreate(
+                    (new Leaderboard)->updateOrCreate(
                         [
                             'user_id' => $stats->user_id,
                             'total_commissions' => $stats->total_commissions,
