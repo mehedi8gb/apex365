@@ -21,9 +21,8 @@ class CustomerResource extends JsonResource
             'phone' => $this->phone,
             'nid' => $this->nid,
             'address' => $this->address,
-            'points' => $this->points,
-            'created_at' => $this->created_at->toDateTimeString(),
-            'updated_at' => $this->updated_at->toDateTimeString(),
+            'balance' => $this->account?->balance,
+            'created_at' => $this->created_at->format('Y-m-d H:i A'),
         ];
     }
 }
