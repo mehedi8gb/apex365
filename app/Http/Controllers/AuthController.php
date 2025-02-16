@@ -3,7 +3,6 @@
 namespace App\Http\Controllers;
 
 use App\Helpers\ReferralHelper;
-use App\Http\Resources\CommissionResource;
 use App\Http\Resources\UserResource;
 use App\Mail\OTPMail;
 use App\Models\Commission;
@@ -68,7 +67,6 @@ class AuthController extends Controller
 
             // Assign the role to the user
             $user->assignRole('customer');
-
 
             if ($request->filled('email')) {
                 $credentials = $request->only(['email', 'password']);
@@ -287,15 +285,20 @@ class AuthController extends Controller
 
     public function me(Request $request): JsonResponse
     {
-        $user = auth()->user()->load([
+        // Fetch the user directly with eager loading to minimize queries
+        $user = User::with([
             'account:id,user_id,balance',
-            'leaderboard:id,user_id,total_nodes,total_commissions',
-            'referralUsers:id,user_id,referrer_id',
+            'leaderboard:user_id,total_nodes,total_commissions',
             'theReferralCode:id,user_id,code',
-        ])->loadCount('commissions');
+        ])->withCount('commissions')
+            ->find(auth()->id()); // Retrieve the authenticated user by ID
 
-        // Fetch paginated commissions separately (avoiding extra queries in UserResource)
-        $commissions = Commission::where('user_id', $user->id)
+        if (! $user) {
+            return response()->json(['message' => 'User not found'], 404);
+        }
+
+        // Fetch paginated commissions separately
+        $commissions = Commission::with('fromUser:id,name')->where('user_id', $user->id)
             ->latest()
             ->paginate(15);
 
@@ -303,7 +306,6 @@ class AuthController extends Controller
             'user' => new UserResource($user, $commissions),
         ]);
     }
-
 
     private function validatePhone($phone): false|string
     {
