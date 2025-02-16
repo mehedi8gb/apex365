@@ -159,9 +159,15 @@ function handleApiRequest(Request $request, Builder $query, array $with = []): a
         $query->with($with);
     }
 
+    // Exclude from the query
+    if ($request->query('exclude')) {
+        $exclude = explode(',', $request->query('exclude'));
+        $query->where($exclude[0], '!=', $exclude[1]);
+    }
+
     // Apply filters
     foreach ($request->query() as $key => $value) {
-        if (!in_array($key, ['page', 'limit', 'searchTerm', 'sortBy', 'sortDirection', 'select', 'where'])) {
+        if (!in_array($key, ['page', 'limit', 'searchTerm', 'sortBy', 'sortDirection', 'select', 'where', 'exclude', 'company'])) {
             $query->where($key, $value);
         }
     }
@@ -255,4 +261,15 @@ function handleApiRequest(Request $request, Builder $query, array $with = []): a
         'result' => $result,
     ];
 
+}
+
+/**
+ * Get the current authenticated user.
+ *
+ * @return bool
+ */
+
+function isAdmin(): bool
+{
+    return auth()->user()?->hasRole('admin');
 }

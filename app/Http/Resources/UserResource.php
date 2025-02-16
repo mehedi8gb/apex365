@@ -20,10 +20,10 @@ class UserResource extends JsonResource
             'name' => $this->name,
             'email' => $this->email,
             'phone' => $this->phone,
-            'balance' => $this->account->balance,
+            'balance' => $this?->account?->balance,
             'nid' => $this->nid,
             'address' => $this->address,
-            'referral_code' => $referralCode->code,
+            'referral_code' => $referralCode?->code,
 //            'referral_chain' => ReferralUserResource::collection($this->referralUsers),  // assuming relationship
             'leaderboard' => new LeaderboardResource($this->leaderboard),  // assuming relationship
             'commissions' => CommissionResource::collection($this->commissions),
