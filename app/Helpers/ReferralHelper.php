@@ -2,7 +2,12 @@
 
 namespace App\Helpers;
 
-use App\Models\{Account, Commission, Leaderboard, ReferralCode, ReferralUser, User};
+use App\Models\Account;
+use App\Models\Commission;
+use App\Models\Leaderboard;
+use App\Models\ReferralCode;
+use App\Models\ReferralUser;
+use App\Models\User;
 use Exception;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
@@ -10,22 +15,34 @@ use Illuminate\Support\Str;
 class ReferralHelper
 {
     private $referralUser;
+
     private $commissions = [];
+
     private $currentUser;
 
     public function createReferralChain(User $user, $referrerAndCode): void
     {
-        $this->currentUser = $user;
-        $this->referralUser = ReferralUser::create([
-            'user_id' => $user->id,
-            'referrer_id' => $referrerAndCode->user->id ?? 1,
-            'referral_code_id' => $referrerAndCode->id,
-        ]);
+        DB::beginTransaction();
+        try {
+            $this->currentUser = $user;
+            $this->referralUser = ReferralUser::create([
+                'user_id' => $user->id,
+                'referrer_id' => $referrerAndCode->user->id ?? 1,
+                'referral_code_id' => $referrerAndCode->id,
+            ]);
+            DB::commit();
+        } catch (Exception $e) {
+            DB::rollBack();
+            throw $e;
+        }
     }
 
+    /**
+     * @throws Exception
+     */
     public function distributeReferralPoints(): void
     {
-        if (!$this->referralUser?->referrer || !$this->referralUser?->user) {
+        if (! $this->referralUser?->referrer || ! $this->referralUser?->user) {
             throw new Exception('Invalid referral user or referrer.');
         }
 
@@ -40,7 +57,7 @@ class ReferralHelper
             // Process higher levels
             $level = 2;
             while ($currentReferrer && $level <= count($commissionAmounts)) {
-                if (!isset($commissionAmounts[$level])) {
+                if (! isset($commissionAmounts[$level])) {
                     throw new Exception("Commission amount not defined for level $level.");
                 }
 
@@ -92,8 +109,9 @@ class ReferralHelper
                     ->groupBy('user_id')
                     ->first();
 
-                if (!$stats) {
+                if (! $stats) {
                     DB::commit();
+
                     continue;
                 }
 
@@ -137,10 +155,19 @@ class ReferralHelper
 
     public function generateReferralCode(User $user): string
     {
-        return ReferralCode::create([
-            'code' => Str::random(8),
-            'type' => 'user',
-            'user_id' => $user->id,
-        ])->code;
+        DB::beginTransaction();
+        try {
+            $referralCode = ReferralCode::create([
+                'code' => Str::random(8),
+                'type' => 'user',
+                'user_id' => $user->id,
+            ])->code;
+            DB::commit();
+
+            return $referralCode;
+        } catch (Exception $e) {
+            DB::rollBack();
+            throw $e;
+        }
     }
 }
