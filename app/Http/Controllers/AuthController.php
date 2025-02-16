@@ -291,31 +291,19 @@ class AuthController extends Controller
             'account',
             'leaderboard',
             'referralCode',
+            'referralUsers',
             'commissions',
-            'roles',
-            'permissions',
         ]);
 
-        // Paginate commissions separately
+        // Fetch paginated commissions separately
         $commissions = $user->commissions()->latest()->paginate(15);
 
         $data = [
-            'user' => new UserResource($user),
-            'commissions' => CommissionResource::collection($commissions), // Paginated response
-            'pagination' => [
-                'total' => $commissions->total(),
-                'per_page' => $commissions->perPage(),
-                'current_page' => $commissions->currentPage(),
-                'last_page' => $commissions->lastPage(),
-                'next_page_url' => $commissions->nextPageUrl(),
-                'prev_page_url' => $commissions->previousPageUrl(),
-            ]
+            'user' => new UserResource($user, $commissions)
         ];
 
         return sendSuccessResponse('User details', $data);
     }
-
-
 
     private function validatePhone($phone): false|string
     {
