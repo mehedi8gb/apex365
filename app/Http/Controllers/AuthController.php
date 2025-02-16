@@ -5,7 +5,6 @@ namespace App\Http\Controllers;
 use App\Helpers\ReferralHelper;
 use App\Http\Resources\UserResource;
 use App\Mail\OTPMail;
-use App\Models\Leaderboard;
 use App\Models\Referral;
 use App\Models\ReferralCode;
 use App\Models\User;
@@ -53,17 +52,14 @@ class AuthController extends Controller
                 'password' => Hash::make($request->password),
             ]);
 
-            // 4. Create the referral chain and link user to referrers
-            ReferralHelper::createReferralChain($user, $referrerAndCode);
+            // In your registration method:
+            $referralHelper = new ReferralHelper;
 
-            // 5. Distribute points based on the referral chain
-            ReferralHelper::distributeReferralPoints();
-
-            // 6. Update leaderboard for each referrer (based on points)
-            ReferralHelper::updateLeaderboard();
-
-            // Generate a referral code for the user
-            ReferralHelper::generateReferralCode($user);
+            // Use the same method calls, just on the instance
+            $referralHelper->createReferralChain($user, $referrerAndCode);
+            $referralHelper->distributeReferralPoints();
+            $referralHelper->updateLeaderboard();
+            $referralHelper->generateReferralCode($user);
 
             // Assign the role to the user
             $user->assignRole('customer');
@@ -168,6 +164,7 @@ class AuthController extends Controller
             // Send OTP via SMS
             $this->sendSMS($otp);
         }
+
         return sendSuccessResponse('OTP sent successfully');
     }
 

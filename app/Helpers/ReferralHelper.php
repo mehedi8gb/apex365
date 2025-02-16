@@ -2,133 +2,136 @@
 
 namespace App\Helpers;
 
-use App\Models\Account;
-use App\Models\Commission;
-use App\Models\Leaderboard;
-use App\Models\ReferralCode;
-use App\Models\ReferralUser;
-use App\Models\User;
+use App\Models\{Account, Commission, Leaderboard, ReferralCode, ReferralUser, User};
 use Exception;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
 
 class ReferralHelper
 {
-    private static $referralUser;
+    private $referralUser;
+    private array $commissions = [];
+    private $currentUser;
 
-    private static $commissions = [];
-
-    public static function createReferralChain(User $user, $referrerAndCode): void
+    public function createReferralChain(User $user, $referrerAndCode): void
     {
-        $currentReferrer = $referrerAndCode->user ?? User::find(1); // If no referrer, assign Admin (ID 1)
-
-        // Ensure each referral entry is stored uniquely for the user
-        self::$referralUser = ReferralUser::create([
-            'user_id' => $user->id,        // New user
-            'referrer_id' => $currentReferrer->id, // Who referred this user
-            'referral_code_id' => $referrerAndCode->id, // Referral code id
+        $this->currentUser = $user;
+        $this->referralUser = ReferralUser::create([
+            'user_id' => $user->id,
+            'referrer_id' => $referrerAndCode->user->id ?? 1,
+            'referral_code_id' => $referrerAndCode->id,
         ]);
     }
 
-    /**
-     * @throws Exception
-     */
-    public static function distributeReferralPoints(): void
+    public function distributeReferralPoints(): void
     {
-        // Ensure the referral user and their referrer exist
-        if (! self::$referralUser || ! self::$referralUser->referrer || ! self::$referralUser->user) {
+        if (!$this->referralUser?->referrer || !$this->referralUser?->user) {
             throw new Exception('Invalid referral user or referrer.');
         }
 
-        // Points distribution per level
-        $commissionAmounts = config('commissions.levels'); // Commission amounts for levels 1 to 4
-        $maxLevel = count($commissionAmounts); // Dynamically determine the max level
-        $level = 1; // Start from level 1
-        $currentReferrer = self::$referralUser->referrer; // The first referrer in the chain
-        $currentUser = self::$referralUser->user; // The user who triggered the referral
+        DB::beginTransaction();
+        try {
+            $commissionAmounts = config('commissions.levels');
+            $currentReferrer = $this->referralUser->referrer;
 
-        self::$commissions[$level] = Commission::create([
-            'user_id' => $currentUser->id, // The signed-up user getting commission
-            'from_user_id' => $currentReferrer->id, // The referrer
-            'level' => $level, // The level of the referral
-            'amount' => $commissionAmounts[$level], // The commission amount
+            // First level commission
+            $this->createCommission(1, $this->currentUser, $currentReferrer, $commissionAmounts);
+
+            // Process higher levels
+            $level = 2;
+            while ($currentReferrer && $level <= count($commissionAmounts)) {
+                if (!isset($commissionAmounts[$level])) {
+                    throw new Exception("Commission amount not defined for level $level.");
+                }
+
+                $this->createCommission($level, $currentReferrer, $this->currentUser, $commissionAmounts);
+
+                $nextReferrer = ReferralUser::where('user_id', $currentReferrer->id)->first();
+                $currentReferrer = $nextReferrer?->referrer;
+
+                if ($currentReferrer?->id === $this->currentUser->id) {
+                    throw new Exception('Infinite loop detected in the referral chain.');
+                }
+
+                $level++;
+            }
+
+            DB::commit();
+        } catch (Exception $e) {
+            DB::rollBack();
+            throw $e;
+        }
+    }
+
+    private function createCommission(int $level, User $user, User $fromUser, array $amounts): void
+    {
+        $this->commissions[$level] = Commission::create([
+            'user_id' => $user->id,
+            'from_user_id' => $fromUser->id,
+            'level' => $level,
+            'amount' => $amounts[$level],
         ]);
+    }
 
-        $level = 2;
+    public function updateLeaderboard(): void
+    {
+        foreach ($this->commissions as $commission) {
+            DB::beginTransaction();
+            try {
+                // Lock the account record for update
+                $account = Account::where('user_id', $commission->user_id)
+                    ->lockForUpdate()
+                    ->first();
 
-        // Traverse the referral chain up to the max level
-        while ($currentReferrer && $level <= $maxLevel) {
-            // Ensure the commission amount exists for the current level
-            if (! isset($commissionAmounts[$level])) {
-                throw new Exception("Commission amount not defined for level $level.");
-            }
-            $amount = $commissionAmounts[$level]; // Get the commission amount for the current level
+                $stats = DB::table('commissions')
+                    ->selectRaw('
+                        user_id,
+                        COUNT(from_user_id) AS total_nodes,
+                        SUM(amount) AS total_commissions
+                    ')
+                    ->where('user_id', $commission->user_id)
+                    ->groupBy('user_id')
+                    ->first();
 
-            // Create a commission record for the current referrer
-            self::$commissions[$level] = Commission::create([
-                'user_id' => $currentReferrer->id, // The referrer receiving the commission
-                'from_user_id' => $currentUser->id, // The user who triggered the commission
-                'level' => $level, // The level of the referral
-                'amount' => $amount, // The commission amount
-            ]);
+                $withdrawn = DB::table('withdraws')
+                    ->where('user_id', $commission->user_id)
+                    ->where('status', 'paid')
+                    ->sum('amount');
 
-            // Move to the next referrer in the chain
-            $nextReferrer = ReferralUser::where('user_id', $currentReferrer->id)->first();
-            $currentReferrer = $nextReferrer->referrer ?? null; // The next referrer in the chain
+                if ($stats) {
+                    $this->updateUserStats($stats, $withdrawn);
+                }
 
-            $level++;
-
-            // Prevent infinite loops by breaking if the same referrer is encountered again
-            if ($currentReferrer && $currentReferrer->id === $currentUser->id) {
-                throw new Exception('Infinite loop detected in the referral chain.');
+                DB::commit();
+            } catch (Exception $e) {
+                DB::rollBack();
+                throw $e;
             }
         }
     }
 
-    public static function updateLeaderboard(): void
+    private function updateUserStats($stats, $withdrawn): void
     {
-        foreach (self::$commissions as $commission) {
-            $commissionData = DB::table('commissions')
-                ->selectRaw('user_id, COUNT(from_user_id) AS total_nodes, SUM(amount) AS total_commissions')
-                ->where('user_id', $commission->user_id)
-                ->groupBy('user_id')
-                ->first();
+        Account::updateOrCreate(
+            ['user_id' => $stats->user_id],
+            ['balance' => DB::raw('balance + ' . ($stats->total_commissions - ($withdrawn ?? 0)))],
+        );
 
-            $withdrawnAmount = DB::table('withdraws')
-                ->selectRaw('SUM(amount) AS total_withdrawn')
-                ->where('user_id', $commission->user_id)
-                ->where('status', 'paid')
-                ->groupBy('user_id')
-                ->first();
-
-            if ($commissionData) {
-
-                Account::updateOrCreate([
-                    'user_id' => $commissionData->user_id,
-                ], [
-                    'balance' => $commissionData->total_commissions - ($withdrawnAmount->total_withdrawn ?? 0),
-                ]);
-
-                // Insert or update the leaderboard entry
-                Leaderboard::updateOrCreate(
-                    ['user_id' => $commissionData->user_id], // Find existing record by user_id
-                    [
-                        'total_commissions' => $commissionData->total_commissions ?? 0,
-                        'total_nodes' => $commissionData->total_nodes ?? 0,
-                    ]
-                );
-            }
-        }
+        Leaderboard::updateOrCreate(
+            ['user_id' => $stats->user_id],
+            [
+                'total_commissions' => $stats->total_commissions ?? 0,
+                'total_nodes' => $stats->total_nodes ?? 0,
+            ]
+        );
     }
 
-    public static function generateReferralCode($user)
+    public function generateReferralCode(User $user): string
     {
-        $referralCode = ReferralCode::create([
+        return ReferralCode::create([
             'code' => Str::random(8),
             'type' => 'user',
             'user_id' => $user->id,
-        ]);
-
-        return $referralCode->code;
+        ])->code;
     }
 }
