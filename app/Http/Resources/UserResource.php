@@ -2,6 +2,7 @@
 
 namespace App\Http\Resources;
 
+use App\Models\ReferralCode;
 use Illuminate\Http\Resources\Json\JsonResource;
 
 class UserResource extends JsonResource
@@ -24,7 +25,7 @@ class UserResource extends JsonResource
             'balance' => optional($this->account)->balance,
             'nid' => $this->nid,
             'address' => $this->address,
-            'referral_code' => optional($this->referralCode?->referralCode)?->code ?? $this->referralCode?->code,
+            'referral_code' => optional($this->referralCode?->referralCode)?->code ?? ReferralCode::where('user_id', $this->id)->first()->code,
             'leaderboard' => new LeaderboardResource($this->whenLoaded('leaderboard')),
             'commissions' => CommissionResource::collection($this->commissions),
             'pagination' => [
