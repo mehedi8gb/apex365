@@ -24,7 +24,7 @@ class UserResource extends JsonResource
             'balance' => optional($this->account)->balance,
             'nid' => $this->nid,
             'address' => $this->address,
-            'referral_code' => optional($this->referralCode->referralCode)->code,
+            'referral_code' => optional($this->referralCode?->referralCode)?->code,
             'leaderboard' => new LeaderboardResource($this->whenLoaded('leaderboard')),
             'commissions' => CommissionResource::collection($this->commissions),
             'pagination' => [
