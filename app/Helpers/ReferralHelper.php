@@ -101,50 +101,53 @@ class ReferralHelper
             $success = false;
 
             while (!$success && $retries < self::MAX_RETRIES) {
-                try {
                     DB::beginTransaction();
-
-                    // Calculate stats with a shared lock
+                try {
+                    // Get commission stats
                     $stats = DB::table('commissions')
                         ->selectRaw('
-                            user_id,
-                            COUNT(from_user_id) AS total_nodes,
-                            SUM(amount) AS total_commissions
-                        ')
+                        user_id,
+                        COUNT(from_user_id) AS total_nodes,
+                        SUM(amount) AS total_commissions
+                    ')
                         ->where('user_id', $commission->user_id)
                         ->groupBy('user_id')
-                        ->sharedLock()
                         ->first();
 
-                    if (!$stats) {
+                    if (! $stats) {
                         DB::commit();
+
                         continue;
                     }
 
-                    // Get withdrawn amount with a shared lock
+                    // Get withdrawn amount
                     $withdrawn = DB::table('withdraws')
                         ->where('user_id', $commission->user_id)
                         ->where('status', 'paid')
-                        ->sharedLock()
                         ->sum('amount');
 
-                    // Use INSERT ... ON DUPLICATE KEY UPDATE for atomic operation
-                    (new Account)->updateOrCreate(
-                        [
+                    // Lock and update account
+                    $account = Account::where('user_id', $commission->user_id)
+                        ->lockForUpdate()
+                        ->first();
+
+                    if ($account) {
+                        $account->balance = $stats->total_commissions - ($withdrawn ?? 0);
+                        $account->save();
+                    } else {
+                        Account::create([
                             'user_id' => $stats->user_id,
                             'balance' => $stats->total_commissions - ($withdrawn ?? 0),
-                        ],
-                        ['balance']
-                    );
+                        ]);
+                    }
 
-                    // Update leaderboard using insertOrUpdate for atomicity
-                    (new Leaderboard)->updateOrCreate(
+                    // Update leaderboard
+                    Leaderboard::updateOrCreate(
+                        ['user_id' => $stats->user_id],
                         [
-                            'user_id' => $stats->user_id,
                             'total_commissions' => $stats->total_commissions,
                             'total_nodes' => $stats->total_nodes,
-                        ],
-                        ['total_commissions', 'total_nodes']
+                        ]
                     );
 
                     DB::commit();
