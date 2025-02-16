@@ -4,10 +4,10 @@ use App\Http\Resources\DefaultResource;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Illuminate\Http\JsonResponse;
+use Illuminate\Http\Request;
 use Illuminate\Pagination\LengthAwarePaginator;
 use Illuminate\Support\Facades\Schema;
 use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
-use Illuminate\Http\Request;
 
 function getResourceClass($model): string
 {
@@ -25,24 +25,18 @@ function getResourceClass($model): string
     // Fallback to a default resource class if not found
     return DefaultResource::class;
 }
+
 /**
  * Convert boolean status to 1/0.
- *
- * @param mixed $status
- * @return int
  */
 function convertStatus(mixed $status): int
 {
     return $status ? 1 : 0;
 }
+
 /**
  * Perform a deep merge of two arrays, allowing forced replacement with a "forceReplace" value.
  * Includes handling for array deletions based on the forceReplace flag.
- *
- * @param array $original
- * @param array $new
- * @param string $forceReplaceIndicator
- * @return array
  */
 function deepMerge(array $original, array $new, string $forceReplaceIndicator = 'forceReplace'): array
 {
@@ -51,6 +45,7 @@ function deepMerge(array $original, array $new, string $forceReplaceIndicator = 
         if ($value === $forceReplaceIndicator) {
             // Remove the key from the original array
             unset($original[$key]);
+
             continue;
         }
 
@@ -59,7 +54,7 @@ function deepMerge(array $original, array $new, string $forceReplaceIndicator = 
             continue;
         }
 
-        if (is_array($value) && isset($original[$key]) && is_array($original[$key])){
+        if (is_array($value) && isset($original[$key]) && is_array($original[$key])) {
             // Recursively merge arrays
             $original[$key] = deepMerge($original[$key], $value, $forceReplaceIndicator);
         } else {
@@ -70,12 +65,9 @@ function deepMerge(array $original, array $new, string $forceReplaceIndicator = 
 
     return $original;
 }
+
 /**
  * Process nested arrays by removing missing indexes and merging incoming data.
- *
- * @param array $existingArray
- * @param array $payloadArray
- * @return array
  */
 function processNestedArray(array $existingArray, array $payloadArray): array
 {
@@ -84,22 +76,19 @@ function processNestedArray(array $existingArray, array $payloadArray): array
 
     // Filter existing array to retain only indexes present in the payload
     $filteredArray = collect($existingArray)
-        ->filter(fn($item) => $payloadMap->has($item['id']))
-        ->map(fn($item) => array_merge($item, $payloadMap->get($item['id'])))
+        ->filter(fn ($item) => $payloadMap->has($item['id']))
+        ->map(fn ($item) => array_merge($item, $payloadMap->get($item['id'])))
         ->values()
         ->toArray();
 
     // if array fragment same to same then remove 1 index
-    return array_map("unserialize", array_unique(array_map("serialize", $filteredArray)));
+    return array_map('unserialize', array_unique(array_map('serialize', $filteredArray)));
 }
+
 /**
  * Format error response.
- *
- * @param NotFoundHttpException|ModelNotFoundException|Exception|string $e
- * @param int $statusCode
- * @return JsonResponse
  */
-function sendErrorResponse( NotFoundHttpException|ModelNotFoundException|Exception|string $e, int $statusCode,): JsonResponse
+function sendErrorResponse(NotFoundHttpException|ModelNotFoundException|Exception|string $e, int $statusCode): JsonResponse
 {
     if ($e instanceof ModelNotFoundException) {
         return response()->json([
@@ -119,34 +108,27 @@ function sendErrorResponse( NotFoundHttpException|ModelNotFoundException|Excepti
         'message' => $e instanceof Exception ? $e->getMessage() : $e,
     ], $statusCode);
 }
+
 /**
  * Format success response.
- *
- * @param string $message
- * @param mixed|null $data
- * @param int $statusCode
- * @return JsonResponse
  */
 function sendSuccessResponse(string $message, mixed $data = null, int $statusCode = 200): JsonResponse
 {
     if ($data === null) {
-        $data = new \stdClass();
+        $data = new \stdClass;
     }
+
     return response()->json([
         'success' => true,
         'message' => $message,
         'data' => $data,
     ], $statusCode);
 }
+
 /**
  * Handle API request.
- *
- * @param Request $request
- * @param Builder $query
- * @param array $with
- * @return array
  */
-function handleApiRequest(Request $request, Builder $query, array $with = []): array
+function handleApiRequest(Request $request, Builder $query, array $with = [], $resourceClass = null): array
 {
     $page = $request->query('page', 1);
     $limit = $request->query('limit', 10);
@@ -155,7 +137,7 @@ function handleApiRequest(Request $request, Builder $query, array $with = []): a
     $selectFields = $request->query('select');
 
     // Eager load relationships
-    if (!empty($with)) {
+    if (! empty($with)) {
         $query->with($with);
     }
 
@@ -167,7 +149,7 @@ function handleApiRequest(Request $request, Builder $query, array $with = []): a
 
     // Apply filters
     foreach ($request->query() as $key => $value) {
-        if (!in_array($key, ['page', 'limit', 'searchTerm', 'sortBy', 'sortDirection', 'select', 'where', 'exclude', 'company'])) {
+        if (! in_array($key, ['page', 'limit', 'searchTerm', 'sortBy', 'sortDirection', 'select', 'where', 'exclude', 'company'])) {
             $query->where($key, $value);
         }
     }
@@ -184,18 +166,18 @@ function handleApiRequest(Request $request, Builder $query, array $with = []): a
         $relationParts = [];
 
         // Extract multiple 'with:' relations dynamically
-        while (!empty($parts) && str_starts_with($parts[0], 'with:')) {
+        while (! empty($parts) && str_starts_with($parts[0], 'with:')) {
             $relationParts[] = str_replace('with:', '', array_shift($parts));
         }
 
         $column = $parts[0] ?? null;
         $value = $parts[1] ?? null;
 
-        if (!$column || $value === null) {
+        if (! $column || $value === null) {
             return ['error' => 'Invalid where format. Use where=column,value or where=with:relation,column,value'];
         }
 
-        if (!empty($relationParts)) {
+        if (! empty($relationParts)) {
             // Handle nested relational filtering
             $query->whereHas(implode('.', $relationParts), function ($relationQuery) use ($column, $value) {
                 $relationQuery->where($column, $value);
@@ -205,8 +187,6 @@ function handleApiRequest(Request $request, Builder $query, array $with = []): a
             $query->where($column, $value);
         }
     }
-
-
 
     // Apply search
     $searchTerm = $request->query('searchTerm');
@@ -240,7 +220,6 @@ function handleApiRequest(Request $request, Builder $query, array $with = []): a
         $total = $results->total();
     }
 
-
     // Meta information for pagination
     $meta = [
         'page' => $page,
@@ -249,8 +228,10 @@ function handleApiRequest(Request $request, Builder $query, array $with = []): a
         'totalPage' => $limit === 'all' ? 1 : $results->lastPage(),
     ];
 
+    if (!$resourceClass) {
+        $resourceClass = getResourceClass($query->getModel());
+    }
     // Apply dynamic resource transformation
-    $resourceClass = getResourceClass($query->getModel());
 
     $result = $request->query('select') !== null
         ? ($results instanceof LengthAwarePaginator ? $results->items() : $results->toArray())
@@ -265,10 +246,7 @@ function handleApiRequest(Request $request, Builder $query, array $with = []): a
 
 /**
  * Get the current authenticated user.
- *
- * @return bool
  */
-
 function isAdmin(): bool
 {
     return auth()->user()?->hasRole('admin');

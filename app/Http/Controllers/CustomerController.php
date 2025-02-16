@@ -3,7 +3,6 @@
 namespace App\Http\Controllers;
 
 use App\Http\Resources\CustomerResource;
-use App\Models\Customer;
 use App\Models\User;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -13,7 +12,12 @@ class CustomerController extends Controller
     public function index(Request $request): JsonResponse
     {
         $user = User::query();
-        $results = handleApiRequest($request, $user);
+        $results = handleApiRequest($request, $user, [
+            'account',
+            'leaderboard',
+            'referralCode',
+            'commissions'
+        ], CustomerResource::class);
 
         return sendSuccessResponse('Records retrieved successfully', $results);
     }
@@ -35,7 +39,7 @@ class CustomerController extends Controller
         $user = User::create($validated);
         $user->assignRole($validated['role']);
 
-        return sendSuccessResponse('Customer created successfully', CustomerResource::make($user));
+        return sendSuccessResponse('Records created successfully', CustomerResource::make($user));
     }
 
     // show function to show the data
@@ -47,7 +51,7 @@ class CustomerController extends Controller
             return sendErrorResponse('Customer not found', 404);
         }
 
-        return sendSuccessResponse('Customer record retrieved successfully', Customer::show($user));
+        return sendSuccessResponse('Records retrieved successfully', CustomerResource::make($user));
     }
 
     // update function to update the data
@@ -56,7 +60,7 @@ class CustomerController extends Controller
         $user = User::find($id);
 
         if (! $user) {
-            return sendErrorResponse('Customer not found', 404);
+            return sendErrorResponse('Record not found', 404);
         }
 
         $validated = $request->validate([
@@ -79,7 +83,7 @@ class CustomerController extends Controller
 
         $user->update($validated);
 
-        return sendSuccessResponse('Customer record updated successfully', new CustomerResource($user));
+        return sendSuccessResponse('Record updated successfully', new CustomerResource($user));
     }
 
     // destroy function to delete the data
@@ -88,11 +92,11 @@ class CustomerController extends Controller
         $user = User::find($id);
 
         if (! $user) {
-            return sendErrorResponse('Customer not found', 404);
+            return sendErrorResponse('Record not found', 404);
         }
 
         $user->delete();
 
-        return sendSuccessResponse('Customer record deleted successfully');
+        return sendSuccessResponse('Record record deleted successfully');
     }
 }
