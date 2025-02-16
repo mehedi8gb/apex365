@@ -38,10 +38,11 @@ class AuthController extends Controller
         ]);
 
         try {
-            DB::beginTransaction();
 
             // 1. Find the referrer user
             $referrerAndCode = ReferralCode::where('code', $validated['referralId'])->firstOrFail();
+
+            DB::beginTransaction();
 
             // 3. Create new user
             $user = User::create([
