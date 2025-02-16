@@ -10,7 +10,7 @@ use Illuminate\Support\Str;
 class ReferralHelper
 {
     private $referralUser;
-    private array $commissions = [];
+    private $commissions = [];
     private $currentUser;
 
     public function createReferralChain(User $user, $referrerAndCode): void
@@ -73,16 +73,15 @@ class ReferralHelper
         ]);
     }
 
+    /**
+     * @throws Exception
+     */
     public function updateLeaderboard(): void
     {
         foreach ($this->commissions as $commission) {
             DB::beginTransaction();
             try {
-                // Lock the account record for update
-                $account = Account::where('user_id', $commission->user_id)
-                    ->lockForUpdate()
-                    ->first();
-
+                // Get commission stats
                 $stats = DB::table('commissions')
                     ->selectRaw('
                         user_id,
@@ -93,14 +92,40 @@ class ReferralHelper
                     ->groupBy('user_id')
                     ->first();
 
+                if (!$stats) {
+                    DB::commit();
+                    continue;
+                }
+
+                // Get withdrawn amount
                 $withdrawn = DB::table('withdraws')
                     ->where('user_id', $commission->user_id)
                     ->where('status', 'paid')
                     ->sum('amount');
 
-                if ($stats) {
-                    $this->updateUserStats($stats, $withdrawn);
+                // Lock and update account
+                $account = Account::where('user_id', $commission->user_id)
+                    ->lockForUpdate()
+                    ->first();
+
+                if ($account) {
+                    $account->balance = $stats->total_commissions - ($withdrawn ?? 0);
+                    $account->save();
+                } else {
+                    Account::create([
+                        'user_id' => $stats->user_id,
+                        'balance' => $stats->total_commissions - ($withdrawn ?? 0),
+                    ]);
                 }
+
+                // Update leaderboard
+                Leaderboard::updateOrCreate(
+                    ['user_id' => $stats->user_id],
+                    [
+                        'total_commissions' => $stats->total_commissions,
+                        'total_nodes' => $stats->total_nodes,
+                    ]
+                );
 
                 DB::commit();
             } catch (Exception $e) {
@@ -108,22 +133,6 @@ class ReferralHelper
                 throw $e;
             }
         }
-    }
-
-    private function updateUserStats($stats, $withdrawn): void
-    {
-        Account::updateOrCreate(
-            ['user_id' => $stats->user_id],
-            ['balance' => DB::raw('balance + ' . ($stats->total_commissions - ($withdrawn ?? 0)))],
-        );
-
-        Leaderboard::updateOrCreate(
-            ['user_id' => $stats->user_id],
-            [
-                'total_commissions' => $stats->total_commissions ?? 0,
-                'total_nodes' => $stats->total_nodes ?? 0,
-            ]
-        );
     }
 
     public function generateReferralCode(User $user): string
