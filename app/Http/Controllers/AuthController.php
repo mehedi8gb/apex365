@@ -53,6 +53,8 @@ class AuthController extends Controller
                 'password' => Hash::make($request->password),
             ]);
 
+            DB::commit();
+
             // In your registration method:
             $referralHelper = new ReferralHelper;
 
@@ -65,7 +67,6 @@ class AuthController extends Controller
             // Assign the role to the user
             $user->assignRole('customer');
 
-            DB::commit();
 
             if ($request->filled('email')) {
                 $credentials = $request->only(['email', 'password']);

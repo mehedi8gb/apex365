@@ -2,100 +2,81 @@
 
 namespace App\Helpers;
 
-use App\Models\{Account, Commission, Leaderboard, ReferralCode, ReferralUser, User};
+use App\Models\Account;
+use App\Models\Commission;
+use App\Models\Leaderboard;
+use App\Models\ReferralCode;
+use App\Models\ReferralUser;
+use App\Models\User;
 use Exception;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
-use Throwable;
 
 class ReferralHelper
 {
     private $referralUser;
+
     private $commissions = [];
+
     private $currentUser;
-    private $maxRetries = 3;
-    private $retryDelay = 100; // milliseconds
 
     public function createReferralChain(User $user, $referrerAndCode): void
     {
-        $this->currentUser = $user;
-
-        $attempt = 1;
-        while ($attempt <= $this->maxRetries) {
-            try {
-                DB::beginTransaction();
-
-                $this->referralUser = ReferralUser::create([
-                    'user_id' => $user->id,
-                    'referrer_id' => $referrerAndCode->user->id ?? 1,
-                    'referral_code_id' => $referrerAndCode->id,
-                ]);
-
-                DB::commit();
-                return;
-            } catch (Throwable $e) {
-                DB::rollBack();
-
-                if ($attempt === $this->maxRetries) {
-                    throw $e;
-                }
-
-                usleep($this->retryDelay * 1000); // Convert to microseconds
-                $attempt++;
-            }
+        DB::beginTransaction();
+        try {
+            $this->currentUser = $user;
+            $this->referralUser = ReferralUser::create([
+                'user_id' => $user->id,
+                'referrer_id' => $referrerAndCode->user->id ?? 1,
+                'referral_code_id' => $referrerAndCode->id,
+            ]);
+            DB::commit();
+        } catch (Exception $e) {
+            DB::rollBack();
+            throw $e;
         }
     }
 
+    /**
+     * @throws Exception
+     */
     public function distributeReferralPoints(): void
     {
-        if (!$this->referralUser?->referrer || !$this->referralUser?->user) {
+        if (! $this->referralUser?->referrer || ! $this->referralUser?->user) {
             throw new Exception('Invalid referral user or referrer.');
         }
 
-        $attempt = 1;
-        while ($attempt <= $this->maxRetries) {
-            try {
-                DB::beginTransaction();
+        DB::beginTransaction();
+        try {
+            $commissionAmounts = config('commissions.levels');
+            $currentReferrer = $this->referralUser->referrer;
 
-                $commissionAmounts = config('commissions.levels');
-                $currentReferrer = $this->referralUser->referrer;
+            // First level commission
+            $this->createCommission(1, $this->currentUser, $currentReferrer, $commissionAmounts);
 
-                // First level commission
-                $this->createCommission(1, $this->currentUser, $currentReferrer, $commissionAmounts);
-
-                // Process higher levels
-                $level = 2;
-                while ($currentReferrer && $level <= count($commissionAmounts)) {
-                    if (!isset($commissionAmounts[$level])) {
-                        throw new Exception("Commission amount not defined for level $level.");
-                    }
-
-                    $this->createCommission($level, $currentReferrer, $this->currentUser, $commissionAmounts);
-
-                    $nextReferrer = ReferralUser::where('user_id', $currentReferrer->id)
-                        ->lockForUpdate()
-                        ->first();
-                    $currentReferrer = $nextReferrer?->referrer;
-
-                    if ($currentReferrer?->id === $this->currentUser->id) {
-                        throw new Exception('Infinite loop detected in the referral chain.');
-                    }
-
-                    $level++;
+            // Process higher levels
+            $level = 2;
+            while ($currentReferrer && $level <= count($commissionAmounts)) {
+                if (! isset($commissionAmounts[$level])) {
+                    throw new Exception("Commission amount not defined for level $level.");
                 }
 
-                DB::commit();
-                return;
-            } catch (Throwable $e) {
-                DB::rollBack();
+                $this->createCommission($level, $currentReferrer, $this->currentUser, $commissionAmounts);
 
-                if ($attempt === $this->maxRetries) {
-                    throw $e;
+                $nextReferrer = ReferralUser::where('user_id', $currentReferrer->id)->first();
+                $currentReferrer = $nextReferrer?->referrer;
+
+                if ($currentReferrer?->id === $this->currentUser->id) {
+                    throw new Exception('Infinite loop detected in the referral chain.');
                 }
 
-                usleep($this->retryDelay * 1000);
-                $attempt++;
+                $level++;
             }
+
+            DB::commit();
+        } catch (Exception $e) {
+            DB::rollBack();
+            throw $e;
         }
     }
 
@@ -109,90 +90,84 @@ class ReferralHelper
         ]);
     }
 
+    /**
+     * @throws Exception
+     */
     public function updateLeaderboard(): void
     {
         foreach ($this->commissions as $commission) {
-            $attempt = 1;
-            while ($attempt <= $this->maxRetries) {
-                try {
-                    DB::beginTransaction();
+            DB::beginTransaction();
+            try {
+                // Get commission stats
+                $stats = DB::table('commissions')
+                    ->selectRaw('
+                        user_id,
+                        COUNT(from_user_id) AS total_nodes,
+                        SUM(amount) AS total_commissions
+                    ')
+                    ->where('user_id', $commission->user_id)
+                    ->groupBy('user_id')
+                    ->first();
 
-                    $stats = DB::table('commissions')
-                        ->selectRaw('
-                            user_id,
-                            COUNT(from_user_id) AS total_nodes,
-                            SUM(amount) AS total_commissions
-                        ')
-                        ->where('user_id', $commission->user_id)
-                        ->groupBy('user_id')
-                        ->first();
-
-                    if (!$stats) {
-                        DB::commit();
-                        continue 2; // Skip to next commission
-                    }
-
-                    $withdrawn = DB::table('withdraws')
-                        ->where('user_id', $commission->user_id)
-                        ->where('status', 'paid')
-                        ->sum('amount');
-
-                    $account = Account::where('user_id', $commission->user_id)
-                        ->lockForUpdate()
-                        ->first();
-
-                    if ($account) {
-                        $account->balance = $stats->total_commissions - ($withdrawn ?? 0);
-                        $account->save();
-                    } else {
-                        Account::create([
-                            'user_id' => $stats->user_id,
-                            'balance' => $stats->total_commissions - ($withdrawn ?? 0),
-                        ]);
-                    }
-
-                    Leaderboard::updateOrCreate(
-                        ['user_id' => $stats->user_id],
-                        [
-                            'total_commissions' => $stats->total_commissions,
-                            'total_nodes' => $stats->total_nodes,
-                        ]
-                    );
-
+                if (! $stats) {
                     DB::commit();
-                    break; // Success, move to next commission
-                } catch (Throwable $e) {
-                    DB::rollBack();
 
-                    if ($attempt === $this->maxRetries) {
-                        throw $e;
-                    }
-
-                    usleep($this->retryDelay * 1000);
-                    $attempt++;
+                    continue;
                 }
+
+                // Get withdrawn amount
+                $withdrawn = DB::table('withdraws')
+                    ->where('user_id', $commission->user_id)
+                    ->where('status', 'paid')
+                    ->sum('amount');
+
+                // Lock and update account
+                $account = Account::where('user_id', $commission->user_id)
+                    ->lockForUpdate()
+                    ->first();
+
+                if ($account) {
+                    $account->balance = $stats->total_commissions - ($withdrawn ?? 0);
+                    $account->save();
+                } else {
+                    Account::create([
+                        'user_id' => $stats->user_id,
+                        'balance' => $stats->total_commissions - ($withdrawn ?? 0),
+                    ]);
+                }
+
+                // Update leaderboard
+                Leaderboard::updateOrCreate(
+                    ['user_id' => $stats->user_id],
+                    [
+                        'total_commissions' => $stats->total_commissions,
+                        'total_nodes' => $stats->total_nodes,
+                    ]
+                );
+
+                DB::commit();
+            } catch (Exception $e) {
+                DB::rollBack();
+                throw $e;
             }
         }
     }
 
     public function generateReferralCode(User $user): string
     {
-        $attempt = 1;
-        while ($attempt <= $this->maxRetries) {
-            try {
-                return ReferralCode::create([
-                    'code' => Str::random(8),
-                    'type' => 'user',
-                    'user_id' => $user->id,
-                ])->code;
-            } catch (Throwable $e) {
-                if ($attempt === $this->maxRetries) {
-                    throw $e;
-                }
+        DB::beginTransaction();
+        try {
+            $referralCode = ReferralCode::create([
+                'code' => Str::random(8),
+                'type' => 'user',
+                'user_id' => $user->id,
+            ])->code;
+            DB::commit();
 
-                usleep($this->retryDelay * 1000);
-                $attempt++;
-            }
+            return $referralCode;
+        } catch (Exception $e) {
+            DB::rollBack();
+            throw $e;
         }
     }
 }
