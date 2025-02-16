@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Helpers\ReferralHelper;
+use App\Http\Resources\CommissionResource;
 use App\Http\Resources\UserResource;
 use App\Mail\OTPMail;
 use App\Models\Referral;
@@ -284,16 +285,37 @@ class AuthController extends Controller
     /**
      * Get the authenticated user
      */
-    public function me(): JsonResponse
+    public function me(Request $request): JsonResponse
     {
-        $user = auth('api')->user();
+        $user = auth('api')->user()->load([
+            'account',
+            'leaderboard',
+            'referralCode',
+            'commissions',
+            'roles',
+            'permissions',
+        ]);
+
+        // Paginate commissions separately
+        $commissions = $user->commissions()->latest()->paginate(15);
 
         $data = [
             'user' => new UserResource($user),
+            'commissions' => CommissionResource::collection($commissions), // Paginated response
+            'pagination' => [
+                'total' => $commissions->total(),
+                'per_page' => $commissions->perPage(),
+                'current_page' => $commissions->currentPage(),
+                'last_page' => $commissions->lastPage(),
+                'next_page_url' => $commissions->nextPageUrl(),
+                'prev_page_url' => $commissions->previousPageUrl(),
+            ]
         ];
 
         return sendSuccessResponse('User details', $data);
     }
+
+
 
     private function validatePhone($phone): false|string
     {
