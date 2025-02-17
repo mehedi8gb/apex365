@@ -1,12 +1,5 @@
 <?php
 
-use App\Http\Controllers\AcademicYearController;
-use App\Http\Controllers\CourseController;
-use App\Http\Controllers\InstitutionController;
-use App\Http\Controllers\ResourceController;
-use App\Http\Controllers\TermController;
-use App\Http\Controllers\UserController;
-
 use App\Http\Middleware\JwtMiddleware;
 use App\Http\Middleware\RefreshTokenMiddleware;
 use Illuminate\Support\Facades\Route;
@@ -26,21 +19,7 @@ Route::group(['prefix' => 'auth'], function () {
     // Token management
     Route::post('refresh', [AuthController::class, 'refresh'])->middleware([RefreshTokenMiddleware::class]);
     Route::post('logout', [AuthController::class, 'logout'])->middleware([JwtMiddleware::class]);
-});
 
-Route::middleware([JwtMiddleware::class])->group(function () {
     Route::get('me', [AuthController::class, 'me']);
-    Route::post('image/upload', [ResourceController::class, 'uploadImage']);
-    Route::apiResource('institutions', InstitutionController::class);
-    Route::apiResource('courses', CourseController::class);
-    Route::apiResource('terms', TermController::class);
-    Route::apiResource('academic-years', AcademicYearController::class);
-    Route::apiResource('users', UserController::class);
 });
 
-// role based route system has to be integrated
-
-// write a test route to test the role based route system
-Route::get('/test', function () {
-    return response()->json(['message' => 'This is a test route']);
-});

@@ -34,12 +34,6 @@ class AuthController extends Controller
             'referralId' => 'required|string',
         ]);
 
-        $referral = Referral::where('referralId', $validated['referralId']);
-
-        if (!$referral->exists()) {
-            return sendErrorResponse('Referral ID not found', 404);
-        }
-
         if (!$this->validatePhone($validated['phone'])) {
             return sendErrorResponse('Invalid phone number', 422);
         }
@@ -49,11 +43,6 @@ class AuthController extends Controller
             'email' => $validated['email'],
             'phone' => self::$phone,
             'password' => Hash::make($validated['password']),
-        ]);
-
-        ReferralUser::create([
-            'referralId' => $referral->first()->id,
-            'user_id' => $user->id,
         ]);
 
         // Assign the role to the user

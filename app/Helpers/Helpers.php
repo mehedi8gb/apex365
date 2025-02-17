@@ -5,9 +5,8 @@ use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Pagination\LengthAwarePaginator;
-use Illuminate\Support\Facades\Schema;
 use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
-use Illuminate\Http\Request;
+use \Illuminate\Http\Request;
 
 function getResourceClass($model): string
 {
@@ -95,30 +94,81 @@ function processNestedArray(array $existingArray, array $payloadArray): array
 /**
  * Format error response.
  *
- * @param NotFoundHttpException|ModelNotFoundException|Exception|string $e
+ * @param NotFoundHttpException|ModelNotFoundException|ErrorException|Exception|string $e
  * @param int $statusCode
  * @return JsonResponse
  */
-function sendErrorResponse( NotFoundHttpException|ModelNotFoundException|Exception|string $e, int $statusCode,): JsonResponse
+function sendErrorResponse(NotFoundHttpException|ModelNotFoundException|ErrorException|Exception|string $e, int $statusCode): JsonResponse
 {
-    if ($e instanceof ModelNotFoundException) {
+    // Check if the environment is 'local' (for detailed error messages in dev)
+    $isLocal = app()->environment('local');
+
+    if ($isLocal) {
         return response()->json([
             'success' => false,
-            'message' => 'Record not found',
-        ], 404);
+            'message' => is_string($e) ? $e : $e->getMessage(),
+        ], 500);
     }
-    if ($e instanceof NotFoundHttpException) {
+
+    // Check for specific ErrorException related to roles access
+    if ($e instanceof ErrorException && str_contains($e->getMessage(), "Attempt to read property \"roles\" on false")) {
         return response()->json([
             'success' => false,
-            'message' => 'Not found',
+            'message' => 'You do not have the necessary permissions to access this resource.',
+        ], 403); // Forbidden status code
+    }
+
+    // Handle ModelNotFoundException
+    if ($e instanceof ModelNotFoundException) {
+        $model = class_basename($e->getModel());
+        $id = $e->getIds() ? implode(',', $e->getIds()) : 'Unknown';
+
+        return response()->json([
+            'success' => false,
+            'message' => $isLocal ? "{$model} with ID {$id} not found. Details: {$e->getMessage()}" : "The requested resource could not be found.",
         ], 404);
     }
 
+    // Handle NotFoundHttpException (404)
+    if ($e instanceof NotFoundHttpException) {
+        return response()->json([
+            'success' => false,
+            'message' => $isLocal ? $e->getMessage() : 'The requested page could not be found.',
+        ], 404);
+    }
+
+    // Handle QueryException (database query errors, 500)
+    if ($e instanceof \Illuminate\Database\QueryException) {
+        return response()->json([
+            'success' => false,
+            'message' => $isLocal ? $e->getMessage() : 'Database error. Please try again later.',
+        ], 500);
+    }
+
+    // Handle general exceptions (500)
+    if ($e instanceof Exception) {
+        return response()->json([
+            'success' => false,
+            'message' => $isLocal ? $e->getMessage() : 'Internal Server Error. Please try again later.',
+        ], 500);
+    }
+
+    // Handle string messages (fallback)
+    if (is_string($e)) {
+        return response()->json([
+            'success' => false,
+            'message' => $e,
+        ], $statusCode);
+    }
+
+    // Fallback for unexpected cases (Internal Server Error)
     return response()->json([
         'success' => false,
-        'message' => $e instanceof Exception ? $e->getMessage() : $e,
-    ], $statusCode);
+        'message' => $isLocal ? $e->getMessage() : 'Internal Server Error',
+    ], 500);
 }
+
+
 /**
  * Format success response.
  *
@@ -138,6 +188,7 @@ function sendSuccessResponse(string $message, mixed $data = null, int $statusCod
         'data' => $data,
     ], $statusCode);
 }
+
 /**
  * Handle API request.
  *
@@ -159,9 +210,15 @@ function handleApiRequest(Request $request, Builder $query, array $with = []): a
         $query->with($with);
     }
 
+    // Exclude from the query
+    if ($request->query('exclude')) {
+        $exclude = explode(',', $request->query('exclude'));
+        $query->where($exclude[0], '!=', $exclude[1]);
+    }
+
     // Apply filters
     foreach ($request->query() as $key => $value) {
-        if (!in_array($key, ['page', 'limit', 'searchTerm', 'sortBy', 'sortDirection', 'select', 'where'])) {
+        if (!in_array($key, ['page', 'limit', 'searchTerm', 'sortBy', 'sortDirection', 'select', 'where', 'exclude', 'company'])) {
             $query->where($key, $value);
         }
     }
