@@ -15,10 +15,10 @@ use Illuminate\Support\Str;
 class ReferralHelper
 {
     private $referralUser;
-
     private $commissions = [];
-
     private $currentUser;
+    private const MAX_RETRIES = 3;
+    private const RETRY_DELAY_MS = 100;
 
     public function createReferralChain(User $user, $referrerAndCode): void
     {
@@ -42,7 +42,7 @@ class ReferralHelper
      */
     public function distributeReferralPoints(): void
     {
-        if (! $this->referralUser?->referrer || ! $this->referralUser?->user) {
+        if (!$this->referralUser?->referrer || !$this->referralUser?->user) {
             throw new Exception('Invalid referral user or referrer.');
         }
 
@@ -50,6 +50,7 @@ class ReferralHelper
         try {
             $commissionAmounts = config('commissions.levels');
             $currentReferrer = $this->referralUser->referrer;
+            $processedUsers = [$this->currentUser->id];
 
             // First level commission
             $this->createCommission(1, $this->currentUser, $currentReferrer, $commissionAmounts);
@@ -57,19 +58,19 @@ class ReferralHelper
             // Process higher levels
             $level = 2;
             while ($currentReferrer && $level <= count($commissionAmounts)) {
-                if (! isset($commissionAmounts[$level])) {
+                if (!isset($commissionAmounts[$level])) {
                     throw new Exception("Commission amount not defined for level $level.");
                 }
+
+                if (in_array($currentReferrer->id, $processedUsers)) {
+                    throw new Exception('Circular reference detected in referral chain.');
+                }
+                $processedUsers[] = $currentReferrer->id;
 
                 $this->createCommission($level, $currentReferrer, $this->currentUser, $commissionAmounts);
 
                 $nextReferrer = ReferralUser::where('user_id', $currentReferrer->id)->first();
                 $currentReferrer = $nextReferrer?->referrer;
-
-                if ($currentReferrer?->id === $this->currentUser->id) {
-                    throw new Exception('Infinite loop detected in the referral chain.');
-                }
-
                 $level++;
             }
 
@@ -96,59 +97,72 @@ class ReferralHelper
     public function updateLeaderboard(): void
     {
         foreach ($this->commissions as $commission) {
-            DB::beginTransaction();
-            try {
-                // Get commission stats
-                $stats = DB::table('commissions')
-                    ->selectRaw('
+            $retries = 0;
+            $success = false;
+
+            while (!$success && $retries < self::MAX_RETRIES) {
+                    DB::beginTransaction();
+                try {
+                    // Get commission stats
+                    $stats = DB::table('commissions')
+                        ->selectRaw('
                         user_id,
                         COUNT(from_user_id) AS total_nodes,
                         SUM(amount) AS total_commissions
                     ')
-                    ->where('user_id', $commission->user_id)
-                    ->groupBy('user_id')
-                    ->first();
+                        ->where('user_id', $commission->user_id)
+                        ->groupBy('user_id')
+                        ->first();
 
-                if (! $stats) {
+                    if (! $stats) {
+                        DB::commit();
+
+                        continue;
+                    }
+
+                    // Get withdrawn amount
+                    $withdrawn = DB::table('withdraws')
+                        ->where('user_id', $commission->user_id)
+                        ->where('status', 'paid')
+                        ->sum('amount');
+
+                    // Lock and update account
+                    $account = Account::where('user_id', $commission->user_id)
+                        ->lockForUpdate()
+                        ->first();
+
+                    if ($account) {
+                        $account->balance = $stats->total_commissions - ($withdrawn ?? 0);
+                        $account->save();
+                    } else {
+                        Account::create([
+                            'user_id' => $stats->user_id,
+                            'balance' => $stats->total_commissions - ($withdrawn ?? 0),
+                        ]);
+                    }
+
+                    // Update leaderboard
+                    Leaderboard::updateOrCreate(
+                        ['user_id' => $stats->user_id],
+                        [
+                            'total_commissions' => $stats->total_commissions,
+                            'total_nodes' => $stats->total_nodes,
+                        ]
+                    );
+
                     DB::commit();
+                    $success = true;
+                } catch (Exception $e) {
+                    DB::rollBack();
+                    $retries++;
 
-                    continue;
+                    if ($retries >= self::MAX_RETRIES) {
+                        throw $e;
+                    }
+
+                    // Add exponential backoff delay
+                    usleep(self::RETRY_DELAY_MS * pow(2, $retries - 1) * 1000);
                 }
-
-                // Get withdrawn amount
-                $withdrawn = DB::table('withdraws')
-                    ->where('user_id', $commission->user_id)
-                    ->where('status', 'paid')
-                    ->sum('amount');
-
-                // Lock and update account
-                $account = Account::where('user_id', $commission->user_id)
-                    ->lockForUpdate()
-                    ->first();
-
-                if ($account) {
-                    $account->balance = $stats->total_commissions - ($withdrawn ?? 0);
-                    $account->save();
-                } else {
-                    Account::create([
-                        'user_id' => $stats->user_id,
-                        'balance' => $stats->total_commissions - ($withdrawn ?? 0),
-                    ]);
-                }
-
-                // Update leaderboard
-                Leaderboard::updateOrCreate(
-                    ['user_id' => $stats->user_id],
-                    [
-                        'total_commissions' => $stats->total_commissions,
-                        'total_nodes' => $stats->total_nodes,
-                    ]
-                );
-
-                DB::commit();
-            } catch (Exception $e) {
-                DB::rollBack();
-                throw $e;
             }
         }
     }
