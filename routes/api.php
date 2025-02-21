@@ -34,11 +34,13 @@ Route::middleware([JwtMiddleware::class])->group(function () {
     Route::get('/referrals/{userId}', [ReferralController::class, 'show']); // Specific user referrals
     Route::get('/referrals/tree/{userId}', [ReferralController::class, 'getReferralNodes']); // Specific user referrals
 
-    Route::get('/transactions', [TransactionController::class, 'index']); // All transactions
-    Route::get('/transactions/{userId}', [TransactionController::class, 'show']); // Specific user transactions
+    Route::delete('transactions/all-delete', [TransactionController::class, 'deleteMultiple'])->middleware([isAdminMiddleware::class]);
+    Route::apiResource('transactions', TransactionController::class);
+
 
     Route::get('/commissions', [CommissionController::class, 'index']); // All commissions
     Route::get('/commissions/{userId}', [CommissionController::class, 'show']); // User commission earnings
+
 
     Route::get('/withdraws', [WithdrawController::class, 'index']);
     Route::post('/withdraws', [WithdrawController::class, 'store']);
@@ -48,6 +50,8 @@ Route::middleware([JwtMiddleware::class])->group(function () {
     Route::apiResource('users', CustomerController::class)->middleware([isAdminMiddleware::class]);
     Route::patch('spinner-items', [SpinnerController::class, 'updateItems']);
     Route::post('spinner-items', [SpinnerController::class, 'storeItems']);
+
+
 });
 
 // role based route system has to be integrated

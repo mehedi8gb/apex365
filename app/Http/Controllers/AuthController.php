@@ -8,6 +8,7 @@ use App\Mail\OTPMail;
 use App\Models\Commission;
 use App\Models\Referral;
 use App\Models\ReferralCode;
+use App\Models\Transaction;
 use App\Models\User;
 use Carbon\Carbon;
 use Illuminate\Http\JsonResponse;
@@ -35,9 +36,13 @@ class AuthController extends Controller
             'nid' => 'required|string|min:10|max:17',
             'address' => 'required|string|max:255',
             'referralId' => 'required|string|exists:referral_codes,code', // Must exist in referral_codes table
+            'transactionId' => 'required|string',
         ]);
 
         try {
+            if (! Transaction::where('transactionId', $request->transactionId)->exists()) {
+                return sendErrorResponse('Transaction is invalid', 400);
+            }
 
             // 1. Find the referrer user
             $referrerAndCode = ReferralCode::where('code', $validated['referralId'])->firstOrFail();

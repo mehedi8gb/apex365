@@ -13,17 +13,12 @@ return new class extends Migration
     {
         Schema::create('transactions', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('buyer_id')->constrained('users')->onDelete('cascade');
-            $table->foreignId('referrer_level_1')->nullable()->constrained('users')->onDelete('set null');
-            $table->foreignId('referrer_level_2')->nullable()->constrained('users')->onDelete('set null');
-            $table->foreignId('referrer_level_3')->nullable()->constrained('users')->onDelete('set null');
-            $table->decimal('purchase_amount', 10, 2);
-            $table->decimal('level_1_commission', 10, 2);
-            $table->decimal('level_2_commission', 10, 2);
-            $table->decimal('level_3_commission', 10, 2);
-            $table->json('metadata')->nullable();
+            $table->string('transactionId')->unique(); // Indexed column for fast search
             $table->timestamps();
+
+            $table->index('transactionId');
         });
+
     }
 
     /**

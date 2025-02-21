@@ -24,6 +24,7 @@ class DatabaseSeeder extends Seeder
 //            ReferralSeeder::class,
             AccountSeeder::class,
             WithdrawSeeder::class,
+            TransactionSeeder::class,
         ]);
     }
 }
