@@ -16,6 +16,7 @@ class ProcessSpinRewardsJob implements ShouldQueue
 {
     use Dispatchable, Queueable, SerializesModels;
 
+    public $queue = 'spin-rewards';
     public function __construct()
     {
         // Constructor logic (if any)
