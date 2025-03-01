@@ -23,20 +23,22 @@ class ProcessSpinRewardsJob implements ShouldQueue
 
     public function handle(): void
     {
-        $todaySpinTime = now();
-        $currentTime = now();
+        $todaySpinTime = now()->setSeconds(0);
+        $currentTime = now()->setSeconds(0);
 
         // Fetch the latest spinner data
-        $latestSpin = Spinner::whereRaw("TIME(spin_time) >= ?", [$currentTime])
-            ->orderByRaw("TIME(spin_time) ASC") // Order by time (HH:MM:SS)
+        $latestSpin = Spinner::whereRaw('TIME(spin_time) >= ?', [$currentTime])
+            ->orderByRaw('TIME(spin_time) ASC') // Order by time (HH:MM:SS)
             ->first();
 
-        $todaySpinTime->setTime(
-            $latestSpin->spin_time->hour,
-            $latestSpin->spin_time->minute,
-        );
+        if ($latestSpin) {
+            $todaySpinTime->setTime(
+                $latestSpin->spin_time->hour,
+                $latestSpin->spin_time->minute,
+            );
+        }
 
-        if ($currentTime->format('H:i') == $todaySpinTime->format('H:i')) {
+        if ($currentTime->format('H:i') == $todaySpinTime->format('H:i') && $latestSpin) {
             // Select a random user
             $user = User::inRandomOrder()->first();
 
@@ -44,7 +46,7 @@ class ProcessSpinRewardsJob implements ShouldQueue
             $reward = $this->getRewardForRotationPoint($latestSpin->rotation_point);
 
             $user->account->update([
-                'balance' => $user->account->balance + $reward
+                'balance' => $user->account->balance + $reward,
             ]);
 
             // Update the leaderboard
@@ -57,12 +59,12 @@ class ProcessSpinRewardsJob implements ShouldQueue
                 'timestamp' => now(),
             ]);
 
-            Log::warning('Reward assigned to user: ' . $user->id);
+            Log::warning('Reward assigned to user: '.$user->id);
         } else {
             Log::warning('No spinner data found.');
         }
 
-        Log::warning('ProcessSpinRewardsJob executed successfully currentTime: ' . $currentTime->format('H:i:s') . ' todaySpinTime: ' . $todaySpinTime->format('H:i:s'));
+        Log::warning('ProcessSpinRewardsJob executed successfully currentTime: '.$currentTime->format('H:i').' todaySpinTime: '.$todaySpinTime->format('H:i'));
     }
 
     protected function getRewardForRotationPoint($rotationPoint)
@@ -92,4 +94,3 @@ class ProcessSpinRewardsJob implements ShouldQueue
         return $rotationPoint; // Example logic
     }
 }
-
