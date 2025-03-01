@@ -7,6 +7,7 @@ use App\Models\SpinnerItems;
 use App\Models\SpinnerLeaderboard;
 use App\Models\User;
 use Illuminate\Console\Command;
+use Illuminate\Support\Facades\Log;
 
 class ProcessSpinRewards extends Command
 {
@@ -53,9 +54,13 @@ class ProcessSpinRewards extends Command
 
 
             $this->info("Reward assigned to user: {$user->id} for spin: {$latestSpin->id}");
+            Log::warning('Reward assigned to user: ' . $user);
         } else {
             $this->error('No spinner data found.');
+            Log::warning('not assigned any reward');
         }
+
+        Log::warning('ProcessSpinRewards command executed successfully currenTime: ' . $currentTime->format('H:i:s') . ' todaySpinTime: ' . $todaySpinTime->format('H:i:s'));
     }
 
     protected function getRewardForRotationPoint($rotationPoint)
