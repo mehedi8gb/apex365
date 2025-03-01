@@ -27,7 +27,7 @@ return Application::configure(basePath: dirname(__DIR__))
     })
     ->withSchedule(function (Illuminate\Console\Scheduling\Schedule $schedule) {
         // Define your scheduled tasks here
-        $schedule->job(new ProcessSpinRewardsJob)->everyMinute();
+        $schedule->command('spin:dispatch-rewards')->everyMinute();
     })
     ->withExceptions(function (Exceptions $exceptions) {
         //
