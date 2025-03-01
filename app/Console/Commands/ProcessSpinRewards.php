@@ -28,10 +28,9 @@ class ProcessSpinRewards extends Command
         $todaySpinTime->setTime(
             $latestSpin->spin_time->hour,
             $latestSpin->spin_time->minute,
-            $latestSpin->spin_time->second
         );
 
-        if ($currentTime == $todaySpinTime) {
+        if ($currentTime->format('H:i') == $todaySpinTime->format('H:i')) {
             // Select a random user
             $user = User::inRandomOrder()->first();
 
