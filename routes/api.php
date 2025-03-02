@@ -56,8 +56,3 @@ Route::middleware([JwtMiddleware::class])->group(function () {
 
 });
 // role based route system has to be integrated
-
-// add a test route for tesinng our ci cd
-Route::get('/test', function () {
-    return response()->json(['message' => 'CI/CD is working']);
-});
