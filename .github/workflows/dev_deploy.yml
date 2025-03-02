@@ -1,0 +1,101 @@
+name: Dev Deploy ApexDrive365 Backend
+
+on:
+  pull_request:
+    branches:
+      - '*'  # Triggers when you create a PR for any branch
+
+jobs:
+  dev-deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v2
+
+    - name: Set up SSH key
+      uses: webfactory/ssh-agent@v0.5.3
+      with:
+        ssh-private-key: ${{ secrets.SSH_PRIVATE_KEY }}
+
+    - name: Deploy the pushed branch or PR head branch
+      env:
+        BRANCH_NAME: ${{ github.event_name == 'pull_request' && github.head_ref || github.ref_name }}  # Use head_ref for PRs, ref_name for pushes
+      run: |
+        ssh -o StrictHostKeyChecking=no root@194.163.191.198 \
+        "BRANCH_NAME=${{ github.event_name == 'pull_request' && github.head_ref || github.ref_name }} bash /var/www/staging-apex365/dev_deploy.sh"
+
+    - name: Send Slack Notification on Success
+      if: success()
+      run: |
+        curl -X POST -H 'Content-type: application/json' \
+          --data '{
+            "attachments": [
+              {
+                "fallback": "Deployment Successful",
+                "color": "#36a64f",
+                "pretext": "✅ *Deployment Successful!*",
+                "fields": [
+                  {
+                    "title": "Project",
+                    "value": "ApexDrive365 Backend",
+                    "short": true
+                  },
+                  {
+                    "title": "Deployed by",
+                    "value": "${{ github.actor }}",
+                    "short": true
+                  },
+                  {
+                    "title": "Branch",
+                    "value": "${{ github.head_ref || github.ref_name }}",
+                    "short": true
+                  },
+                  {
+                    "title": "PR Link",
+                    "value": "${{ github.event.pull_request.html_url != '' && format('<{0}|View PR>', github.event.pull_request.html_url) || 'N/A' }}",
+                    "short": false
+                  }
+                ]
+              }
+            ]
+          }' \
+          ${{ secrets.SLACK_WEBHOOK_URL }}
+
+      # ❌ Slack Notification on Failure
+    - name: Send Slack Notification on Failure
+      if: failure()
+      run: |
+        curl -X POST -H 'Content-type: application/json' \
+          --data '{
+            "attachments": [
+              {
+                "fallback": "Deployment Failed",
+                "color": "#ff0000",
+                "pretext": "🚨 *Deployment Failed!*",
+                "fields": [
+                  {
+                    "title": "Project",
+                    "value": "ApexDrive365 Backend",
+                    "short": true
+                  },
+                  {
+                    "title": "Deployed by",
+                    "value": "${{ github.actor }}",
+                    "short": true
+                  },
+                  {
+                    "title": "Branch",
+                    "value": "${{ github.head_ref || github.ref_name }}",
+                    "short": true
+                  },
+                  {
+                    "title": "PR Link",
+                    "value": "<${{ github.event.pull_request.html_url }}|View PR>",
+                    "short": false
+                  }
+                ]
+              }
+            ]
+          }' \
+          ${{ secrets.SLACK_WEBHOOK_URL }}
