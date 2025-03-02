@@ -22,6 +22,9 @@ git fetch origin | tee -a $LOG_FILE
 git checkout $BRANCH_NAME | tee -a $LOG_FILE
 git reset --hard origin/$BRANCH_NAME | tee -a $LOG_FILE  # Force reset to the latest state of the branch
 
+# Set maintenance mode (optional)
+php artisan down || true
+
 # Check for database/migrations changes
 #if git diff --name-only $BASE_COMMIT HEAD | grep -q "^database/migrations/"; then
 #    echo "Migration changes detected, running migrations..."
@@ -48,5 +51,8 @@ php artisan optimize | tee -a $LOG_FILE
 echo "Setting permissions..." | tee -a $LOG_FILE
 chown -R www-data:www-data /var/www/staging-apex365
 chmod -R 775 /var/www/staging-apex365/storage /var/www/staging-apex365/bootstrap/cache
+
+# Bring application back online
+php artisan up || true
 
 echo "Development deployment completed successfully at $(date)" | tee -a $LOG_FILE
