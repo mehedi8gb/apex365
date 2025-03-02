@@ -23,7 +23,7 @@ jobs:
         BRANCH_NAME: ${{ github.event_name == 'pull_request' && github.head_ref || github.ref_name }}  # Use head_ref for PRs, ref_name for pushes
       run: |
         ssh -o StrictHostKeyChecking=no root@194.163.191.198 \
-        "BRANCH_NAME=${{ github.event_name == 'pull_request' && github.head_ref || github.ref_name }} bash /var/www/staging-apex365/dev_deploy.sh"
+        "BRANCH_NAME=${{ github.event_name == 'pull_request' && github.head_ref || github.ref_name }} bash /var/www/staging-apex365/staging_deploy.sh"
 
     - name: Send Slack Notification on Success
       if: success()

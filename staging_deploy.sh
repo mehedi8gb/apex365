@@ -3,7 +3,7 @@
 set -e  # Exit if any command fails
 
 # Log file
-LOG_FILE="/var/www/staging-apex365/dev_deploy.log"
+LOG_FILE="/var/www/staging-apex365/staging_deploy.log"
 
 echo "Starting development deployment at $(date)" | tee -a $LOG_FILE
 
