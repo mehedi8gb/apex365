@@ -86,8 +86,8 @@ class TransactionController extends Controller
     public function deleteMultiple(Request $request): JsonResponse
     {
         request()->validate([
-            'transactionIds' => 'nullable|array|min:1',
-            'transactionIds.*' => 'nullable|string|exists:transactions,transactionId',
+            'transactionIds' => 'required|array|min:1',
+            'transactionIds.*' => 'required|string|exists:transactions,transactionId',
         ]);
 
         Transaction::whereIn('transactionId', request()->transactionIds)->delete();
