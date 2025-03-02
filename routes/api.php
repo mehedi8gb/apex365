@@ -5,6 +5,7 @@ use App\Http\Controllers\CommissionController;
 use App\Http\Controllers\CustomerController;
 use App\Http\Controllers\ReferralController;
 use App\Http\Controllers\SpinnerController;
+use App\Http\Controllers\SpinnerLeaderboardController;
 use App\Http\Controllers\TransactionController;
 use App\Http\Controllers\WithdrawController;
 use App\Http\Middleware\isAdminMiddleware;
@@ -46,12 +47,12 @@ Route::middleware([JwtMiddleware::class])->group(function () {
     Route::post('/withdraws', [WithdrawController::class, 'store']);
     Route::post('/withdraws/{id}/approve', [WithdrawController::class, 'approve'])->middleware([isAdminMiddleware::class]);
 
-    Route::apiResource('spinner', SpinnerController::class);
-    Route::apiResource('users', CustomerController::class)->middleware([isAdminMiddleware::class]);
     Route::patch('spinner-items', [SpinnerController::class, 'updateItems']);
     Route::post('spinner-items', [SpinnerController::class, 'storeItems']);
+    Route::apiResource('spinner', SpinnerController::class);
+    Route::apiResource('users', CustomerController::class)->middleware([isAdminMiddleware::class]);
+    Route::apiResource('leaderboard', SpinnerLeaderboardController::class);
 
 
 });
-
 // role based route system has to be integrated

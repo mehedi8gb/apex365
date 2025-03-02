@@ -64,8 +64,6 @@ class SpinnerController extends Controller
         ], 201);
     }
 
-
-
     public function show($id): JsonResponse
     {
         $spinner = Spinner::findOrFail($id);
@@ -77,7 +75,7 @@ class SpinnerController extends Controller
     {
         $validated = $request->validate([
             'rotation_point' => 'nullable|integer',
-            'spin_time' => 'nullable|date|unique:spinners,spin_time',
+            'spin_time' => 'nullable|unique:spinners,spin_time',
         ]);
 
         $spinner = Spinner::findOrFail($id);

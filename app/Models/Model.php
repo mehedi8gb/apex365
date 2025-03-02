@@ -39,7 +39,7 @@ use Illuminate\Support\Carbon;
  * @method static Builder<static>|Model findOrFail($id)
  * @method static Builder<static>|Model find($id)
  * @method static Builder<static>|Model exists()
- * @method static Builder<static>|Model latest()
+ * @method static Builder<static>|Model latest($column = 'created_at')
  * @method static Builder<static>|Model create($data)
  * @method static Builder<static>|Model where($column, $operator = null, $value = null, $boolean = 'and')
  *
