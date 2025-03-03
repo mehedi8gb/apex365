@@ -16,6 +16,10 @@ class TransactionResource extends JsonResource
     {
         return [
             'id' => $this->id,
+            'user' => [
+                'name' => $this->user?->name,
+                'phone' => $this->user?->phone,
+            ],
             'transactionId' => $this->transactionId,
             'date' => $this->created_at->format('Y-m-d H:i:s'),
         ];
