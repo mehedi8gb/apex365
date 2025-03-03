@@ -10,5 +10,6 @@ class Transaction extends Model
 
     protected $fillable = [
         'transactionId',
+        'userId',
     ];
 }
