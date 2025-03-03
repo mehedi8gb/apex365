@@ -83,12 +83,14 @@ class ReferralHelper
 
     private function createCommission(int $level, User $user, User $fromUser, array $amounts): void
     {
-        $this->commissions[$level] = Commission::create([
+        $this->commissions[$level] = new Commission([
             'user_id' => $user->id,
             'from_user_id' => $fromUser->id,
             'level' => $level,
             'amount' => $amounts[$level],
         ]);
+
+        $this->commissions[$level]->save();
     }
 
     /**
