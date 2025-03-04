@@ -1,0 +1,64 @@
+name: Deploy ApexDrive365 Backend
+
+on:
+  push:
+    branches:
+    - master  # Only runs when code is pushed to master
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v2
+
+      - name: Set up SSH key
+        uses: webfactory/ssh-agent@v0.5.3
+        with:
+          ssh-private-key: ${{ secrets.SSH_PRIVATE_KEY }}
+
+      - name: Deploy the pushed branch
+        env:
+          BRANCH_NAME: ${{ github.ref_name }}
+        run: |
+          ssh -o StrictHostKeyChecking=no ${{ secrets.USERNAME }}@${{ secrets.HOST }} \
+          "BRANCH_NAME=${{ github.ref_name }} bash /var/www/apex365/bin/deploy.sh"
+
+      # ✅ Slack Notification on Success
+      - name: Send Slack Notification on Success
+        if: success()
+        run: |
+          curl -X POST -H 'Content-type: application/json' \
+            --data '{
+              "attachments": [
+                {
+                  "fallback": "Production Deployment Successful",
+                  "color": "#36a64f",
+                  "pretext": "✅ *Production Deployment Successful!*",
+                  "fields": [
+                    {
+                      "title": "Project",
+                      "value": "ApexDrive365 Backend",
+                      "short": true
+                    },
+                    {
+                      "title": "Deployed by",
+                      "value": "${{ github.actor }}",
+                      "short": true
+                    },
+                    {
+                      "title": "Branch",
+                      "value": "${{ github.head_ref || github.ref_name }}",
+                      "short": true
+                    },
+                    {
+                      "title": "PR Link",
+                      "value": "${{ github.event.pull_request.html_url != '' && format('<{0}|View PR>', github.event.pull_request.html_url) || 'N/A' }}",
+                      "short": false
+                    }
+                  ]
+                }
+              ]
+            }' \
+            ${{ secrets.SLACK_WEBHOOK_URL }}
