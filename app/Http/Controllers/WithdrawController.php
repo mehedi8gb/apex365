@@ -42,7 +42,6 @@ class WithdrawController extends Controller
         }
 
         if ($validatedData['amount'] < 50) {
-            $needed = 50 - $validatedData['amount'];
             return sendErrorResponse("Minimum withdrawal amount is 50", 400);
         }
 

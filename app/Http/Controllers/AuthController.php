@@ -13,6 +13,7 @@ use App\Models\User;
 use Carbon\Carbon;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\App;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
@@ -36,12 +37,17 @@ class AuthController extends Controller
             'nid' => 'required|string|min:10|max:17',
             'address' => 'required|string|max:255',
             'referralId' => 'required|string|exists:referral_codes,code', // Must exist in referral_codes table
-            'transactionId' => 'required|string',
+            'transactionId' => 'required|string|exists:transactions,transactionId', // Must exist in transactions table
         ]);
 
         try {
-            if (! Transaction::where('transactionId', $request->transactionId)->exists()) {
-                return sendErrorResponse('Transaction is invalid', 400);
+            $transaction = Transaction::where('transactionId', $request->transactionId)->first();
+
+            // Production Logic: Allow signup only if userId is NULL
+            if (!App::isLocal()) {
+                if ($transaction->userId !== null) {
+                    return sendErrorResponse('Transaction id already used, try with a new one', 400);
+                }
             }
 
             // 1. Find the referrer user
@@ -50,7 +56,7 @@ class AuthController extends Controller
             DB::beginTransaction();
 
             // 3. Create new user
-            $user = User::create([
+            $user = new User([
                 'name' => $request->name,
                 'email' => $request->email,
                 'phone' => $request->phone,
@@ -58,11 +64,15 @@ class AuthController extends Controller
                 'address' => $request->address,
                 'password' => Hash::make($request->password),
             ]);
+            $user->save();
+
+            // Assign userId to transaction
+            $transaction->update(['userId' => $user->id]);
 
             DB::commit();
 
             // In your registration method:
-            $referralHelper = new ReferralHelper;
+            $referralHelper = new ReferralHelper();
 
             // Use the same method calls, just on the instance
             $referralHelper->createReferralChain($user, $referrerAndCode);
