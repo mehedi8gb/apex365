@@ -1,0 +1,9 @@
+services:
+  app:
+    image: gkibria121/laravel:12-node22x_composer
+    ports:
+      - 8000:8000
+    volumes:
+      - .:/app   
+    entrypoint: /app/bin/entrypoint.sh 
+    restart: always
