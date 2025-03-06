@@ -1,6 +1,8 @@
 #!/bin/bash
 set -e  # Exit immediately if a command exits with a non-zero status
-set -x  # Print each command before executing
+  
 
+docker compose -f docker-compose.yml up  -d --build
 # Deployment completed
 echo "Deployment completed successfully at $(date)" 
+docker compose logs -f  app 
