@@ -36,6 +36,8 @@ Route::middleware([JwtMiddleware::class])->group(function () {
     Route::get('/referrals/tree/{userId}', [ReferralController::class, 'getReferralNodes']); // Specific user referrals
 
     Route::delete('transactions/all-delete', [TransactionController::class, 'deleteMultiple'])->middleware([isAdminMiddleware::class]);
+    Route::get('user/{userId}/transactions', [TransactionController::class, 'userTransactions'])->middleware([isAdminMiddleware::class]);
+    Route::get('users/transactions', [TransactionController::class, 'usersTransactions'])->middleware([isAdminMiddleware::class]);
     Route::apiResource('transactions', TransactionController::class);
 
 

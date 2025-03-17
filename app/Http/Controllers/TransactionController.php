@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Http\Resources\TransactionResource;
+use App\Http\Resources\UserTransactionsIdResource;
 use App\Models\Transaction;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -93,5 +94,25 @@ class TransactionController extends Controller
         Transaction::whereIn('transactionId', request()->transactionIds)->delete();
 
         return sendSuccessResponse('Transactions deleted successfully');
+    }
+
+    /**
+     * Get all transactions for a specific user
+     */
+    public function userTransactions($userId): JsonResponse
+    {
+        $transactions = Transaction::with('user')->where('userId', $userId)->get();
+
+        return sendSuccessResponse('Transactions retrieved successfully', UserTransactionsIdResource::collection($transactions));
+    }
+
+    /**
+     * Get all transactions for all users
+     */
+    public function usersTransactions(): JsonResponse
+    {
+        $transactions = Transaction::with('user')->whereNotNull('userId')->get();
+
+        return sendSuccessResponse('Transactions retrieved successfully', UserTransactionsIdResource::collection($transactions));
     }
 }
