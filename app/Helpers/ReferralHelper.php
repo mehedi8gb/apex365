@@ -37,6 +37,12 @@ class ReferralHelper
         }
     }
 
+    public function updateReferralChain($userId): void
+    {
+       $this->currentUser = User::find($userId);
+       $this->referralUser = ReferralUser::where('user_id', $userId)->first();
+    }
+
     /**
      * @throws Exception
      */
@@ -96,7 +102,7 @@ class ReferralHelper
     /**
      * @throws Exception
      */
-    public function updateLeaderboard(): void
+    public function updateReferralLeaderboard(): void
     {
         foreach ($this->commissions as $commission) {
             $retries = 0;

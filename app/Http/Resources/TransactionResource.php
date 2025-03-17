@@ -14,13 +14,17 @@ class TransactionResource extends JsonResource
      */
     public function toArray(Request $request): array
     {
-        return [
-            'id' => $this->id,
-            'user' => [
+        if ($this->userId) {
+            $user = [
                 'name' => $this->user?->name,
                 'phone' => $this->user?->phone,
                 'referral_code' => $this->user?->theReferralCode?->code,
-            ],
+            ];
+        }
+
+        return [
+            'id' => $this->id,
+            'user' => $user ?? "not assigned",
             'transactionId' => $this->transactionId,
             'date' => $this->created_at->format('Y-m-d H:i:s'),
         ];

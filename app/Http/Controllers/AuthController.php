@@ -77,7 +77,7 @@ class AuthController extends Controller
             // Use the same method calls, just on the instance
             $referralHelper->createReferralChain($user, $referrerAndCode);
             $referralHelper->distributeReferralPoints();
-            $referralHelper->updateLeaderboard();
+            $referralHelper->updateReferralLeaderboard();
             $referralHelper->generateReferralCode($user);
 
             // Assign the role to the user

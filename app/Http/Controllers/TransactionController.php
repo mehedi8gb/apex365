@@ -2,9 +2,11 @@
 
 namespace App\Http\Controllers;
 
+use App\Helpers\ReferralHelper;
 use App\Http\Resources\TransactionResource;
 use App\Http\Resources\UserTransactionsIdResource;
 use App\Models\Transaction;
+use Exception;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 
@@ -114,5 +116,36 @@ class TransactionController extends Controller
         $transactions = Transaction::with('user')->whereNotNull('userId')->get();
 
         return sendSuccessResponse('Transactions retrieved successfully', UserTransactionsIdResource::collection($transactions));
+    }
+
+    /**
+     * Apply commissions to single transaction's user
+     *
+     * @throws Exception
+     */
+    public function ApplyCommissions(Request $request): JsonResponse
+    {
+        $request->validate([
+            'transactionId' => 'required|string|exists:transactions,transactionId',
+            'userId' => 'required|integer|exists:users,id',
+        ]);
+
+        $transaction = Transaction::where('transactionId', $request->transactionId)->first();
+
+        if (! isset($transaction->userId)) {
+
+            $referralHelper = new ReferralHelper;
+
+            // Use the same method calls, just on the instance
+            $referralHelper->updateReferralChain($request->userId);
+            $referralHelper->distributeReferralPoints();
+            $referralHelper->updateReferralLeaderboard();
+
+            $transaction->update(['userId' => $request->userId]);
+
+            return sendSuccessResponse('Commissions applied successfully');
+        }
+
+        return sendErrorResponse('Commissions already applied', 422);
     }
 }
