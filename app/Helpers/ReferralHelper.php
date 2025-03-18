@@ -11,6 +11,7 @@ use App\Models\User;
 use Exception;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
+use Throwable;
 
 class ReferralHelper
 {
@@ -44,9 +45,9 @@ class ReferralHelper
     }
 
     /**
-     * @throws Exception
+     * @throws Exception|Throwable
      */
-    public function distributeReferralPoints(): void
+    public function distributeReferralPoints(string $commissionType = 'signup'): void
     {
         if (!$this->referralUser?->referrer || !$this->referralUser?->user) {
             throw new Exception('Invalid referral user or referrer.');
@@ -54,7 +55,7 @@ class ReferralHelper
 
         DB::beginTransaction();
         try {
-            $commissionAmounts = config('commissions.levels');
+            $commissionAmounts = config('commissions.'.$commissionType);
             $currentReferrer = $this->referralUser->referrer;
             $processedUsers = [$this->currentUser->id];
 

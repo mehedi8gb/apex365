@@ -10,6 +10,7 @@ use App\Models\User;
 use Exception;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Throwable;
 
 class TransactionController extends Controller
 {
@@ -126,6 +127,7 @@ class TransactionController extends Controller
      * Apply commissions to single transaction's user
      *
      * @throws Exception
+     * @throws Throwable
      */
     public function ApplyCommissions(Request $request): JsonResponse
     {
@@ -142,7 +144,7 @@ class TransactionController extends Controller
 
             // Use the same method calls, just on the instance
             $referralHelper->updateReferralChain($request->userId);
-            $referralHelper->distributeReferralPoints();
+            $referralHelper->distributeReferralPoints('purchase');
             $referralHelper->updateReferralLeaderboard();
 
             $transaction->update(['userId' => $request->userId]);
