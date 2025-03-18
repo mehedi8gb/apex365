@@ -31,10 +31,6 @@ Route::group(['prefix' => 'auth'], function () {
 Route::middleware([JwtMiddleware::class])->group(function () {
     Route::get('me', [AuthController::class, 'me']);
 
-    Route::get('/referrals', [ReferralController::class, 'index']); // All referrals
-    Route::get('/referrals/{userId}', [ReferralController::class, 'show']); // Specific user referrals
-    Route::get('/referrals/tree/{userId}', [ReferralController::class, 'getReferralNodes']); // Specific user referrals
-
     Route::delete('transactions/all-delete', [TransactionController::class, 'deleteMultiple'])->middleware([isAdminMiddleware::class]);
     Route::post('transactions/apply-commissions', [TransactionController::class, 'ApplyCommissions'])->middleware([isAdminMiddleware::class]);
     Route::get('transactions/user/{userId}', [TransactionController::class, 'userTransactions'])->middleware([isAdminMiddleware::class]);
