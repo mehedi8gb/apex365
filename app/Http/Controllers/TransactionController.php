@@ -6,6 +6,7 @@ use App\Helpers\ReferralHelper;
 use App\Http\Resources\TransactionResource;
 use App\Http\Resources\UserTransactionsIdResource;
 use App\Models\Transaction;
+use App\Models\User;
 use Exception;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -103,19 +104,22 @@ class TransactionController extends Controller
      */
     public function userTransactions($userId): JsonResponse
     {
-        $transactions = Transaction::with('user')->where('userId', $userId)->get();
+        $user = User::with('transactionIds')->findOrFail($userId);
 
-        return sendSuccessResponse('Transactions retrieved successfully', UserTransactionsIdResource::collection($transactions));
+        return sendSuccessResponse('Transactions retrieved successfully', UserTransactionsIdResource::make($user));
     }
 
     /**
      * Get all transactions for all users
+     * @throws Exception
      */
-    public function usersTransactions(): JsonResponse
+    public function usersTransactions(Request $request): JsonResponse
     {
-        $transactions = Transaction::with('user')->whereNotNull('userId')->get();
+        $users =  User::query();
 
-        return sendSuccessResponse('Transactions retrieved successfully', UserTransactionsIdResource::collection($transactions));
+        $results = handleApiRequest($request, $users, ['transactionIds'], UserTransactionsIdResource::class);
+
+        return sendSuccessResponse('Transactions retrieved successfully', $results);
     }
 
     /**

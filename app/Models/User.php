@@ -68,6 +68,11 @@ class User extends Authenticatable implements JWTSubject
         return $this->hasOne(Account::class);
     }
 
+    public function transactionIds(): HasMany
+    {
+        return $this->hasMany(Transaction::class, 'userId');
+    }
+
     /**
      * The attributes that should be hidden for serialization.
      *
