@@ -21,6 +21,9 @@ class ReferralHelper
     private const MAX_RETRIES = 3;
     private const RETRY_DELAY_MS = 100;
 
+    /**
+     * @throws Throwable
+     */
     public function createReferralChain(User $user, $referrerAndCode): void
     {
         DB::beginTransaction();
@@ -101,7 +104,7 @@ class ReferralHelper
     }
 
     /**
-     * @throws Exception
+     * @throws Exception|Throwable
      */
     public function updateReferralLeaderboard(): void
     {
@@ -176,6 +179,9 @@ class ReferralHelper
         }
     }
 
+    /**
+     * @throws Throwable
+     */
     public function generateReferralCode(User $user): string
     {
         DB::beginTransaction();
