@@ -1,9 +1,9 @@
-name: Deploy ApexDrive365 Backend
+name: Deploy NHL Replica Backend
 
 on:
   push:
     branches:
-    - master  # Only runs when code is pushed to master
+    - replica_nhl  # Only runs when code is pushed to master
 
 jobs:
   deploy:
@@ -23,7 +23,7 @@ jobs:
           BRANCH_NAME: ${{ github.ref_name }}
         run: |
           ssh -o StrictHostKeyChecking=no ${{ secrets.USERNAME }}@${{ secrets.HOST }} \
-          "BRANCH_NAME=${{ github.ref_name }} bash /var/www/apex365/bin/deploy.sh"
+          "BRANCH_NAME=${{ github.ref_name }} bash /var/www/replica-apex365/bin/deploy.sh"
 
       # ✅ Slack Notification on Success
       - name: Send Slack Notification on Success
