@@ -19,7 +19,10 @@ return [
 
     'allowed_methods' => ['*'],
 
-    'allowed_origins' => ['localhost:3000', 'apex-dashboard-five.vercel.app'],
+    'allowed_origins' => [
+        'http://localhost:3000',
+        'https://apex-dashboard-five.vercel.app',
+    ],
 
     'allowed_origins_patterns' => [],
 
@@ -29,6 +32,6 @@ return [
 
     'max_age' => 0,
 
-    'supports_credentials' => false,
+    'supports_credentials' => true,
 
 ];
