@@ -38,7 +38,7 @@ jobs:
                 "fields": [
                   {
                     "title": "Project",
-                    "value": "ApexDrive365 Backend",
+                    "value": "NHL Backend",
                     "short": true
                   },
                   {
@@ -76,7 +76,7 @@ jobs:
                 "fields": [
                   {
                     "title": "Project",
-                    "value": "ApexDrive365 Backend",
+                    "value": "NHL Backend",
                     "short": true
                   },
                   {
