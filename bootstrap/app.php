@@ -21,6 +21,7 @@ return Application::configure(basePath: dirname(__DIR__))
         ]);
         $middleware->api(append: [
 //            RefreshTokenMiddleware::class
+        \Illuminate\Http\Middleware\HandleCors::class
         ]);
 
         //

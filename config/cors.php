@@ -15,13 +15,14 @@ return [
     |
     */
 
-    'paths' => ['api/*', 'sanctum/csrf-cookie'],
+    'paths' => ['api/*', 'auth/*', 'sanctum/csrf-cookie'],
 
     'allowed_methods' => ['*'],
 
     'allowed_origins' => [
         'http://localhost:3000',
         'https://apex-dashboard-five.vercel.app',
+        'https://nhl-dashboard.apexdrive365.com'
     ],
 
     'allowed_origins_patterns' => [],
@@ -32,6 +33,6 @@ return [
 
     'max_age' => 0,
 
-    'supports_credentials' => true,
+    'supports_credentials' => false,
 
 ];
