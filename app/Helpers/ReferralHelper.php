@@ -11,6 +11,7 @@ use App\Models\User;
 use Exception;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
+use Throwable;
 
 class ReferralHelper
 {
@@ -20,6 +21,9 @@ class ReferralHelper
     private const MAX_RETRIES = 3;
     private const RETRY_DELAY_MS = 100;
 
+    /**
+     * @throws Throwable
+     */
     public function createReferralChain(User $user, $referrerAndCode): void
     {
         DB::beginTransaction();
@@ -37,10 +41,16 @@ class ReferralHelper
         }
     }
 
+    public function updateReferralChain($userId): void
+    {
+       $this->currentUser = User::find($userId);
+       $this->referralUser = ReferralUser::where('user_id', $userId)->first();
+    }
+
     /**
-     * @throws Exception
+     * @throws Exception|Throwable
      */
-    public function distributeReferralPoints(): void
+    public function distributeReferralPoints(string $commissionType = 'signup'): void
     {
         if (!$this->referralUser?->referrer || !$this->referralUser?->user) {
             throw new Exception('Invalid referral user or referrer.');
@@ -48,7 +58,7 @@ class ReferralHelper
 
         DB::beginTransaction();
         try {
-            $commissionAmounts = config('commissions.levels');
+            $commissionAmounts = config('commissions.'.$commissionType);
             $currentReferrer = $this->referralUser->referrer;
             $processedUsers = [$this->currentUser->id];
 
@@ -94,9 +104,9 @@ class ReferralHelper
     }
 
     /**
-     * @throws Exception
+     * @throws Exception|Throwable
      */
-    public function updateLeaderboard(): void
+    public function updateReferralLeaderboard(): void
     {
         foreach ($this->commissions as $commission) {
             $retries = 0;
@@ -169,6 +179,9 @@ class ReferralHelper
         }
     }
 
+    /**
+     * @throws Throwable
+     */
     public function generateReferralCode(User $user): string
     {
         DB::beginTransaction();
