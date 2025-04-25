@@ -25,7 +25,7 @@ php artisan down || true
 
 # Install dependencies
 echo "Installing dependencies..." | tee -a $LOG_FILE
-composer install --no-dev --optimize-autoloader 2>&1 | tee -a $LOG_FILE
+#composer install --no-dev --optimize-autoloader 2>&1 | tee -a $LOG_FILE
 
 # Run database migrations
 echo "Skipping migrations..." | tee -a $LOG_FILE
