@@ -25,7 +25,7 @@ class TransactionController extends Controller
      */
     public function show($id): JsonResponse
     {
-        $transaction = Transaction::find($id);
+        $transaction = Transaction::findOrFail($id);
 
         return sendSuccessResponse('Transaction retrieved successfully', new TransactionResource($transaction));
     }
