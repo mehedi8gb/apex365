@@ -6,7 +6,6 @@ use App\Helpers\ReferralHelper;
 use App\Http\Resources\UserResource;
 use App\Mail\OTPMail;
 use App\Models\Commission;
-use App\Models\Referral;
 use App\Models\ReferralCode;
 use App\Models\Transaction;
 use App\Models\User;
@@ -22,6 +21,7 @@ use Illuminate\Support\Str;
 use libphonenumber\NumberParseException;
 use libphonenumber\PhoneNumberFormat;
 use libphonenumber\PhoneNumberUtil;
+use Throwable;
 use Tymon\JWTAuth\Exceptions\JWTException;
 use Tymon\JWTAuth\Facades\JWTAuth;
 
@@ -77,7 +77,7 @@ class AuthController extends Controller
             // Use the same method calls, just on the instance
             $referralHelper->createReferralChain($user, $referrerAndCode);
             $referralHelper->distributeReferralPoints();
-            $referralHelper->updateLeaderboard();
+            $referralHelper->updateReferralLeaderboard();
             $referralHelper->generateReferralCode($user);
 
             // Assign the role to the user
@@ -103,7 +103,7 @@ class AuthController extends Controller
 
             return sendSuccessResponse('Customer registered successfully', $data, 201);
 
-        } catch (\Exception $e) {
+        } catch (\Exception|Throwable $e) {
             DB::rollBack();
 
             return response()->json(['error' => 'Registration failed', 'message' => $e->getMessage()], 500);
@@ -277,7 +277,7 @@ class AuthController extends Controller
 
             return response()->json([
                 'access_token' => $newAccessToken,
-                'expires_in' => auth('api')->factory()->getTTL() * 60,
+                'expires_in' => config('jwt.ttl')
             ]);
         } catch (JWTException $e) {
             return response()->json(['error' => 'Unable to refresh token'], 401);

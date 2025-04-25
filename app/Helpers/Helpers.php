@@ -1,8 +1,10 @@
 <?php
 
+use App\Helpers\SearchParamMapper;
 use App\Http\Resources\DefaultResource;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
+use Illuminate\Database\QueryException;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Pagination\LengthAwarePaginator;
@@ -88,25 +90,87 @@ function processNestedArray(array $existingArray, array $payloadArray): array
 /**
  * Format error response.
  */
-function sendErrorResponse(NotFoundHttpException|ModelNotFoundException|Exception|string $e, int $statusCode): JsonResponse
+function sendErrorResponse(NotFoundHttpException|ModelNotFoundException|ErrorException|Exception|string $e, int $statusCode): JsonResponse
 {
-    if ($e instanceof ModelNotFoundException) {
+    // Check if the environment is 'local' (for detailed error messages in dev)
+    $isLocal = app()->environment('local');
+
+    if ($isLocal) {
         return response()->json([
             'success' => false,
-            'message' => 'Record not found',
-        ], 404);
+            'message' => is_string($e) ? $e : $e->getMessage(),
+        ], 500);
     }
-    if ($e instanceof NotFoundHttpException) {
+
+    if ($e instanceof QueryException) {
+        $errorCode = $e->errorInfo[1];  // Get the MySQL error code
+
+        // Check if it's a duplicate entry (error code 1062 for MySQL)
+        if ($errorCode == 1062) {
+            // Handle duplicate entry error
+            return response()->json([
+                'success' => false,
+                'message' => 'Duplicate entry detected. Please ensure the value is unique.',
+            ], 400);  // Send a 400 Bad Request response
+        }
+    }
+
+    // Check for specific ErrorException related to roles access
+    if ($e instanceof ErrorException && str_contains($e->getMessage(), 'Attempt to read property "roles" on false')) {
         return response()->json([
             'success' => false,
-            'message' => 'Not found',
+            'message' => 'You do not have the necessary permissions to access this resource.',
+        ], 403); // Forbidden status code
+    }
+
+    // Handle ModelNotFoundException
+    if ($e instanceof ModelNotFoundException) {
+        $model = class_basename($e->getModel());
+        $id = $e->getIds() ? implode(',', $e->getIds()) : 'Unknown';
+
+        return response()->json([
+            'success' => false,
+            'message' => $isLocal ? "{$model} with ID {$id} not found. Details: {$e->getMessage()}" : 'The requested resource could not be found.',
         ], 404);
     }
 
+    // Handle NotFoundHttpException (404)
+    if ($e instanceof NotFoundHttpException) {
+        return response()->json([
+            'success' => false,
+            'message' => $isLocal ? $e->getMessage() : 'The requested page could not be found.',
+        ], 404);
+    }
+
+    // Handle QueryException (database query errors, 500)
+    if ($e instanceof \Illuminate\Database\QueryException) {
+        return response()->json([
+            'success' => false,
+            'message' => $isLocal ? $e->getMessage() : 'Database error. Please try again later.',
+        ], 500);
+    }
+
+    // Handle general exceptions (500)
+    if ($e instanceof Exception) {
+        return response()->json([
+            'success' => false,
+            'message' => $isLocal ? $e->getMessage() : 'Internal Server Error. Please try again later.',
+        ], 500);
+    }
+
+    // Handle string messages (fallback)
+    if (is_string($e)) {
+        return response()->json([
+            'success' => false,
+            'message' => $e,
+        ], $statusCode);
+    }
+
+    // Fallback for unexpected cases (Internal Server Error)
     return response()->json([
         'success' => false,
-        'message' => $e instanceof Exception ? $e->getMessage() : $e,
-    ], $statusCode);
+        'message' => $isLocal ? $e->getMessage() : 'Internal Server Error',
+    ], 500);
 }
 
 /**
@@ -127,6 +191,8 @@ function sendSuccessResponse(string $message, mixed $data = null, int $statusCod
 
 /**
  * Handle API request.
+ *
+ * @throws Exception
  */
 function handleApiRequest(Request $request, Builder $query, array $with = [], $resourceClass = null): array
 {
@@ -135,6 +201,13 @@ function handleApiRequest(Request $request, Builder $query, array $with = [], $r
     $sortBy = $request->query('sortBy');
     $sortDirection = $request->query('sortDirection', 'asc');
     $selectFields = $request->query('select');
+    $request->validate([
+        'operator' => 'nullable|in:=,!=,<,<=,>,>=,like,ilike',
+    ]);
+    $operator = $request->query('operator', 'like');
+
+    // this class will map and inject into request the low level query from the frontend high level query
+    new SearchParamMapper($request);
 
     // Eager load relationships
     if (! empty($with)) {
@@ -149,42 +222,12 @@ function handleApiRequest(Request $request, Builder $query, array $with = [], $r
 
     // Apply filters
     foreach ($request->query() as $key => $value) {
-        if (! in_array($key, ['page', 'limit', 'searchTerm', 'sortBy', 'sortDirection', 'select', 'where', 'exclude', 'company'])) {
+        // Match keys that end with "-limit" or "-page"
+        if (! preg_match('/.*-(limit|page)$/', $key) && ! in_array($key, [
+            'page', 'limit', 'search', 'searchTerm', 'sortBy', 'sortDirection',
+            'select', 'where', 'orWhere', 'exclude', 'company', 'q', 'or', 'operator',
+        ])) {
             $query->where($key, $value);
-        }
-    }
-
-    // Check for the 'where' parameter
-    if ($request->query('where')) {
-        $filter = $request->query('where');
-        $parts = explode(',', $filter);
-
-        if (count($parts) < 2) {
-            return ['error' => 'Invalid where format. Use where=column,value or where=with:relation,column,value'];
-        }
-
-        $relationParts = [];
-
-        // Extract multiple 'with:' relations dynamically
-        while (! empty($parts) && str_starts_with($parts[0], 'with:')) {
-            $relationParts[] = str_replace('with:', '', array_shift($parts));
-        }
-
-        $column = $parts[0] ?? null;
-        $value = $parts[1] ?? null;
-
-        if (! $column || $value === null) {
-            return ['error' => 'Invalid where format. Use where=column,value or where=with:relation,column,value'];
-        }
-
-        if (! empty($relationParts)) {
-            // Handle nested relational filtering
-            $query->whereHas(implode('.', $relationParts), function ($relationQuery) use ($column, $value) {
-                $relationQuery->where($column, $value);
-            });
-        } else {
-            // Handle standard column filtering (previous system support)
-            $query->where($column, $value);
         }
     }
 
@@ -192,9 +235,101 @@ function handleApiRequest(Request $request, Builder $query, array $with = [], $r
     $searchTerm = $request->query('searchTerm');
     if ($searchTerm !== null) {
         $columns = Schema::getColumnListing($query->getModel()->getTable());
-        $query->where(function ($query) use ($searchTerm, $columns) {
+
+        //        if ($request->query('or')) {
+        //            $query->orWhere(function ($query) use ($operator, $searchTerm, $columns) {
+        //                foreach ($columns as $column) {
+        //                    $query->orWhere($column, $operator, "%$searchTerm%");
+        //                }
+        //            });
+        //        }
+
+        $query->where(function ($query) use ($operator, $searchTerm, $columns) {
             foreach ($columns as $column) {
-                $query->orWhere($column, 'like', "%$searchTerm%");
+                $query->orWhere($column, $operator, "%$searchTerm%");
+            }
+        });
+    }
+
+    // Check for the 'where' parameter
+    if ($request->query('where')) {
+        $filters = $request->query('where');
+        // Multiple where conditions can be passed as an array
+        $filters = is_array($filters) ? $filters : [$filters];
+
+        $query->where(function ($q) use ($operator, $filters) {
+            foreach ($filters as $filter) {
+                $parts = explode(',', $filter);
+
+                if (count($parts) < 2) {
+                    throw new Exception(response()->json([
+                        'error' => 'Invalid where format. Use where=column,value or where=with:relation,column,value',
+                    ], 400));
+                }
+
+                $relationParts = [];
+
+                // Extract multiple 'with:' relations dynamically
+                while (! empty($parts) && str_starts_with($parts[0], 'with:')) {
+                    $relationParts[] = str_replace('with:', '', array_shift($parts));
+                }
+
+                $column = $parts[0] ?? null;
+                $value = $parts[1] ?? null;
+
+                if (! $column || $value === null) {
+                    throw new Exception(response()->json([
+                        'error' => 'Invalid where format. Use where=column,value or where=with:relation,column,value',
+                    ], 400));
+                }
+
+                if (! empty($relationParts)) {
+                    // Handle nested relational filtering with where condition
+                    $q->whereHas(implode('.', $relationParts), function ($relationQuery) use ($operator, $column, $value) {
+                        $relationQuery->where($column, $operator, $value);
+                    });
+                } else {
+                    // Handle standard column filtering where
+                    $q->where($column, $operator, $value);
+                }
+            }
+        });
+    }
+
+    // Check for the 'orWhere' parameter
+    if ($request->query('orWhere')) {
+        $filters = $request->query('orWhere');
+
+        // Multiple where conditions can be passed as an array
+        $filters = is_array($filters) ? $filters : [$filters];
+        $query->orWhere(function ($orQuery) use ($operator, $filters) {
+            foreach ($filters as $filter) {
+                $parts = explode(',', $filter);
+
+                if (count($parts) < 2) {
+                    return ['error' => 'Invalid orWhere format. Use orWhere=column,value or orWhere=with:relation,column,value'];
+                }
+
+                $relationParts = [];
+
+                while (! empty($parts) && str_starts_with($parts[0], 'with:')) {
+                    $relationParts[] = str_replace('with:', '', array_shift($parts));
+                }
+
+                $column = $parts[0] ?? null;
+                $value = $parts[1] ?? null;
+
+                if (! $column || $value === null) {
+                    return ['error' => 'Invalid orWhere format. Use orWhere=column,value or orWhere=with:relation,column,value'];
+                }
+
+                if (! empty($relationParts)) {
+                    $orQuery->orWhereHas(implode('.', $relationParts), function ($relationQuery) use ($operator, $column, $value) {
+                        $relationQuery->where($column, $operator, $value);
+                    });
+                } else {
+                    $orQuery->orWhere($column, $operator, $value);
+                }
             }
         });
     }
@@ -228,10 +363,10 @@ function handleApiRequest(Request $request, Builder $query, array $with = [], $r
         'totalPage' => $limit === 'all' ? 1 : $results->lastPage(),
     ];
 
-    if (!$resourceClass) {
+    // Apply dynamic resource transformation
+    if (! $resourceClass) {
         $resourceClass = getResourceClass($query->getModel());
     }
-    // Apply dynamic resource transformation
 
     $result = $request->query('select') !== null
         ? ($results instanceof LengthAwarePaginator ? $results->items() : $results->toArray())
@@ -244,10 +379,20 @@ function handleApiRequest(Request $request, Builder $query, array $with = [], $r
 
 }
 
+function isStaff(): bool
+{
+    return auth()->user()->hasRole('staff');
+}
+
+function isAgent(): bool
+{
+    return auth()->user()->hasRole('agent');
+}
+
 /**
- * Get the current authenticated user.
+ * Check if the user is an admin.
  */
 function isAdmin(): bool
 {
-    return auth()->user()?->hasRole('admin');
+    return auth()->check() && auth()->user()->hasRole('admin');
 }

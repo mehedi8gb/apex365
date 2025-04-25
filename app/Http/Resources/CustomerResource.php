@@ -22,6 +22,7 @@ class CustomerResource extends JsonResource
             'nid' => $this->nid,
             'address' => $this->address,
             'balance' => $this->account?->balance,
+            'referral_code' => $this->theReferralCode?->code,
             'created_at' => $this->created_at->format('Y-m-d H:i A'),
         ];
     }
