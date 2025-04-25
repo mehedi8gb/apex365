@@ -23,20 +23,20 @@ class UsersSeeder extends Seeder
         ]);
         $superAgent->assignRole('admin');
 
-        UserFactory::times(20)->create();
+//        UserFactory::times(20)->create();
 
-        $users = User::all();
-        $users->each(function ($user) use ($superAgent) {
-            ReferralCodeFactory::times(1)->create([
-                'user_id' => $user->id,
-            ]);
-
-            if ($user->id === $superAgent->id) {
-                return;
-            }
-
-            $user->assignRole('customer');
-        });
+//        $users = User::all();
+//        $users->each(function ($user) use ($superAgent) {
+//            ReferralCodeFactory::times(1)->create([
+//                'user_id' => $user->id,
+//            ]);
+//
+//            if ($user->id === $superAgent->id) {
+//                return;
+//            }
+//
+//            $user->assignRole('customer');
+//        });
 
         //        // Create Super Admin
         //        $superAgent = User::factory()->create([
