@@ -3,12 +3,12 @@
 set -e  # Exit if any command fails
 
 # Log file
-LOG_FILE="/var/www/apex365/deploy.log"
+LOG_FILE="/var/www/replica-apex365/deploy.log"
 
 echo "Starting deployment at $(date)" | tee -a $LOG_FILE
 
 # Navigate to project directory
-cd /var/www/apex365 || { echo "Failed to change directory!"; exit 1; }
+cd /var/www/replica-apex365 || { echo "Failed to change directory!"; exit 1; }
 
 # Get the branch name from the environment variable (passed from GitHub Actions)
 BRANCH_NAME=${BRANCH_NAME:-"master"}  # Default to master if not provided
@@ -25,7 +25,7 @@ php artisan down || true
 
 # Install dependencies
 echo "Installing dependencies..." | tee -a $LOG_FILE
-composer install --no-dev --optimize-autoloader 2>&1 | tee -a $LOG_FILE
+#composer install --no-dev --optimize-autoloader 2>&1 | tee -a $LOG_FILE
 
 # Run database migrations
 echo "Skipping migrations..." | tee -a $LOG_FILE
@@ -37,8 +37,8 @@ php artisan optimize:clear | tee -a $LOG_FILE
 php artisan optimize | tee -a $LOG_FILE
 
 # Set correct permissions (if needed)
-chown -R www-data:www-data /var/www/apex365
-chmod -R 775 /var/www/apex365/storage /var/www/apex365/bootstrap/cache
+chown -R www-data:www-data /var/www/replica-apex365
+chmod -R 775 /var/www/replica-apex365/storage /var/www/replica-apex365/bootstrap/cache
 
 # Restart queue workers (if using Laravel queue)
 echo "Restarting queue workers..." | tee -a $LOG_FILE

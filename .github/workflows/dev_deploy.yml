@@ -1,9 +1,9 @@
-name: Dev Deploy ApexDrive365 Backend
+name: Dev Deploy NHL Replica Backend
 
 on:
   pull_request:
     branches:
-      - '*'  # Triggers when you create a PR for any branch
+      - 'staging_replica_nhl'  # Triggers when you create a PR for any branch
 
 jobs:
   dev-deploy:
@@ -23,7 +23,7 @@ jobs:
         BRANCH_NAME: ${{ github.event_name == 'pull_request' && github.head_ref || github.ref_name }}  # Use head_ref for PRs, ref_name for pushes
       run: |
         ssh -o StrictHostKeyChecking=no ${{ secrets.USERNAME }}@${{ secrets.HOST }} \
-        "BRANCH_NAME=${{ github.event_name == 'pull_request' && github.head_ref || github.ref_name }} bash /var/www/staging-apex365/bin/staging_deploy.sh"
+        "BRANCH_NAME=${{ github.event_name == 'pull_request' && github.head_ref || github.ref_name }} bash /var/www/staging-replica-apex365/bin/staging_deploy.sh"
 
     - name: Send Slack Notification on Success
       if: success()
@@ -38,7 +38,7 @@ jobs:
                 "fields": [
                   {
                     "title": "Project",
-                    "value": "ApexDrive365 Backend",
+                    "value": "NHL Backend",
                     "short": true
                   },
                   {
@@ -76,7 +76,7 @@ jobs:
                 "fields": [
                   {
                     "title": "Project",
-                    "value": "ApexDrive365 Backend",
+                    "value": "NHL Backend",
                     "short": true
                   },
                   {

@@ -3,12 +3,12 @@
 set -e  # Exit if any command fails
 
 # Log file
-LOG_FILE="/var/www/staging-apex365/staging_deploy.log"
+LOG_FILE="/var/www/staging-replica-apex365/staging_deploy.log"
 
 echo "Starting development deployment at $(date)" | tee -a $LOG_FILE
 
 # Navigate to project directory
-cd /var/www/staging-apex365 || { echo "Failed to change directory!"; exit 1; }
+cd /var/www/staging-replica-apex365 || { echo "Failed to change directory!"; exit 1; }
 
 # Get the branch name from the environment variable (passed from GitHub Actions)
 BRANCH_NAME=${BRANCH_NAME:-"dev"}  # Default to dev if not provided
@@ -49,8 +49,8 @@ php artisan optimize | tee -a $LOG_FILE
 
 # Set correct permissions
 echo "Setting permissions..." | tee -a $LOG_FILE
-chown -R www-data:www-data /var/www/staging-apex365
-chmod -R 775 /var/www/staging-apex365/storage /var/www/staging-apex365/bootstrap/cache
+chown -R www-data:www-data /var/www/staging-replica-apex365
+chmod -R 775 /var/www/staging-replica-apex365/storage /var/www/staging-replica-apex365/bootstrap/cache
 
 # Bring application back online
 php artisan up || true
