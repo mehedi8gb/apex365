@@ -41,12 +41,12 @@ class WithdrawController extends Controller
             return sendErrorResponse('Insufficient balance', 400);
         }
 
-        if ($validatedData['amount'] < 50) {
-            return sendErrorResponse("Minimum withdrawal amount is 50", 400);
+        if ($validatedData['amount'] < 100) {
+            return sendErrorResponse("Minimum withdrawal amount is 100", 400);
         }
 
-        if ($account->balance < 10 || ($account->balance - $validatedData['amount']) < 10) {
-            return sendErrorResponse('Account balance must be 10 after withdraw', 400);
+        if ($account->balance < 100 || ($account->balance - $validatedData['amount']) < 100) {
+            return sendErrorResponse('Account balance must be 100 after withdraw', 400);
         }
 
         $withdraw = Withdraw::create([
