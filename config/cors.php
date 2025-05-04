@@ -22,7 +22,9 @@ return [
     'allowed_origins' => [
         'https://nhl-dashboard.apexdrive365.com',
         'https://apex-dashboard-five.vercel.app',
-        'http://localhost:3000',
+        'https://nhl-dashboard.apexdrive365.com',
+        'https://staging-nhl-dashboard.apexdrive365.com',
+        'http://localhost:3000'
     ],
 
     'allowed_origins_patterns' => [],
