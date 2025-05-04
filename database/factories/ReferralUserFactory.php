@@ -20,8 +20,10 @@ class ReferralUserFactory extends Factory
     public function definition(): array
     {
         return [
-            'referral_id' => Referral::inRandomOrder()->first()->id,
             'user_id' => User::factory(),
+            'referrer_id' => User::factory(),
+            'referral_code_id' => ReferralCodeFactory::times(1)->create()->first()->id,
+            'level' => $this->faker->numberBetween(1, 5),
         ];
     }
 }

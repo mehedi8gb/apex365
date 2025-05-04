@@ -2,10 +2,15 @@
 
 namespace App\Http\Controllers;
 
+use App\Helpers\ReferralHelper;
 use App\Http\Resources\TransactionResource;
+use App\Http\Resources\UserTransactionsIdResource;
 use App\Models\Transaction;
+use App\Models\User;
+use Exception;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Throwable;
 
 class TransactionController extends Controller
 {
@@ -25,7 +30,7 @@ class TransactionController extends Controller
      */
     public function show($id): JsonResponse
     {
-        $transaction = Transaction::find($id);
+        $transaction = Transaction::findOrFail($id);
 
         return sendSuccessResponse('Transaction retrieved successfully', new TransactionResource($transaction));
     }
@@ -93,5 +98,60 @@ class TransactionController extends Controller
         Transaction::whereIn('transactionId', request()->transactionIds)->delete();
 
         return sendSuccessResponse('Transactions deleted successfully');
+    }
+
+    /**
+     * Get all transactions for a specific user
+     */
+    public function userTransactions($userId): JsonResponse
+    {
+        $user = User::with('transactionIds')->findOrFail($userId);
+
+        return sendSuccessResponse('Transactions retrieved successfully', UserTransactionsIdResource::make($user));
+    }
+
+    /**
+     * Get all transactions for all users
+     * @throws Exception
+     */
+    public function usersTransactions(Request $request): JsonResponse
+    {
+        $users =  User::query();
+
+        $results = handleApiRequest($request, $users, ['transactionIds'], UserTransactionsIdResource::class);
+
+        return sendSuccessResponse('Transactions retrieved successfully', $results);
+    }
+
+    /**
+     * Apply commissions to single transaction's user
+     *
+     * @throws Exception
+     * @throws Throwable
+     */
+    public function ApplyCommissions(Request $request): JsonResponse
+    {
+        $request->validate([
+            'transactionId' => 'required|string|exists:transactions,transactionId',
+            'userId' => 'required|integer|exists:users,id',
+        ]);
+
+        $transaction = Transaction::where('transactionId', $request->transactionId)->first();
+
+        if (! isset($transaction->userId)) {
+
+            $referralHelper = new ReferralHelper;
+
+            // Use the same method calls, just on the instance
+            $referralHelper->updateReferralChain($request->userId);
+            $referralHelper->distributeReferralPoints('purchase');
+            $referralHelper->updateReferralLeaderboard();
+
+            $transaction->update(['userId' => $request->userId]);
+
+            return sendSuccessResponse('Commissions applied successfully');
+        }
+
+        return sendErrorResponse('Commissions already applied', 422);
     }
 }
