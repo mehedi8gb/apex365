@@ -28,7 +28,17 @@ class User extends Authenticatable implements JWTSubject
         'password',
         'nid',
         'address',
-        'points',             // points associated with the user
+        'points',
+
+        // New fields
+        'business_name',
+        'business_type',
+        'shop_email',
+        'shop_phone',
+        'country',
+        'shop_address',
+        'topbar_announcement',
+        'shop_qr_code',
     ];
 
     public function referralCode()
@@ -41,7 +51,6 @@ class User extends Authenticatable implements JWTSubject
         return $this->hasOne(ReferralCode::class, 'user_id');
     }
 
-
     public function referralUsers(): HasMany
     {
         return $this->hasMany(ReferralUser::class);
@@ -51,7 +60,6 @@ class User extends Authenticatable implements JWTSubject
     {
         return $this->hasMany(ReferralUser::class, 'referrer_id'); // Referrals made by this user
     }
-
 
     public function leaderboard(): HasOne
     {
@@ -115,7 +123,7 @@ class User extends Authenticatable implements JWTSubject
     public function getProfilePhotoUrlAttribute(): Application|string|\Illuminate\Contracts\Routing\UrlGenerator|null
     {
         return $this->profile_photo_path
-            ? url('storage/' . $this->profile_photo_path)
+            ? url('storage/'.$this->profile_photo_path)
             : null;
     }
 }
