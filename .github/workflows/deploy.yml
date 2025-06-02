@@ -3,7 +3,7 @@ name: Deploy ApexDrive365 Backend
 on:
   push:
     branches:
-    - master  # Only runs when code is pushed to master
+    - main  # Only runs when code is pushed to main
 
 jobs:
   deploy:
