@@ -3,7 +3,7 @@ name: Dev Deploy ApexDrive365 Backend
 on:
   pull_request:
     branches:
-      - '*'  # Triggers when you create a PR for any branch
+      - staging
 
 jobs:
   dev-deploy:
