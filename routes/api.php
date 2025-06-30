@@ -3,10 +3,10 @@
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\CommissionController;
 use App\Http\Controllers\CustomerController;
-use App\Http\Controllers\ReferralController;
 use App\Http\Controllers\SpinnerController;
 use App\Http\Controllers\SpinnerLeaderboardController;
 use App\Http\Controllers\TransactionController;
+use App\Http\Controllers\UserShopController;
 use App\Http\Controllers\WithdrawController;
 use App\Http\Middleware\isAdminMiddleware;
 use App\Http\Middleware\JwtMiddleware;
@@ -52,6 +52,7 @@ Route::middleware([JwtMiddleware::class])->group(function () {
     Route::apiResource('users', CustomerController::class)->middleware([isAdminMiddleware::class]);
     Route::apiResource('leaderboard', SpinnerLeaderboardController::class);
 
-
+    Route::post('/shop-details', [UserShopController::class, 'updateShopDetails']);
+    Route::get('/shop-details', [UserShopController::class, 'getShopDetails']);
 });
 // role based route system has to be integrated
