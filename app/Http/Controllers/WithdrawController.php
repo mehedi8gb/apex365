@@ -5,12 +5,16 @@ namespace App\Http\Controllers;
 use App\Http\Resources\WithdrawResource;
 use App\Models\Account;
 use App\Models\Withdraw;
+use Exception;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 
 class WithdrawController extends Controller
 {
+    /**
+     * @throws Exception
+     */
     public function index(Request $request): JsonResponse
     {
         $withdraws = Withdraw::query();
