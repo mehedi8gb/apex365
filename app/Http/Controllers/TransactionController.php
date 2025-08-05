@@ -16,6 +16,7 @@ class TransactionController extends Controller
 {
     /**
      * List all transactions
+     * @throws Exception
      */
     public function index(Request $request): JsonResponse
     {

@@ -17,6 +17,6 @@ class ReferralCodeSeeder extends Seeder
         ReferralCodeFactory::times(1)->create([
             'code' => "REF-12345678",
         ]);
-        ReferralCodeFactory::times(99)->create();
+//        ReferralCodeFactory::times(99)->create();
     }
 }
