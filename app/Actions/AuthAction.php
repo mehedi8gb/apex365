@@ -2,7 +2,7 @@
 
 namespace App\Actions;
 
-use App\Helpers\ReferralHelper;
+use App\Jobs\ProcessReferralChain;
 use App\Models\ReferralCode;
 use App\Models\Transaction;
 use App\Models\User;
@@ -21,38 +21,29 @@ class AuthAction
      */
     public static function register(array $validated): array
     {
-        DB::beginTransaction();
+        $transaction = self::validateTransaction($validated['transactionId']);
 
-        try {
-            $transaction = self::validateTransaction($validated['transactionId']);
+        $referrerAndCode = ReferralCode::where('code', $validated['referralId'])->firstOrFail();
 
-            $referrerAndCode = ReferralCode::where('code', $validated['referralId'])->firstOrFail();
+        $user = self::createUser($validated);
+        $transaction->update(['userId' => $user->id]);
 
-            $user = self::createUser($validated);
-            $transaction->update(['userId' => $user->id]);
+        ProcessReferralChain::dispatch($user, $referrerAndCode);
 
-            self::applyReferralChain($user, $referrerAndCode);
-            $user->assignRole('customer');
+        $user->assignRole('customer');
 
-            $credentials = self::getCredentials($validated);
+        $credentials = self::getCredentials($validated);
 
-            if (! Auth::attempt($credentials)) {
-                throw new Exception('Authentication failed after registration');
-            }
-
-            $token = self::generateToken(Auth::user());
-
-            DB::commit();
-
-            return [
-                'transaction_id_required' => ! (bool) auth()->user()->transaction_id,
-                'access_token' => $token,
-            ];
-
-        } catch (Throwable $e) {
-            DB::rollBack();
-            throw $e;
+        if (! Auth::attempt($credentials)) {
+            throw new Exception('Authentication failed after registration');
         }
+
+        $token = self::generateToken(Auth::user());
+
+        return [
+            'transaction_id_required' => ! (bool) auth()->user()->transaction_id,
+            'access_token' => $token,
+        ];
     }
 
     /**
@@ -84,14 +75,14 @@ class AuthAction
     /**
      * @throws Throwable
      */
-    private static function applyReferralChain(User $user, ReferralCode $referrer): void
-    {
-        $helper = new ReferralHelper();
-        $helper->createReferralChain($user, $referrer);
-        $helper->distributeReferralPoints();
-        $helper->updateReferralLeaderboard();
-        $helper->generateReferralCode();
-    }
+    //    private static function applyReferralChain(User $user, ReferralCode $referrer): void
+    //    {
+    //        $helper = new ReferralHelper();
+    //        $helper->createReferralChain($user, $referrer);
+    //        $helper->distributeReferralPoints();
+    //        $helper->updateReferralLeaderboard();
+    //        $helper->generateReferralCode();
+    //    }
 
     /**
      * @throws Exception
