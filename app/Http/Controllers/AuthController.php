@@ -2,7 +2,9 @@
 
 namespace App\Http\Controllers;
 
+use App\Actions\AuthAction;
 use App\Helpers\ReferralHelper;
+use App\Http\Requests\RegisterRequest;
 use App\Http\Resources\UserResource;
 use App\Mail\OTPMail;
 use App\Models\Commission;
@@ -21,92 +23,20 @@ use Illuminate\Support\Str;
 use libphonenumber\NumberParseException;
 use libphonenumber\PhoneNumberFormat;
 use libphonenumber\PhoneNumberUtil;
-use Throwable;
 use Tymon\JWTAuth\Exceptions\JWTException;
 use Tymon\JWTAuth\Facades\JWTAuth;
 
 class AuthController extends Controller
 {
-    public function register(Request $request): JsonResponse
+    public function register(RegisterRequest $request): JsonResponse
     {
-        $validated = $request->validate([
-            'name' => 'required|string|max:255',
-            'email' => 'nullable|email:rfc,dns|unique:users,email|required_without:phone',
-            'phone' => 'nullable|string|unique:users,phone|max:15|required_without:email',
-            'password' => 'required|string|min:6',
-            'nid' => 'required|string|min:10|max:17',
-            'address' => 'required|string|max:255',
-            'referralId' => 'required|string|exists:referral_codes,code', // Must exist in referral_codes table
-            'transactionId' => 'required|string|exists:transactions,transactionId', // Must exist in transactions table
-        ]);
-
         try {
-            $transaction = Transaction::where('transactionId', $request->transactionId)->first();
-
-            // Production Logic: Allow signup only if userId is NULL
-            if (!App::isLocal()) {
-                if ($transaction->userId !== null) {
-                    return sendErrorResponse('Transaction id already used, try with a new one', 400);
-                }
-            }
-
-            // 1. Find the referrer user
-            $referrerAndCode = ReferralCode::where('code', $validated['referralId'])->firstOrFail();
-
-            DB::beginTransaction();
-
-            // 3. Create new user
-            $user = new User([
-                'name' => $request->name,
-                'email' => $request->email,
-                'phone' => $request->phone,
-                'nid' => $request->nid,
-                'address' => $request->address,
-                'password' => Hash::make($request->password),
-            ]);
-            $user->save();
-
-            // Assign userId to transaction
-            $transaction->update(['userId' => $user->id]);
-
-            DB::commit();
-
-            // In your registration method:
-            $referralHelper = new ReferralHelper();
-
-            // Use the same method calls, just on the instance
-            $referralHelper->createReferralChain($user, $referrerAndCode);
-            $referralHelper->distributeReferralPoints();
-            $referralHelper->updateReferralLeaderboard();
-            $referralHelper->generateReferralCode($user);
-
-            // Assign the role to the user
-            $user->assignRole('customer');
-
-            if ($request->filled('email')) {
-                $credentials = $request->only(['email', 'password']);
-            } elseif ($request->filled('phone')) {
-                $credentials = $request->only(['phone', 'password']);
-            } else {
-                return sendErrorResponse('Email or Phone is required', 422);
-            }
-
-            Auth::attempt($credentials);
-
-            // Generate refresh token (optional: store securely if needed)
-            $refreshToken = JWTAuth::claims(['refresh' => true])->fromUser(Auth::user());
-
-            $data = [
-                'transaction_id_required' => ! (bool) auth()->user()->transaction_id,
-                'access_token' => $refreshToken ?? 'null',
-            ];
+            $data = AuthAction::register($request->validated());
 
             return sendSuccessResponse('Customer registered successfully', $data, 201);
 
-        } catch (\Exception|Throwable $e) {
-            DB::rollBack();
-
-            return response()->json(['error' => 'Registration failed', 'message' => $e->getMessage()], 500);
+        } catch (\Throwable $e) {
+            return sendErrorResponse('Registration failed: ' . $e->getMessage(), 500);
         }
     }
 

@@ -15,10 +15,14 @@ use Throwable;
 
 class ReferralHelper
 {
-    private $referralUser;
-    private $commissions = [];
-    private $currentUser;
+    private ReferralUser $referralUser;
+
+    private array $commissions = [];
+
+    private User $currentUser;
+
     private const MAX_RETRIES = 3;
+
     private const RETRY_DELAY_MS = 100;
 
     /**
@@ -41,10 +45,10 @@ class ReferralHelper
         }
     }
 
-    public function updateReferralChain($userId): void
+    public function updateReferralChain(User $user): void
     {
-       $this->currentUser = User::find($userId);
-       $this->referralUser = ReferralUser::where('user_id', $userId)->first();
+        $this->currentUser = $user;
+        $this->referralUser = ReferralUser::where('user_id', $user->id)->first();
     }
 
     /**
@@ -52,7 +56,7 @@ class ReferralHelper
      */
     public function distributeReferralPoints(string $commissionType = 'signup'): void
     {
-        if (!$this->referralUser?->referrer || !$this->referralUser?->user) {
+        if (! $this->referralUser?->referrer || ! $this->referralUser?->user) {
             throw new Exception('Invalid referral user or referrer.');
         }
 
@@ -68,7 +72,7 @@ class ReferralHelper
             // Process higher levels
             $level = 2;
             while ($currentReferrer && $level <= count($commissionAmounts)) {
-                if (!isset($commissionAmounts[$level])) {
+                if (! isset($commissionAmounts[$level])) {
                     throw new Exception("Commission amount not defined for level $level.");
                 }
 
@@ -112,8 +116,8 @@ class ReferralHelper
             $retries = 0;
             $success = false;
 
-            while (!$success && $retries < self::MAX_RETRIES) {
-                    DB::beginTransaction();
+            while (! $success && $retries < self::MAX_RETRIES) {
+                DB::beginTransaction();
                 try {
                     // Get commission stats
                     $stats = DB::table('commissions')
@@ -182,14 +186,14 @@ class ReferralHelper
     /**
      * @throws Throwable
      */
-    public function generateReferralCode(User $user): string
+    public function generateReferralCode(): string
     {
         DB::beginTransaction();
         try {
             $referralCode = ReferralCode::create([
-                'code' => Str::random(8),
+                'code' => self::generateCode(),
                 'type' => 'user',
-                'user_id' => $user->id,
+                'user_id' => $this->currentUser->id,
             ])->code;
             DB::commit();
 
@@ -198,5 +202,17 @@ class ReferralHelper
             DB::rollBack();
             throw $e;
         }
+    }
+
+    protected static function generateCode(int $length = 8, string $prefix = 'REF'): string
+    {
+        $code = $prefix.'-'.strtoupper(Str::random($length));
+
+        // Optionally ensure uniqueness (safe for a small scale, refactor for scaling)
+        while (ReferralCode::where('code', $code)->exists()) {
+            $code = $prefix.'-'.strtoupper(Str::random($length));
+        }
+
+        return $code;
     }
 }

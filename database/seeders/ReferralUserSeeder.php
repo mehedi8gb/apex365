@@ -25,7 +25,7 @@ class ReferralUserSeeder extends Seeder
         // Number of referral users you want to create
         $count = 20;
 
-        // Prevent overflow: do not exceed available user count
+        // Prevent overflow: do not exceed the available user count
         $totalToCreate = min($count, count($userIds));
 
         for ($i = 0; $i < $totalToCreate; $i++) {
@@ -42,7 +42,7 @@ class ReferralUserSeeder extends Seeder
             $referralHelper->createReferralChain($user, $referrerAndCode);
             $referralHelper->distributeReferralPoints();
             $referralHelper->updateReferralLeaderboard();
-            $referralHelper->generateReferralCode($user);
+            $referralHelper->generateReferralCode();
         }
     }
 }
