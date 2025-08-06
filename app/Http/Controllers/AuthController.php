@@ -3,18 +3,14 @@
 namespace App\Http\Controllers;
 
 use App\Actions\AuthAction;
-use App\Helpers\ReferralHelper;
 use App\Http\Requests\RegisterRequest;
 use App\Http\Resources\UserResource;
 use App\Mail\OTPMail;
 use App\Models\Commission;
-use App\Models\ReferralCode;
-use App\Models\Transaction;
 use App\Models\User;
 use Carbon\Carbon;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\App;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
@@ -28,6 +24,7 @@ use Tymon\JWTAuth\Facades\JWTAuth;
 
 class AuthController extends Controller
 {
+
     public function register(RegisterRequest $request): JsonResponse
     {
         try {
@@ -258,7 +255,7 @@ class AuthController extends Controller
             $phoneUtil = PhoneNumberUtil::getInstance();
             $numberProto = $phoneUtil->parse($phone, 'BD'); // BD = Bangladesh
             if ($phoneUtil->isValidNumber($numberProto)) {
-                self::$phone = $phoneUtil->format($numberProto, PhoneNumberFormat::E164); // +8801XXXXXXXXX
+                $phoneUtil->format($numberProto, PhoneNumberFormat::E164); // +8801XXXXXXXXX
 
                 return true;
             }
