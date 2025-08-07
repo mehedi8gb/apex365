@@ -27,6 +27,8 @@ class CustomerAction
 
     private static function syncRoleIfNeeded(array $validated, User $user): void
     {
+        if ($user->hasRole('admin')) return;
+
         if (isset($validated['role'])) {
             $user->syncRoles($validated['role']);
         }

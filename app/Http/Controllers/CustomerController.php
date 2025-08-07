@@ -64,10 +64,6 @@ class CustomerController extends Controller
     {
         $user = CustomerAction::handleUpdate($request->validated(), $user);
 
-        if (!$user) {
-            return sendErrorResponse('Record not found', 404);
-        }
-
         return sendSuccessResponse('Record updated successfully', new CustomerResource($user));
     }
 
