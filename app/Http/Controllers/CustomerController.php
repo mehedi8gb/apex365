@@ -62,6 +62,10 @@ class CustomerController extends Controller
     // update function to update the data
     public function update(UpdateUserRequest $request, User $user): JsonResponse
     {
+        if ($user->hasRole('admin')) {
+            return sendErrorResponse('You cannot update admin user', 403);
+        }
+
         $user = CustomerAction::handleUpdate($request->validated(), $user);
 
         return sendSuccessResponse('Record updated successfully', new CustomerResource($user));

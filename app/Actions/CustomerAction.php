@@ -36,6 +36,8 @@ class CustomerAction
 
     private static function updateUser(User $user, array $validated): void
     {
+        if ($user->hasRole('admin')) return;
+
         if (isset($validated['password'])) {
             $validated['password'] = bcrypt($validated['password']);
         }
