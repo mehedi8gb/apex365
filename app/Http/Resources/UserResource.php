@@ -2,7 +2,6 @@
 
 namespace App\Http\Resources;
 
-use App\Models\ReferralCode;
 use Illuminate\Http\Resources\Json\JsonResource;
 
 class UserResource extends JsonResource
@@ -23,9 +22,10 @@ class UserResource extends JsonResource
             'name' => $this->name,
             'email' => $this->email,
             'phone' => $this->phone,
-            'balance' => $this->whenLoaded('account', fn() => $this->account->balance),
+            'balance' => $this->whenLoaded('account', fn () => $this->account->balance),
             'nid' => $this->nid,
             'address' => $this->address,
+            'date_of_birth' => $this->date_of_birth?->format('Y-m-d'),
             'referral_code' => $this->theReferralCode?->code,
             'leaderboard' => new LeaderboardResource($this->whenLoaded('leaderboard')),
             'commissions' => CommissionResource::collection($this->commissions),
@@ -40,4 +40,3 @@ class UserResource extends JsonResource
         ];
     }
 }
-

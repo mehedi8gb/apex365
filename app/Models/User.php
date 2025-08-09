@@ -26,6 +26,7 @@ class User extends Authenticatable implements JWTSubject
         'password',
         'nid',
         'address',
+        'date_of_birth',
         'points',             // points associated with the user
 
         'business_name',

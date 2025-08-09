@@ -34,6 +34,7 @@ class CustomerResource extends JsonResource
             'balance' => $this->whenLoaded('account', fn () => $this->account->balance),
             'nid' => $this->nid,
             'address' => $this->address,
+            'date_of_birth' => $this->date_of_birth?->format('Y-m-d'),
             'referral_code' => $this->theReferralCode?->code,
             'leaderboard' => new LeaderboardResource($this->whenLoaded('leaderboard')),
             'commissions' => CommissionResource::collection($this->commissions),
