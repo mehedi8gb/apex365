@@ -68,6 +68,7 @@ class AuthAction
             'phone' => $data['phone'] ?? null,
             'nid' => $data['nid'],
             'address' => $data['address'],
+            'date_of_birth' => $data['date_of_birth'] ?? null,
             'password' => Hash::make($data['password']),
         ]);
     }

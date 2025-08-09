@@ -31,6 +31,7 @@ class RegisterRequest extends FormRequest
                 'unique:users,nid',
             ],
             'address' => 'required|string|max:255',
+            'date_of_birth' => 'nullable|date_format:Y-m-d',
             'referralId' => 'required|string|exists:referral_codes,code',
             'transactionId' => 'required|string|exists:transactions,transactionId',
         ];
@@ -46,6 +47,7 @@ class RegisterRequest extends FormRequest
             'phone.regex' => 'Phone must be in the format +880XXXXXXXXXX',
             'phone.unique' => 'Phone number is already registered',
             'address.required' => 'Address is required',
+            'date_of_birth.date_format' => 'Date of Birth must be in the format Y-m-d',
             'password.min' => 'Password must be at least 6 characters long',
             'nid.regex' => 'NID must be 10, 13, or 17 digits long',
             'referralId.exists' => 'Referral ID does not exist',
@@ -62,6 +64,7 @@ class RegisterRequest extends FormRequest
             'password' => 'Password',
             'nid' => 'NID',
             'address' => 'Address',
+            'date_of_birth' => 'Date of Birth',
             'referralId' => 'Referral ID',
             'transactionId' => 'Transaction ID',
         ];
