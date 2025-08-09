@@ -225,7 +225,7 @@ function handleApiRequest(Request $request, Builder $query, array $with = [], $r
         // Match keys that end with "-limit" or "-page"
         if (! preg_match('/.*-(limit|page)$/', $key) && ! in_array($key, [
             'page', 'limit', 'search', 'searchTerm', 'sortBy', 'sortDirection',
-            'select', 'where', 'orWhere', 'exclude', 'company', 'q', 'or', 'operator',
+            'select', 'where', 'orWhere', 'exclude', 'company', 'q', 'or', 'operator', 'commissions_page'
         ])) {
             $query->where($key, $value);
         }

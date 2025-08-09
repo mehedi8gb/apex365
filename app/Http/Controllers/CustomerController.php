@@ -16,15 +16,16 @@ class CustomerController extends Controller
      */
     public function index(Request $request): JsonResponse
     {
-        $user = User::query();
-        $results = handleApiRequest($request, $user, [
-            'account',
-            'leaderboard',
-            'referralCode',
-            'commissions'
+        // 1. Base user query with eager loading and commissions count
+        $query = User::query();
+
+        $result = handleApiRequest($request, $query, [
+            'account:id,user_id,balance',
+            'leaderboard:user_id,total_nodes,total_commissions',
+            'theReferralCode:id,user_id,code',
         ], CustomerResource::class);
 
-        return sendSuccessResponse('Records retrieved successfully', $results);
+        return sendSuccessResponse('Customers retrieved successfully', $result);
     }
 
     // make store function to store the data
@@ -70,7 +71,6 @@ class CustomerController extends Controller
 
         return sendSuccessResponse('Record updated successfully', new CustomerResource($user));
     }
-
 
     // destroy function to delete the data
     public function destroy($id): JsonResponse
