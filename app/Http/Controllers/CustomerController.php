@@ -20,6 +20,7 @@ class CustomerController extends Controller
         $query = User::query();
 
         $result = handleApiRequest($request, $query, [
+            'roles',
             'account:id,user_id,balance',
             'leaderboard:user_id,total_nodes,total_commissions',
             'theReferralCode:id,user_id,code',

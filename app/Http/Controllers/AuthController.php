@@ -24,7 +24,6 @@ use Tymon\JWTAuth\Facades\JWTAuth;
 
 class AuthController extends Controller
 {
-
     public function register(RegisterRequest $request): JsonResponse
     {
         try {
@@ -33,7 +32,7 @@ class AuthController extends Controller
             return sendSuccessResponse('Customer registered successfully', $data, 201);
 
         } catch (\Throwable $e) {
-            return sendErrorResponse('Registration failed: ' . $e->getMessage(), 500);
+            return sendErrorResponse('Registration failed: '.$e->getMessage(), 500);
         }
     }
 
@@ -204,7 +203,7 @@ class AuthController extends Controller
 
             return response()->json([
                 'access_token' => $newAccessToken,
-                'expires_in' => config('jwt.ttl')
+                'expires_in' => config('jwt.ttl'),
             ]);
         } catch (JWTException $e) {
             return response()->json(['error' => 'Unable to refresh token'], 401);
@@ -229,6 +228,7 @@ class AuthController extends Controller
     {
         // Fetch the user directly with eager loading to minimize queries
         $user = User::with([
+            'roles',
             'account:id,user_id,balance',
             'leaderboard:user_id,total_nodes,total_commissions',
             'theReferralCode:id,user_id,code',
