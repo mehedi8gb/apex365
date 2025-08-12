@@ -239,13 +239,8 @@ class AuthController extends Controller
             return response()->json(['message' => 'User not found'], 404);
         }
 
-        // Fetch paginated commissions separately
-        $commissions = Commission::with('fromUser:id,name')->where('user_id', $user->id)
-            ->latest()
-            ->paginate(15);
-
         return sendSuccessResponse('User details', [
-            'user' => new UserResource($user, $commissions),
+            'user' => new UserResource($user),
         ]);
     }
 

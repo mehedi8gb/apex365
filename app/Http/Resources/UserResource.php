@@ -2,20 +2,20 @@
 
 namespace App\Http\Resources;
 
+use App\Models\Commission;
 use Illuminate\Http\Resources\Json\JsonResource;
 
 class UserResource extends JsonResource
 {
     protected mixed $commissions;
 
-    public function __construct($resource, $commissions = null)
-    {
-        parent::__construct($resource);
-        $this->commissions = $commissions;
-    }
-
     public function toArray($request): array
-    {
+    {               // Run paginated commissions query here, per user
+        $this->commissions = Commission::with('fromUser:id,name')
+            ->where('user_id', $this->id)
+            ->latest()
+            ->paginate(15);
+
         return [
             'id' => $this->id,
             'role' => $this->getRoleNames()->first(),

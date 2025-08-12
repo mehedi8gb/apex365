@@ -24,7 +24,7 @@ class CustomerController extends Controller
             'account:id,user_id,balance',
             'leaderboard:user_id,total_nodes,total_commissions',
             'theReferralCode:id,user_id,code',
-        ], CustomerResource::class);
+        ]);
 
         return sendSuccessResponse('Customers retrieved successfully', $result);
     }
