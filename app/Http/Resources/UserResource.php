@@ -26,6 +26,7 @@ class UserResource extends JsonResource
             'nid' => $this->nid,
             'address' => $this->address,
             'date_of_birth' => $this->date_of_birth?->format('Y-m-d'),
+            "profile_picture" => config('apex365.microservice.file_api_server') . '/data/profile/' . $this->id,
             'referral_code' => $this->theReferralCode?->code,
             'leaderboard' => new LeaderboardResource($this->whenLoaded('leaderboard')),
             'commissions' => CommissionResource::collection($this->commissions),
