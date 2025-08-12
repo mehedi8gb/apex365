@@ -2,12 +2,16 @@
 
 namespace App\Helpers;
 
+use App\Enums\EarningType;
 use App\Models\Account;
 use App\Models\Commission;
 use App\Models\Leaderboard;
 use App\Models\ReferralCode;
 use App\Models\ReferralUser;
 use App\Models\User;
+use App\Models\UserCoin;
+use App\Models\Withdraw;
+use App\Services\ProfileRankService;
 use Exception;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
@@ -18,6 +22,8 @@ class ReferralHelper
     private ReferralUser $referralUser;
 
     private array $commissions = [];
+
+    private string $commissionType = 'signup';
 
     private User $currentUser;
 
@@ -56,13 +62,14 @@ class ReferralHelper
      */
     public function distributeReferralPoints(string $commissionType = 'signup'): void
     {
-        if (! $this->referralUser?->referrer || ! $this->referralUser?->user) {
+        if (!$this->referralUser?->referrer || !$this->referralUser?->user) {
             throw new Exception('Invalid referral user or referrer.');
         }
+        $this->commissionType = $commissionType;
 
         DB::beginTransaction();
         try {
-            $commissionAmounts = config('commissions.'.$commissionType);
+            $commissionAmounts = config('commissions.' . $this->commissionType);
             $currentReferrer = $this->referralUser->referrer;
             $processedUsers = [$this->currentUser->id];
 
@@ -112,6 +119,7 @@ class ReferralHelper
      */
     public function updateReferralLeaderboard(): void
     {
+        $profileRankService = app(ProfileRankService::class);
         foreach ($this->commissions as $commission) {
             $retries = 0;
             $success = false;
@@ -136,10 +144,8 @@ class ReferralHelper
                         continue;
                     }
 
-                    // Get withdrawn amount
-                    $withdrawn = DB::table('withdraws')
-                        ->where('user_id', $commission->user_id)
-                        ->where('status', 'paid')
+                    // Get the sum of the totalWithdrawn amount
+                    $totalWithdrawn = Withdraw::where('user_id', $commission->user_id)
                         ->sum('amount');
 
                     // Lock and update account
@@ -148,23 +154,58 @@ class ReferralHelper
                         ->first();
 
                     if ($account) {
-                        $account->balance = $stats->total_commissions - ($withdrawn ?? 0);
+                        $account->balance = $stats->total_commissions - ($totalWithdrawn ?? 0);
+                        $account->total_withdrawn = (float) ($totalWithdrawn ?? 0);
                         $account->save();
                     } else {
                         Account::create([
                             'user_id' => $stats->user_id,
-                            'balance' => $stats->total_commissions - ($withdrawn ?? 0),
+                            'balance' => $stats->total_commissions - ($totalWithdrawn ?? 0),
+                            'total_withdrawn' => 0,
                         ]);
                     }
 
-                    // Update leaderboard
-                    Leaderboard::updateOrCreate(
-                        ['user_id' => $stats->user_id],
-                        [
-                            'total_commissions' => $stats->total_commissions,
-                            'total_nodes' => $stats->total_nodes,
-                        ]
-                    );
+                    if ($this->commissionType === 'signup') {
+                        // Calculate coins
+                        $earnedCoins = $profileRankService->getEarnedCoins($stats->total_nodes);
+
+                        // Calculate profile rank
+                        $profileRank = $profileRankService->getRankName($stats->total_nodes);
+
+                        // before inserting into history, check if a rank exists or not if not, then create it
+                        if (!UserCoin::where('user_id', $stats->user_id)->where('rank', $profileRank)->exists()) {
+                            // Insert into history
+                            UserCoin::create([
+                                'user_id' => $stats->user_id,
+                                'coins' => $earnedCoins,
+                                'reason' => EarningType::ReferralEarnings,
+                                'rank' => $profileRank,
+                            ]);
+                        }
+
+                        // Calculate total coins (audit history sum)
+                        $totalCoins = UserCoin::where('user_id', $stats->user_id)->sum('coins');
+
+                        // Update the leaderboard with total coins and rank
+                        Leaderboard::updateOrCreate(
+                            ['user_id' => $stats->user_id],
+                            [
+                                'total_commissions' => $stats->total_commissions,
+                                'total_nodes' => $stats->total_nodes,
+                                'total_earned_coins' => $totalCoins,
+                                'profile_rank' => $profileRank,
+                            ]
+                        );
+                    } else {
+                        // Fallback to old leaderboard update if coins disabled
+                        Leaderboard::updateOrCreate(
+                            ['user_id' => $stats->user_id],
+                            [
+                                'total_commissions' => $stats->total_commissions,
+                                'total_nodes' => $stats->total_nodes,
+                            ]
+                        );
+                    }
 
                     DB::commit();
                     $success = true;
@@ -206,11 +247,11 @@ class ReferralHelper
 
     protected static function generateCode(int $length = 8, string $prefix = 'REF'): string
     {
-        $code = $prefix.'-'.strtoupper(Str::random($length));
+        $code = $prefix . '-' . strtoupper(Str::random($length));
 
         // Optionally ensure uniqueness (safe for a small scale, refactor for scaling)
         while (ReferralCode::where('code', $code)->exists()) {
-            $code = $prefix.'-'.strtoupper(Str::random($length));
+            $code = $prefix . '-' . strtoupper(Str::random($length));
         }
 
         return $code;
