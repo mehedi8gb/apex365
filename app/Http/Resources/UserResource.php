@@ -3,6 +3,7 @@
 namespace App\Http\Resources;
 
 use App\Models\Commission;
+use Carbon\Carbon;
 use Illuminate\Http\Resources\Json\JsonResource;
 
 class UserResource extends JsonResource
@@ -26,8 +27,11 @@ class UserResource extends JsonResource
             'nid' => $this->nid,
             'address' => $this->address,
             'date_of_birth' => $this->date_of_birth?->format('Y-m-d'),
-            "profile_picture" => config('apex365.microservice.file_api_server') . '/data/profile/' . $this->id,
+            'profile_picture' => config('apex365.microservice.file_api_server').'/data/profile/'.$this->id,
             'referral_code' => $this->theReferralCode?->code,
+            'account_created_at' => getFormatedDate($this->created_at),
+
+
             'leaderboard' => new LeaderboardResource($this->whenLoaded('leaderboard')),
             'commissions' => CommissionResource::collection($this->commissions),
             'pagination' => $this->when($this->commissions, function () {
