@@ -1,0 +1,14 @@
+<?php
+
+use App\Http\Controllers\Admin\CommissionSettingController;
+use App\Http\Controllers\CustomerController;
+use App\Http\Controllers\WithdrawController;
+use App\Http\Middleware\isAdminMiddleware;
+use App\Http\Middleware\JwtMiddleware;
+
+Route::middleware([JwtMiddleware::class, isAdminMiddleware::class])->prefix('v2/admin')->group(function () {
+    Route::get('commissions', [CommissionSettingController::class, 'index']);
+    Route::put('commissions/{type}', [CommissionSettingController::class, 'update']);
+    Route::post('withdraws/{id}/approve', [WithdrawController::class, 'approve'])->middleware([isAdminMiddleware::class]);
+    Route::apiResource('users', CustomerController::class)->middleware([isAdminMiddleware::class]);
+});
