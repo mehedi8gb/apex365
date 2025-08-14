@@ -33,7 +33,7 @@ class UserResource extends JsonResource
             'profile_picture' => config('apex365.microservice.file_api_server').'/data/profile/'.$this->id,
             'referral_code' => $this->theReferralCode?->code,
             'account_created_at' => getFormatedDate($this->created_at),
-            'referred_by' => isAdmin()
+            'referred_by' => $this->id === 1 // admin filterd
                 ? [
                     'name' => 'Admin',  // fixed text for admin
                     'phone' => $this->phone
