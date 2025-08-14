@@ -20,7 +20,7 @@ return new class extends Migration
             $table->timestamps(); // when the change occurred
             $table->softDeletes();
 
-            $table->index(['commission_setting_id', 'admin_id']);
+            $table->index(['admin_id']);
         });
     }
 
