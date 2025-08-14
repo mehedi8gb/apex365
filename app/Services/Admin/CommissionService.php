@@ -44,4 +44,12 @@ class CommissionService
 
         return $setting;
     }
+
+    public function delete(int $id): bool
+    {
+        CommissionSetting::deleteDeepJsonField('levels', (array)$id);
+
+        Cache::forget('commission_settings');
+        return true;
+    }
 }
