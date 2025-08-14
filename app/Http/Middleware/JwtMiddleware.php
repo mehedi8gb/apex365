@@ -22,11 +22,11 @@ class JwtMiddleware
             $issuedAt = $payload->get('iat');
             $userUpdatedAt = $user->updated_at?->timestamp;
 
-            if ($userUpdatedAt && $userUpdatedAt > $issuedAt) {
+            if ($userUpdatedAt && $userUpdatedAt > $issuedAt && app()->environment('production')) {
                 return sendErrorResponse('Token invalid due to recent account update. Please login again.', 401);
             }
         } catch (JWTException $e) {
-            return sendErrorResponse('Token not valid', 401);
+            return sendErrorResponse($e->getMessage(), 401);
         }
 
         return $next($request);
