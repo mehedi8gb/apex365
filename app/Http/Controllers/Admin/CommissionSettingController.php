@@ -5,7 +5,7 @@ namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
 use App\Models\CommissionSettingHistory;
-use App\Services\CommissionService;
+use App\Services\Admin\CommissionService;
 use Illuminate\Http\Request;
 
 class CommissionSettingController extends Controller

@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\Admin\AdminRankSettingController;
 use App\Http\Controllers\Admin\CommissionSettingController;
 use App\Http\Controllers\CustomerController;
 use App\Http\Controllers\WithdrawController;
@@ -12,4 +13,8 @@ Route::middleware([JwtMiddleware::class, isAdminMiddleware::class])->prefix('v2/
     Route::get('commissions-history', [CommissionSettingController::class, 'commissionsHistory']);
     Route::post('withdraws/{id}/approve', [WithdrawController::class, 'approve'])->middleware([isAdminMiddleware::class]);
     Route::apiResource('users', CustomerController::class)->middleware([isAdminMiddleware::class]);
+
+    Route::get('rank-settings', [AdminRankSettingController::class, 'index']);
+    Route::put('rank-settings', [AdminRankSettingController::class, 'update']);
+    Route::delete('rank-settings', [AdminRankSettingController::class, 'delete']);
 });

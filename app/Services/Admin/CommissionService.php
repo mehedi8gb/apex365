@@ -1,6 +1,6 @@
 <?php
 // app/Services/CommissionService.php
-namespace App\Services;
+namespace App\Services\Admin;
 
 use App\Models\CommissionSetting;
 use App\Models\CommissionSettingHistory;

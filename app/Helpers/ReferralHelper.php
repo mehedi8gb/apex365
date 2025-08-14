@@ -11,7 +11,7 @@ use App\Models\ReferralUser;
 use App\Models\User;
 use App\Models\UserCoin;
 use App\Models\Withdraw;
-use App\Services\ProfileRankService;
+use App\Services\Admin\ProfileRankService;
 use Exception;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;

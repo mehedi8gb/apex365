@@ -1,5 +1,5 @@
 <?php
-namespace App\Services;
+namespace App\Services\Admin;
 
 class ProfileRankService
 {
@@ -36,5 +36,10 @@ class ProfileRankService
             }
         }
         return 0.0; // fallback default
+    }
+
+    public function getAllRanks()
+    {
+        return $this->ranks;
     }
 }
