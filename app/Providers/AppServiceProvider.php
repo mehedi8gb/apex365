@@ -19,10 +19,10 @@ class AppServiceProvider extends ServiceProvider
     public function register(): void
     {
         $this->app->singleton(ExceptionHandler::class, Handler::class);
-        $this->app->singleton(ProfileRankService::class, function ($app) {
-            $service = $app->make(AdminRankService::class);
-            return new ProfileRankService($service->allAsObjects());
-        });
+//        $this->app->singleton(ProfileRankService::class, function ($app) {
+//            $service = $app->make(AdminRankService::class);
+//            return new ProfileRankService($service->allAsObjects());
+//        });
 
 
     }
@@ -32,9 +32,9 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot(CommissionService $service): void
     {
-        $commissions = $service->getAll();
-
-        // Dynamically override config
-        config(['commissions' => $commissions]);
+//        $commissions = $service->getAll();
+//
+//        // Dynamically override config
+//        config(['commissions' => $commissions]);
     }
 }
