@@ -7,7 +7,7 @@ use App\Http\Controllers\WithdrawController;
 use App\Http\Middleware\isAdminMiddleware;
 use App\Http\Middleware\JwtMiddleware;
 
-Route::middleware([JwtMiddleware::class, isAdminMiddleware::class])->prefix('v2/admin')->group(function () {
+Route::middleware([JwtMiddleware::class, isAdminMiddleware::class])->prefix('v2/admin')->as('admin.')->group(function () {
     Route::get('commissions', [CommissionSettingController::class, 'index']);
     Route::put('commissions/{type}', [CommissionSettingController::class, 'update']);
     Route::get('commissions-history', [CommissionSettingController::class, 'commissionsHistory']);
