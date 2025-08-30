@@ -64,7 +64,7 @@ class TelescopeServiceProvider extends TelescopeApplicationServiceProvider
             }
 
             // Production only: require secret pass key
-            $secretKey = env('TELESCOPE_SECRET_KEY');
+            $secretKey = config('telescope.telescope_secret_key');
 
             return $request->get('pass_key_server') === $secretKey
                 || $request->header('X-Telescope-Key') === $secretKey;

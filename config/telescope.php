@@ -5,6 +5,7 @@ use Laravel\Telescope\Watchers;
 
 return [
 
+    'telescope_secret_key' => env('TELESCOPE_SECRET_KEY', 'D7VNvSihte3daZoOQ817Xz96OUCZNtdnk625G7OH4tKr3vEtsx'),
     /*
     |--------------------------------------------------------------------------
     | Telescope Master Switch
