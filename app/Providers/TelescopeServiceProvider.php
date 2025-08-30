@@ -56,13 +56,18 @@ class TelescopeServiceProvider extends TelescopeApplicationServiceProvider
     protected function gate(): void
     {
         Gate::define('viewTelescope', function ($user = null) {
-            // Allow only your IP
-//            return in_array(request()->ip(), [
-//                '123.45.67.89',
-//                '103.108.90.77',
-//                '103.202.144.182'
-//            ]);
-            return true;
+            $request = request();
+
+            // Always allow in local / testing env
+            if (app()->environment(['local', 'testing'])) {
+                return true;
+            }
+
+            // Production only: require secret pass key
+            $secretKey = env('TELESCOPE_SECRET_KEY');
+
+            return $request->get('pass_key_server') === $secretKey
+                || $request->header('X-Telescope-Key') === $secretKey;
         });
     }
 
