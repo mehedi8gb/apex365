@@ -11,13 +11,11 @@ class UserResource extends JsonResource
 
     public function toArray($request): array
     {
-        $commissionsPage = (int) $request->query('commissions_page', 1);
-
         // Run paginated commissions query here, per user
         $this->commissions = Commission::with('fromUser:id,name')
             ->where('user_id', $this->id)
             ->latest()
-            ->paginate(10, ['*'], 'commissions_page', $commissionsPage);
+            ->get();
 
         $referrer = $this->referredBy?->referrer;
 
@@ -46,15 +44,8 @@ class UserResource extends JsonResource
                     'phone' => $referrer?->phone ?? null
                 ],
             'leaderboard' => new LeaderboardResource($this->whenLoaded('leaderboard')),
-            'commissions' => CommissionResource::collection($this->commissions),
-            'pagination' => $this->when($this->commissions, function () {
-                return [
-                    'total' => $this->commissions->total(),
-                    'per_page' => $this->commissions->perPage(),
-                    'current_page' => $this->commissions->currentPage(),
-                    'last_page' => $this->commissions->lastPage(),
-                ];
-            }),
+            'commissions_count' => $this->commissions->count(),
+            'commissions' => CommissionResource::collection($this->commissions)
         ];
     }
 }
