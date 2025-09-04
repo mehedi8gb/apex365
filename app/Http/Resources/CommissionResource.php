@@ -16,7 +16,7 @@ class CommissionResource extends JsonResource
     {
         return [
             'from_user' => $this->fromUser->name,
-            'amount' => $this->amount,
+            'amount' => (float) $this->amount,
             'level' => $this->level,
         ];
     }

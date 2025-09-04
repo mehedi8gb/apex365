@@ -2,16 +2,21 @@
 
 namespace App\Models;
 
+use App\Enums\EarningType;
+use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
-class Leaderboard extends Model
+class UserCoin extends Model
 {
     protected $fillable = [
         'user_id',
-        'total_commissions',
-        'total_nodes',
-        'total_earned_coins',
-        'profile_rank',
+        'coins',
+        'reason',
+        'rank',
+    ];
+
+    protected $casts = [
+        'reason' => EarningType::class,
     ];
 
     public function user(): BelongsTo

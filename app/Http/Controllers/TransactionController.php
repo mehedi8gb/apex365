@@ -16,6 +16,7 @@ class TransactionController extends Controller
 {
     /**
      * List all transactions
+     * @throws Exception
      */
     public function index(Request $request): JsonResponse
     {
@@ -140,10 +141,11 @@ class TransactionController extends Controller
 
         if (! isset($transaction->userId)) {
 
+            $user = User::findOrFail($request->userId);
             $referralHelper = new ReferralHelper;
 
             // Use the same method calls, just on the instance
-            $referralHelper->updateReferralChain($request->userId);
+            $referralHelper->updateReferralChain($user);
             $referralHelper->distributeReferralPoints('purchase');
             $referralHelper->updateReferralLeaderboard();
 

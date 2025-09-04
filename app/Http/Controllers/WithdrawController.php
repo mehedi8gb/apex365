@@ -5,12 +5,17 @@ namespace App\Http\Controllers;
 use App\Http\Resources\WithdrawResource;
 use App\Models\Account;
 use App\Models\Withdraw;
+use Exception;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Throwable;
 
 class WithdrawController extends Controller
 {
+    /**
+     * @throws Exception
+     */
     public function index(Request $request): JsonResponse
     {
         $withdraws = Withdraw::query();
@@ -66,15 +71,19 @@ class WithdrawController extends Controller
         );
     }
 
+    /**
+     * @throws Throwable
+     */
     public function approve($id): JsonResponse
     {
         return DB::transaction(function () use ($id) {
-            $withdraw = Withdraw::findOrFail($id);
+            $withdraw = Withdraw::with('user')->findOrFail($id);
             if ($withdraw->status !== 'due') {
                 return sendErrorResponse('Withdraw request is already processed', 400);
             }
 
             $withdraw->update(['status' => 'paid']);
+            $withdraw->user->account->update(['total_withdrawn' => $withdraw->user->account->total_withdrawn + $withdraw->amount]);
 
             return sendSuccessResponse('Withdraw request approved successfully',
                 WithdrawResource::make($withdraw)

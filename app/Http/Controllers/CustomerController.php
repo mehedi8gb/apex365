@@ -2,6 +2,8 @@
 
 namespace App\Http\Controllers;
 
+use App\Actions\CustomerAction;
+use App\Http\Requests\UpdateUserRequest;
 use App\Http\Resources\CustomerResource;
 use App\Models\User;
 use Illuminate\Http\JsonResponse;
@@ -9,17 +11,24 @@ use Illuminate\Http\Request;
 
 class CustomerController extends Controller
 {
+    /**
+     * @throws \Exception
+     */
     public function index(Request $request): JsonResponse
     {
-        $user = User::query();
-        $results = handleApiRequest($request, $user, [
-            'account',
-            'leaderboard',
-            'referralCode',
-            'commissions'
-        ], CustomerResource::class);
+        // 1. Base user query with eager loading and commissions count
+        $query = User::query();
 
-        return sendSuccessResponse('Records retrieved successfully', $results);
+        $result = handleApiRequest($request, $query, [
+            'roles',
+            'account:id,user_id,balance,total_withdrawn',
+            'referredBy:referrer_id,user_id',
+            'withdraws:id,user_id,amount,status',
+            'leaderboard:user_id,total_nodes,total_commissions,total_earned_coins,profile_rank',
+            'theReferralCode:id,user_id,code',
+        ]);
+
+        return sendSuccessResponse('Customers retrieved successfully', $result);
     }
 
     // make store function to store the data
@@ -55,33 +64,13 @@ class CustomerController extends Controller
     }
 
     // update function to update the data
-    public function update(Request $request, $id): JsonResponse
+    public function update(UpdateUserRequest $request, User $user): JsonResponse
     {
-        $user = User::find($id);
-
-        if (! $user) {
-            return sendErrorResponse('Record not found', 404);
+        if ($user->hasRole('admin')) {
+            return sendErrorResponse('You cannot update admin user', 403);
         }
 
-        $validated = $request->validate([
-            'name' => 'nullable|string',
-            'email' => 'nullable|email|unique:users,email,' . $user->id,
-            'phone' => 'nullable|unique:users,phone,' . $user->id,
-            'nid' => 'nullable|string',
-            'address' => 'nullable|string',
-            'password' => 'nullable|string',
-            'role' => 'nullable|string|in:customer,staff,admin',
-        ]);
-
-        if ($request->has('password')) {
-            $validated['password'] = bcrypt($validated['password']);
-        }
-
-        if ($request->has('role')) {
-            $user->syncRoles($validated['role']);
-        }
-
-        $user->update($validated);
+        $user = CustomerAction::handleUpdate($request->validated(), $user);
 
         return sendSuccessResponse('Record updated successfully', new CustomerResource($user));
     }

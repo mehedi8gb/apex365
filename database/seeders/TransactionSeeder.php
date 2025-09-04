@@ -13,6 +13,9 @@ class TransactionSeeder extends Seeder
      */
     public function run(): void
     {
-        TransactionFactory::times(100)->create();
+        TransactionFactory::times(1)->create([
+            "transactionId" => "TRX-000111-AAAJJJ",
+            ]);
+        TransactionFactory::times(99)->create();
     }
 }

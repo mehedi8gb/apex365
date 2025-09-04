@@ -26,6 +26,7 @@ class User extends Authenticatable implements JWTSubject
         'password',
         'nid',
         'address',
+        'date_of_birth',
         'points',             // points associated with the user
 
         'business_name',
@@ -58,6 +59,11 @@ class User extends Authenticatable implements JWTSubject
         return $this->hasMany(ReferralUser::class, 'referrer_id'); // Referrals made by this user
     }
 
+    public function referredBy(): HasOne
+    {
+        return $this->hasOne(ReferralUser::class, 'user_id');
+    }
+
     public function leaderboard(): HasOne
     {
         return $this->hasOne(Leaderboard::class);
@@ -66,6 +72,11 @@ class User extends Authenticatable implements JWTSubject
     public function commissions(): HasMany
     {
         return $this->hasMany(Commission::class);
+    }
+
+    public function withdraws(): HasMany
+    {
+        return $this->hasMany(Withdraw::class);
     }
 
     public function account(): HasOne
@@ -100,6 +111,9 @@ class User extends Authenticatable implements JWTSubject
         return [
             'email_verified_at' => 'datetime',
             'password' => 'hashed',
+            'date_of_birth' => 'datetime',
+            'created_at' => 'datetime',
+            'updated_at' => 'datetime',
         ];
     }
 
