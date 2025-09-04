@@ -26,7 +26,7 @@ class DashboardResource extends JsonResource
         $data = Cache::remember($cacheKey, $ttl, function () {
             return [
                 'total_customers_count' => User::role('customer')->count(),
-                'total_commissions_count' => 'Tk '.number_format((float) Commission::sum('amount'), 2, '.', ''),
+                'total_commissions' => 'Tk '.number_format((float) Commission::sum('amount'), 2, '.', ''),
                 'total_transaction_ids_count' => Transaction::count(),
                 'total_ranks_count' => AdminRankSetting::count(),
                 'total_spinners' => Spinner::count(),
