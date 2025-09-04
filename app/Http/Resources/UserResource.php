@@ -10,11 +10,14 @@ class UserResource extends JsonResource
     protected mixed $commissions;
 
     public function toArray($request): array
-    {               // Run paginated commissions query here, per user
+    {
+        $commissionsPage = (int) $request->query('commissions_page', 1);
+
+        // Run paginated commissions query here, per user
         $this->commissions = Commission::with('fromUser:id,name')
             ->where('user_id', $this->id)
             ->latest()
-            ->paginate(15);
+            ->paginate(10, ['*'], 'commissions_page', $commissionsPage);
 
         $referrer = $this->referredBy?->referrer;
 
