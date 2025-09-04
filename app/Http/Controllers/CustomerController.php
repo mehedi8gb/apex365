@@ -16,15 +16,19 @@ class CustomerController extends Controller
      */
     public function index(Request $request): JsonResponse
     {
-        $user = User::query();
-        $results = handleApiRequest($request, $user, [
-            'account',
-            'leaderboard',
-            'referralCode',
-            'commissions'
-        ], CustomerResource::class);
+        // 1. Base user query with eager loading and commissions count
+        $query = User::query();
 
-        return sendSuccessResponse('Records retrieved successfully', $results);
+        $result = handleApiRequest($request, $query, [
+            'roles',
+            'account:id,user_id,balance,total_withdrawn',
+            'referredBy:referrer_id,user_id',
+            'withdraws:id,user_id,amount,status',
+            'leaderboard:user_id,total_nodes,total_commissions,total_earned_coins,profile_rank',
+            'theReferralCode:id,user_id,code',
+        ]);
+
+        return sendSuccessResponse('Customers retrieved successfully', $result);
     }
 
     // make store function to store the data
@@ -62,15 +66,14 @@ class CustomerController extends Controller
     // update function to update the data
     public function update(UpdateUserRequest $request, User $user): JsonResponse
     {
-        $user = CustomerAction::handleUpdate($request->validated(), $user);
-
-        if (!$user) {
-            return sendErrorResponse('Record not found', 404);
+        if ($user->hasRole('admin')) {
+            return sendErrorResponse('You cannot update admin user', 403);
         }
+
+        $user = CustomerAction::handleUpdate($request->validated(), $user);
 
         return sendSuccessResponse('Record updated successfully', new CustomerResource($user));
     }
-
 
     // destroy function to delete the data
     public function destroy($id): JsonResponse

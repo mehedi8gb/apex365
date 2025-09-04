@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\Admin\CommissionSettingController;
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\CommissionController;
 use App\Http\Controllers\CustomerController;
@@ -12,6 +13,8 @@ use App\Http\Middleware\isAdminMiddleware;
 use App\Http\Middleware\JwtMiddleware;
 use App\Http\Middleware\RefreshTokenMiddleware;
 use Illuminate\Support\Facades\Route;
+
+require __DIR__ . '/api/v2/admin.php';
 
 Route::group(['prefix' => 'auth'], function () {
     // Authentication routes
@@ -55,4 +58,3 @@ Route::middleware([JwtMiddleware::class])->group(function () {
     Route::post('/shop-details', [UserShopController::class, 'updateShopDetails']);
     Route::get('/shop-details', [UserShopController::class, 'getShopDetails']);
 });
-// role based route system has to be integrated

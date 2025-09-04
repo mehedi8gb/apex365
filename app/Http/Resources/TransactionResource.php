@@ -24,6 +24,7 @@ class TransactionResource extends JsonResource
 
         return [
             'id' => $this->id,
+            'is_assigned' => (bool)$this->userId,
             'user' => $user ?? "not assigned",
             'transactionId' => $this->transactionId,
             'date' => $this->created_at->format('Y-m-d H:i:s'),

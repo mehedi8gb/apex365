@@ -24,7 +24,6 @@ use Tymon\JWTAuth\Facades\JWTAuth;
 
 class AuthController extends Controller
 {
-
     public function register(RegisterRequest $request): JsonResponse
     {
         try {
@@ -33,7 +32,7 @@ class AuthController extends Controller
             return sendSuccessResponse('Customer registered successfully', $data, 201);
 
         } catch (\Throwable $e) {
-            return sendErrorResponse('Registration failed: ' . $e->getMessage(), 500);
+            return sendErrorResponse('Registration failed: '.$e->getMessage(), 500);
         }
     }
 
@@ -204,7 +203,7 @@ class AuthController extends Controller
 
             return response()->json([
                 'access_token' => $newAccessToken,
-                'expires_in' => config('jwt.ttl')
+                'expires_in' => config('jwt.ttl'),
             ]);
         } catch (JWTException $e) {
             return response()->json(['error' => 'Unable to refresh token'], 401);
@@ -229,8 +228,11 @@ class AuthController extends Controller
     {
         // Fetch the user directly with eager loading to minimize queries
         $user = User::with([
-            'account:id,user_id,balance',
-            'leaderboard:user_id,total_nodes,total_commissions',
+            'roles',
+            'account:id,user_id,balance,total_withdrawn',
+            'referredBy:referrer_id,user_id',
+            'withdraws:id,user_id,amount,status',
+            'leaderboard:user_id,total_nodes,total_commissions,total_earned_coins,profile_rank',
             'theReferralCode:id,user_id,code',
         ])->withCount('commissions')
             ->find(auth()->id()); // Retrieve the authenticated user by ID
@@ -239,13 +241,8 @@ class AuthController extends Controller
             return response()->json(['message' => 'User not found'], 404);
         }
 
-        // Fetch paginated commissions separately
-        $commissions = Commission::with('fromUser:id,name')->where('user_id', $user->id)
-            ->latest()
-            ->paginate(15);
-
         return sendSuccessResponse('User details', [
-            'user' => new UserResource($user, $commissions),
+            'user' => new UserResource($user),
         ]);
     }
 

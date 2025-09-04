@@ -15,9 +15,10 @@ class LeaderboardResource extends JsonResource
     public function toArray(Request $request): array
     {
         return [
-//            'user_id' => $this->user_id,
-            'total_commissions' => $this->total_commissions,
+            'total_commissions' => (float) $this->total_commissions ?? 0,
             'total_nodes' => $this->total_nodes ?? 1,
+            'total_earned_coins' => $this->total_earned_coins ?? 0,
+            'profile_rank' => $this->profile_rank ?? 'N/A',
         ];
     }
 }
