@@ -2,7 +2,9 @@
 
 namespace App\Http\Requests;
 
+use App\Enums\UserStatus;
 use Illuminate\Foundation\Http\FormRequest;
+use Illuminate\Validation\Rules\Enum;
 
 class UpdateUserRequest extends FormRequest
 {
@@ -18,11 +20,12 @@ class UpdateUserRequest extends FormRequest
         return [
             'name' => 'nullable|string',
             'email' => 'nullable|email|unique:users,email,' . $userId,
+            'status' => ['nullable', new Enum(UserStatus::class)],
             'phone' => 'nullable|unique:users,phone,' . $userId,
             'nid' => 'nullable|string',
             'address' => 'nullable|string',
             'password' => 'nullable|string',
-            'role' => 'nullable|string|in:customer,staff,admin',
+            'role' => 'nullable|string|in:customer,staff',
         ];
     }
 }

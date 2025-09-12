@@ -26,6 +26,7 @@ class UserResource extends JsonResource
             'role' => $this->resource->getRoleNames()->first(),
             'name' => $this->resource->name,
             'email' => $this->resource->email,
+            'status' => $this->resource->status,
             'phone' => $this->resource->phone,
             'balance' => $this->whenLoaded('account', fn () => $this->resource->account->balance),
             'total_withdrawn_approved' => $this->whenLoaded('account', fn () => $this->resource->account->total_withdrawn),

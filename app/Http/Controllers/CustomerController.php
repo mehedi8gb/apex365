@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Actions\CustomerAction;
 use App\Http\Requests\UpdateUserRequest;
 use App\Http\Resources\CustomerResource;
+use App\Http\Resources\UserResource;
 use App\Models\User;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -48,7 +49,7 @@ class CustomerController extends Controller
         $user = User::create($validated);
         $user->assignRole($validated['role']);
 
-        return sendSuccessResponse('Records created successfully', CustomerResource::make($user));
+        return sendSuccessResponse('Records created successfully', UserResource::make($user));
     }
 
     // show function to show the data
@@ -60,7 +61,7 @@ class CustomerController extends Controller
             return sendErrorResponse('Customer not found', 404);
         }
 
-        return sendSuccessResponse('Records retrieved successfully', CustomerResource::make($user));
+        return sendSuccessResponse('Records retrieved successfully', UserResource::make($user));
     }
 
     // update function to update the data
@@ -72,7 +73,7 @@ class CustomerController extends Controller
 
         $user = CustomerAction::handleUpdate($request->validated(), $user);
 
-        return sendSuccessResponse('Record updated successfully', new CustomerResource($user));
+        return sendSuccessResponse('Record updated successfully', new UserResource($user));
     }
 
     // destroy function to delete the data
