@@ -2,8 +2,8 @@
 
 namespace App\Http\Controllers;
 
+use App\Enums\WithdrawStatus;
 use App\Http\Resources\WithdrawResource;
-use App\Models\Account;
 use App\Models\Withdraw;
 use Exception;
 use Illuminate\Http\JsonResponse;
@@ -42,12 +42,12 @@ class WithdrawController extends Controller
 
         $account = auth()->user()->account;
 
-        if (!$account || $account->balance < $validatedData['amount']) {
+        if (! $account || $account->balance < $validatedData['amount']) {
             return sendErrorResponse('Insufficient balance', 400);
         }
 
         if ($validatedData['amount'] < 50) {
-            return sendErrorResponse("Minimum withdrawal amount is 50", 400);
+            return sendErrorResponse('Minimum withdrawal amount is 50', 400);
         }
 
         if ($account->balance < 10 || ($account->balance - $validatedData['amount']) < 10) {
@@ -59,7 +59,7 @@ class WithdrawController extends Controller
             'amount' => $validatedData['amount'],
             'payment_method' => $validatedData['payment_method'],
             'mobile_number' => $validatedData['mobile_number'],
-            'status' => 'due',
+            'status' => WithdrawStatus::Pending,
         ]);
 
         $account->update(['balance' => $account->balance - $validatedData['amount']]);
@@ -78,14 +78,34 @@ class WithdrawController extends Controller
     {
         return DB::transaction(function () use ($id) {
             $withdraw = Withdraw::with('user')->findOrFail($id);
-            if ($withdraw->status !== 'due') {
-                return sendErrorResponse('Withdraw request is already processed', 400);
+            if ($withdraw->status === WithdrawStatus::Approved || $withdraw->status === WithdrawStatus::Suspended) {
+                return sendErrorResponse('Withdraw request is already '.$withdraw->status->value, 422);
             }
 
-            $withdraw->update(['status' => 'paid']);
+            $withdraw->update(['status' => WithdrawStatus::Approved]);
             $withdraw->user->account->update(['total_withdrawn' => $withdraw->user->account->total_withdrawn + $withdraw->amount]);
 
             return sendSuccessResponse('Withdraw request approved successfully',
+                WithdrawResource::make($withdraw)
+            );
+        });
+    }
+
+    // make suspend function to suspend the withdraw request
+
+    /**
+     * @throws Throwable
+     */
+    public function suspend($id): JsonResponse
+    {
+        return DB::transaction(function () use ($id) {
+            $withdraw = Withdraw::with('user')->findOrFail($id);
+            if ($withdraw->status === WithdrawStatus::Approved || $withdraw->status === WithdrawStatus::Suspended) {
+                return sendErrorResponse('Withdraw request is already '.$withdraw->status->value, 422);
+            }
+            $withdraw->update(['status' => WithdrawStatus::Suspended]);
+
+            return sendSuccessResponse('Withdraw request suspended successfully',
                 WithdrawResource::make($withdraw)
             );
         });

@@ -12,8 +12,9 @@ Route::middleware([JwtMiddleware::class, isAdminMiddleware::class])->prefix('v2/
     Route::get('commissions', [CommissionSettingController::class, 'index']);
     Route::put('commissions/{type}', [CommissionSettingController::class, 'update']);
     Route::get('commissions-history', [CommissionSettingController::class, 'commissionsHistory']);
-    Route::post('withdraws/{id}/approve', [WithdrawController::class, 'approve'])->middleware([isAdminMiddleware::class]);
-    Route::apiResource('users', CustomerController::class)->middleware([isAdminMiddleware::class]);
+    Route::post('withdraws/{id}/approve', [WithdrawController::class, 'approve']);
+    Route::post('withdraws/{id}/suspend', [WithdrawController::class, 'suspend']);
+    Route::apiResource('users', CustomerController::class);
 
     Route::get('rank-settings', [AdminRankSettingController::class, 'index']);
     Route::put('rank-settings', [AdminRankSettingController::class, 'update']);
