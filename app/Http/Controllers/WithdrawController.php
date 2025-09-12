@@ -37,7 +37,10 @@ class WithdrawController extends Controller
         $validatedData = $request->validate([
             'amount' => 'required|numeric|min:10',
             'payment_method' => 'required|in:bkash,nagad,rocket',
-            'mobile_number' => 'required_if:payment_method,bkash,nagad,rocket',
+            'mobile_number' => [
+                'required_if:payment_method,bkash,nagad,rocket',
+                'digits:11',
+            ],
         ]);
 
         $account = auth()->user()->account;
