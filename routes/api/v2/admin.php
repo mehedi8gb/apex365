@@ -19,5 +19,6 @@ Route::middleware([JwtMiddleware::class, isAdminMiddleware::class])->prefix('v2/
     Route::get('rank-settings', [AdminRankSettingController::class, 'index']);
     Route::put('rank-settings', [AdminRankSettingController::class, 'update']);
     Route::delete('rank-settings', [AdminRankSettingController::class, 'delete']);
+    Route::apiResource('transactions', \App\Http\Controllers\Api\V2\TransactionControllerV2::class);
     Route::get('/dashboard', [DashboardController::class, 'index']);
 });

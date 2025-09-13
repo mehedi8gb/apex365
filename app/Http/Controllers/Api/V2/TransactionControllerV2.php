@@ -1,0 +1,193 @@
+<?php
+
+namespace App\Http\Controllers\Api\V2;
+
+use App\Enums\TransactionStatus;
+use App\Helpers\ReferralHelper;
+use App\Http\Controllers\Controller;
+use App\Http\Resources\TransactionResource;
+use App\Http\Resources\UserTransactionsIdResource;
+use App\Models\Transaction;
+use App\Models\User;
+use Exception;
+use Illuminate\Http\JsonResponse;
+use Illuminate\Http\Request;
+use Illuminate\Validation\Rule;
+use Throwable;
+
+class TransactionControllerV2 extends Controller
+{
+    /**
+     * List all transactions
+     *
+     * @throws Exception
+     */
+    public function index(Request $request): JsonResponse
+    {
+        $query = Transaction::query();
+        $results = handleApiRequest($request, $query);
+
+        return sendSuccessResponse('Transactions retrieved successfully', $results);
+    }
+
+    /**
+     * Show a specific transaction
+     */
+    public function show($id): JsonResponse
+    {
+        $transaction = Transaction::find($id);
+
+        return sendSuccessResponse('Transaction retrieved successfully', new TransactionResource($transaction));
+    }
+
+    /**
+     * Create a new transaction
+     */
+    public function store(Request $request): JsonResponse
+    {
+        $request->validate([
+            'transactions' => 'required|array',
+            'transactions.*.transactionId' => 'required|string|unique:transactions,transactionId',
+            'transactions.*.date' => 'required|date',
+        ]);
+
+        $transactions = collect($request->transactions)->map(function ($trx) {
+            return [
+                'transactionId' => $trx['transactionId'],
+                'created_at' => now(),
+                'updated_at' => now(),
+            ];
+        })->toArray();
+
+        Transaction::insert($transactions); // Bulk insert for performance
+
+        return sendSuccessResponse('Transactions generated successfully');
+    }
+
+    /**
+     * Create a new transaction
+     */
+    public function update($transactionId): JsonResponse
+    {
+        $validated = request()->validate([
+            'transactionId' => [
+                'sometimes',
+                'required',
+                'string',
+                Rule::unique('transactions', 'transactionId')->ignore($transactionId, 'transactionId'),
+            ],
+            'userId' => 'sometimes|nullable|integer|exists:users,id',
+            'status' => [
+                'sometimes',
+                'required',
+                Rule::enum(TransactionStatus::class),
+            ],
+        ]);
+
+        $transaction = Transaction::where('transactionId', $transactionId)->first();
+
+        if (! $transaction) {
+            return sendErrorResponse('Transaction ID not found', 404);
+        }
+
+        // Special business rule: once suspended, never activate again
+//        if (
+//            isset($validated['status'])
+//            && $transaction->status === TransactionStatus::Suspend
+//            && $validated['status'] === TransactionStatus::Activate->value
+//        ) {
+//            return sendErrorResponse('Transaction already suspended, cannot be reactivated', 422);
+//        }
+
+        if (isset($validated['status']) && $transaction->status->value === $validated['status']) {
+            return sendErrorResponse('Transaction already '.$transaction->status->value, 422);
+        }
+
+        $transaction->update($validated);
+
+        return sendSuccessResponse('Transaction updated successfully', new TransactionResource($transaction));
+    }
+
+    /**
+     * Delete a transaction
+     */
+    public function destroy($id): JsonResponse
+    {
+        $transaction = Transaction::findOrFail($id);
+        $transaction->delete();
+
+        return sendSuccessResponse('Transaction deleted successfully');
+    }
+
+    /**
+     * delete multiple transaction
+     */
+    public function deleteMultiple(Request $request): JsonResponse
+    {
+        request()->validate([
+            'transactionIds' => 'required|array|min:1',
+            'transactionIds.*' => 'required|string|exists:transactions,transactionId',
+        ]);
+
+        Transaction::whereIn('transactionId', request()->transactionIds)->delete();
+
+        return sendSuccessResponse('Transactions deleted successfully');
+    }
+
+    /**
+     * Get all transactions for a specific user
+     */
+    public function userTransactions($userId): JsonResponse
+    {
+        $user = User::with('transactionIds')->findOrFail($userId);
+
+        return sendSuccessResponse('Transactions retrieved successfully', UserTransactionsIdResource::make($user));
+    }
+
+    /**
+     * Get all transactions for all users
+     *
+     * @throws Exception
+     */
+    public function usersTransactions(Request $request): JsonResponse
+    {
+        $users = User::query();
+
+        $results = handleApiRequest($request, $users, ['transactionIds'], UserTransactionsIdResource::class);
+
+        return sendSuccessResponse('Transactions retrieved successfully', $results);
+    }
+
+    /**
+     * Apply commissions to single transaction's user
+     *
+     * @throws Exception
+     * @throws Throwable
+     */
+    public function ApplyCommissions(Request $request): JsonResponse
+    {
+        $request->validate([
+            'transactionId' => 'required|string|exists:transactions,transactionId',
+            'userId' => 'required|integer|exists:users,id',
+        ]);
+
+        $transaction = Transaction::where('transactionId', $request->transactionId)->first();
+
+        if (! isset($transaction->userId)) {
+
+            $user = User::findOrFail($request->userId);
+            $referralHelper = new ReferralHelper;
+
+            // Use the same method calls, just on the instance
+            $referralHelper->updateReferralChain($user);
+            $referralHelper->distributeReferralPoints('purchase');
+            $referralHelper->updateReferralLeaderboard();
+
+            $transaction->update(['userId' => $request->userId]);
+
+            return sendSuccessResponse('Commissions applied successfully');
+        }
+
+        return sendErrorResponse('Commissions already applied', 422);
+    }
+}
