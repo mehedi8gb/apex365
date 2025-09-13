@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Admin;
 use App\Http\Controllers\Controller;
 use App\Models\AdminRankSetting;
 use App\Services\Admin\AdminRankService;
+use Exception;
 use Illuminate\Http\Request;
 
 class AdminRankSettingController extends Controller
@@ -12,7 +13,7 @@ class AdminRankSettingController extends Controller
     public function __construct(private readonly AdminRankService $service) {}
 
     /**
-     * @throws \Exception
+     * @throws Exception
      */
     public function index()
     {
@@ -27,14 +28,15 @@ class AdminRankSettingController extends Controller
     public function update(Request $request)
     {
         $data = $request->validate([
-            '*.name' => 'required|string',
-            '*.threshold' => 'required|integer|min:1',
-            '*.coins' => 'required|numeric|min:0',
+            '*.id' => 'sometimes|exists:admin_rank_settings,id',
+            '*.name' => 'sometimes|string',
+            '*.threshold' => 'sometimes|integer|min:1',
+            '*.coins' => 'sometimes|numeric|min:0',
         ]);
 
-        $this->service->updateRanks($data);
+        $data = $this->service->updateRanks($data);
 
-        return response()->json(['message' => 'Admin rank settings updated successfully']);
+        return sendSuccessResponse('Admin rank settings updated successfully', $data);
     }
 
     public function delete(Request $request)
