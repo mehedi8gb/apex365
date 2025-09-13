@@ -12,4 +12,14 @@ class AdminRankSetting extends Model
         'threshold',
         'coins'
     ];
+
+    protected function casts(): array
+    {
+        return [
+            'created_at' => 'datetime',
+            'updated_at' => 'datetime',
+            'coins' => 'float',
+            'threshold' => 'integer',
+        ];
+    }
 }

@@ -3,8 +3,10 @@
 namespace App\Services\Admin;
 
 use App\Models\AdminRankSetting;
+use Illuminate\Http\Client\ConnectionException;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Facades\Http;
 
 class AdminRankService
 {
@@ -35,7 +37,7 @@ class AdminRankService
     {
         $results = [];
 
-        foreach ($ranks as $rank) {
+        foreach ($ranks as $i => $rank) {
             if (! empty($rank['id'])) {
                 // Update existing by ID
                 $updated = AdminRankSetting::where('id', $rank['id'])->update($rank);
