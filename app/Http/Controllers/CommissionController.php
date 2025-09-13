@@ -4,11 +4,15 @@ namespace App\Http\Controllers;
 
 use App\Http\Resources\CommissionResource;
 use App\Models\Transaction;
+use Exception;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 
 class CommissionController extends Controller
 {
+    /**
+     * @throws Exception
+     */
     public function index(Request $request): JsonResponse
     {
         $query = Transaction::query();

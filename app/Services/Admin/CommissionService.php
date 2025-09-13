@@ -13,7 +13,7 @@ class CommissionService
 
     public function getAll(): array
     {
-        return Cache::remember($this->cacheKey, 3600 * 30, function () {
+        return Cache::remember($this->cacheKey, 3600 * 24 * 30, function () {
             return CommissionSetting::all()
                 ->mapWithKeys(fn($item) => [$item->type => $item->levels])
                 ->toArray();
@@ -43,13 +43,5 @@ class CommissionService
         Cache::forget('commission_settings'); // refresh cache
 
         return $setting;
-    }
-
-    public function delete(int $id): bool
-    {
-        CommissionSetting::deleteDeepJsonField('levels', (array)$id);
-
-        Cache::forget('commission_settings');
-        return true;
     }
 }

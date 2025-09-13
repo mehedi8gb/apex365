@@ -15,16 +15,16 @@ class CommissionSettingResource extends JsonResource
     public function toArray(Request $request): array
     {
         return [
-            'id'         => $this->id,
-            'type'       => $this->type,
-            'levels'     => collect($this->levels)->map(function ($value, $index) {
+            'id'         => $this->resource->id,
+            'type'       => $this->resource->type,
+            'levels'     => collect($this->resource->levels)->map(function ($value, $index) {
                 return [
                     'level' => $index,  // add level index
                     'value' => $value,
                 ];
             })->values(),
-            'created_at' => $this->created_at,
-            'updated_at' => $this->updated_at,
+            'created_at' => getFormatedDate($this->resource->created_at),
+            'updated_at' => getFormatedDate($this->resource->updated_at),
         ];
     }
 }
