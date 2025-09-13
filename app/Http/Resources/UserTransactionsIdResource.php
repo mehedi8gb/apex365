@@ -2,8 +2,8 @@
 
 namespace App\Http\Resources;
 
+use App\Http\Resources\V2\UserResourceV2;
 use App\Models\Commission;
-use App\Models\Transaction;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
 
@@ -31,7 +31,7 @@ class UserTransactionsIdResource extends JsonResource
         $paginatedTransactions = $transactionIds->forPage($page, $perPage)->values();
 
         return [
-            'user' => new UserResource($this, $commissions),
+            'user' => new UserResourceV2($this->resource->user),
             'transactionIds' => [
                 'meta' => [
                     'transactions-page' => (int) $page,

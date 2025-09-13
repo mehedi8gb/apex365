@@ -3,6 +3,7 @@
 use App\Http\Controllers\Admin\AdminRankSettingController;
 use App\Http\Controllers\Admin\CommissionSettingController;
 use App\Http\Controllers\Api\V1\DashboardController;
+use App\Http\Controllers\Api\V2\TransactionControllerV2;
 use App\Http\Controllers\CustomerController;
 use App\Http\Controllers\WithdrawController;
 use App\Http\Middleware\isAdminMiddleware;
@@ -19,6 +20,8 @@ Route::middleware([JwtMiddleware::class, isAdminMiddleware::class])->prefix('v2/
     Route::get('rank-settings', [AdminRankSettingController::class, 'index']);
     Route::put('rank-settings', [AdminRankSettingController::class, 'update']);
     Route::delete('rank-settings', [AdminRankSettingController::class, 'delete']);
-    Route::apiResource('transactions', \App\Http\Controllers\Api\V2\TransactionControllerV2::class);
+    Route::get('transactions/user/{userId}', [TransactionControllerV2::class, 'userTransactions'])->middleware([isAdminMiddleware::class]);
+    Route::get('transactions/users', [TransactionControllerV2::class, 'usersTransactions'])->middleware([isAdminMiddleware::class]);
+    Route::apiResource('transactions', TransactionControllerV2::class);
     Route::get('/dashboard', [DashboardController::class, 'index']);
 });
