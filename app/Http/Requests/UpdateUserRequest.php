@@ -15,7 +15,7 @@ class UpdateUserRequest extends FormRequest
 
     public function rules(): array
     {
-        $userId = $this->route('id'); // Pull from route param
+        $userId = $this->route('user')->id; // Pull from route param
 
         return [
             'name' => 'nullable|string',
