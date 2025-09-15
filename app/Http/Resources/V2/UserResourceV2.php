@@ -30,7 +30,7 @@ class UserResourceV2 extends JsonResource
             'email' => $this->resource->email,
             'status' => $this->resource->status,
             'phone' => $this->resource->phone,
-            'balance' => $this->resource->account->balance,
+            'balance' => $this->resource?->account?->balance ?? "0.00",
             'total_withdrawn_approved' => $this->resource->account->total_withdrawn,
             'total_pending_withdrawal' => $this->resource->withdraws->where('status', 'due')->sum('amount'),
             'nid' => $this->resource->nid,
