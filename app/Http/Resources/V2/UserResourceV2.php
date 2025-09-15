@@ -31,7 +31,7 @@ class UserResourceV2 extends JsonResource
             'status' => $this->resource->status,
             'phone' => $this->resource->phone,
             'balance' => $this->resource?->account?->balance ?? "0.00",
-            'total_withdrawn_approved' => $this->resource->account->total_withdrawn,
+            'total_withdrawn_approved' => $this->resource?->account?->total_withdrawn ?? 0.00,
             'total_pending_withdrawal' => $this->resource->withdraws->where('status', 'due')->sum('amount'),
             'nid' => $this->resource->nid,
             'address' => $this->resource->address,
