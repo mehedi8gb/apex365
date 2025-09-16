@@ -2,6 +2,7 @@
 
 namespace App\Http\Resources\V2;
 
+use App\Enums\WithdrawStatus;
 use App\Http\Resources\CommissionResource;
 use App\Http\Resources\LeaderboardResource;
 use App\Models\Commission;
@@ -32,7 +33,7 @@ class UserResourceV2 extends JsonResource
             'phone' => $this->resource->phone,
             'balance' => $this->resource?->account?->balance ?? "0.00",
             'total_withdrawn_approved' => $this->resource?->account?->total_withdrawn ?? 0.00,
-            'total_pending_withdrawal' => $this->resource->withdraws->where('status', 'due')->sum('amount'),
+            'total_pending_withdrawal' => $this->resource->withdraws->where('status', WithdrawStatus::Pending->value)->sum('amount'),
             'nid' => $this->resource->nid,
             'address' => $this->resource->address,
             'date_of_birth' => $this->resource->date_of_birth?->format('Y-m-d'),

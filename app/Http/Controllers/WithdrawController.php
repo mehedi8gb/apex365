@@ -65,7 +65,9 @@ class WithdrawController extends Controller
             'status' => WithdrawStatus::Pending,
         ]);
 
-        $account->update(['balance' => $account->balance - $validatedData['amount']]);
+        $account->update([
+            'balance' => $account->balance - $validatedData['amount']
+        ]);
 
         return sendSuccessResponse(
             'Withdraw request created successfully',
