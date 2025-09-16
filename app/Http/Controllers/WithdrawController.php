@@ -106,7 +106,9 @@ class WithdrawController extends Controller
             if ($withdraw->status === WithdrawStatus::Approved || $withdraw->status === WithdrawStatus::Suspended) {
                 return sendErrorResponse('Withdraw request is already '.$withdraw->status->value, 422);
             }
+
             $withdraw->update(['status' => WithdrawStatus::Suspended]);
+            $withdraw->user->account->update(['balance' => $withdraw->user->account->balance + $withdraw->amount]);
 
             return sendSuccessResponse('Withdraw request suspended successfully',
                 WithdrawResource::make($withdraw)

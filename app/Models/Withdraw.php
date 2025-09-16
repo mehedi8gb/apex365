@@ -10,12 +10,18 @@ class Withdraw extends Model
 {
     use HasFactory;
 
-    protected $fillable = ['user_id', 'amount', 'payment_method', 'mobile_number', 'status'];
+    protected $fillable = [
+        'user_id',
+        'amount',
+        'payment_method',
+        'mobile_number',
+        'status',
+    ];
 
     protected function casts(): array
     {
         return [
-            'status' => WithdrawStatus::class
+            'status' => WithdrawStatus::class,
         ];
     }
 
