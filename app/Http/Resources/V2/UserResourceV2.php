@@ -34,6 +34,7 @@ class UserResourceV2 extends JsonResource
             'balance' => $this->resource?->account?->balance ?? "0.00",
             'total_withdrawn_approved' => $this->resource?->account?->total_withdrawn ?? 0.00,
             'total_pending_withdrawal' => $this->resource->withdraws->where('status', WithdrawStatus::Pending->value)->sum('amount'),
+            'total_suspended_withdrawal' => $this->resource->withdraws->where('status', WithdrawStatus::Suspended->value)->sum('amount'),
             'nid' => $this->resource->nid,
             'address' => $this->resource->address,
             'date_of_birth' => $this->resource->date_of_birth?->format('Y-m-d'),
