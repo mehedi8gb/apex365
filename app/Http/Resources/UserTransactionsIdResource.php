@@ -16,12 +16,8 @@ class UserTransactionsIdResource extends JsonResource
      */
     public function toArray(Request $request): array
     {
-        $commissions = Commission::with('fromUser:id,name')->where('user_id', $this->id)
-            ->latest()
-            ->paginate(5);
-
         // Get transactionIds as an array
-        $transactionIds = collect($this->transactionIds);
+        $transactionIds = collect($this->resource->transactionIds);
 
         // Paginate transactionIds manually
         $perPage = $request->get('transactions-limit', 10); // Default to 10 per page
@@ -41,7 +37,7 @@ class UserTransactionsIdResource extends JsonResource
                 ],
                 'result' => $paginatedTransactions,
             ],
-            'createdAt' => $this->created_at->format('Y-m-d H:i:s'),
+            'createdAt' => $this->resource->created_at->format('Y-m-d H:i:s'),
         ];
     }
 

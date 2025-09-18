@@ -11,15 +11,28 @@ use Illuminate\Http\Resources\Json\JsonResource;
 
 class UserResourceV2 extends JsonResource
 {
-    protected mixed $commissions;
+    protected mixed $purchaseCommissions;
+    protected mixed $signupCommissions;
 
     public function toArray($request): array
     {
         // Run paginated commissions query here, per user
-        $this->commissions = Commission::with('fromUser:id,name')
+        $this->purchaseCommissions = Commission::with('fromUser:id,name')
             ->where('user_id', $this->resource->id)
+            ->ofType('purchase')
             ->latest()
             ->get();
+
+        $this->signupCommissions = Commission::with(['fromUser:id,name', 'commissionSetting:id,type'])
+            ->where('user_id', $this->resource->id)
+            ->where(function ($query) {
+                $query->whereHas('commissionSetting', function ($q) {
+                    $q->where('type', 'signup');
+                })->orWhereNull('commission_type_id'); // include legacy rows
+            })
+            ->latest()
+            ->get();
+
 
         // Get max referral depth from config (signup only)
         $maxLevel = config('commissions.signup') ? count(config('commissions.signup')) : 5;
@@ -43,8 +56,10 @@ class UserResourceV2 extends JsonResource
             'account_created_at' => getFormatedDate($this->resource->created_at),
             'referred_by_chain' => $this->buildReferralChain($this->resource, $maxLevel),
             'leaderboard' => new LeaderboardResource($this->whenLoaded('leaderboard')),
-            'commissions_count' => $this->commissions->count(),
-            'commissions' => CommissionResource::collection($this->commissions),
+            'purchase_commissions' => CommissionResource::collection($this->purchaseCommissions),
+            'purchase_commissions_count' => $this->purchaseCommissions->count(),
+            'signup_commissions' => CommissionResource::collection($this->signupCommissions),
+            'signup_commissions_count' => $this->signupCommissions->count(),
         ];
     }
 
