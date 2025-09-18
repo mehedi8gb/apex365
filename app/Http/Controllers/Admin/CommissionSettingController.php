@@ -12,6 +12,7 @@ use App\Models\CommissionSettingHistory;
 use App\Services\Admin\CommissionService;
 use Exception;
 use Illuminate\Http\Request;
+use Throwable;
 
 class CommissionSettingController extends Controller
 {
@@ -29,6 +30,9 @@ class CommissionSettingController extends Controller
         return sendSuccessResponse('Get all commissions values', $results);
     }
 
+    /**
+     * @throws Throwable
+     */
     public function update(Request $request, string $type)
     {
         $request->validate([
@@ -49,6 +53,6 @@ class CommissionSettingController extends Controller
 
         $results = handleApiRequest(request(), $query, ['admin', 'commissionSetting']);
 
-        return sendSuccessResponse('Commission change history', CommissionSettingHistoryResource::make($results));
+        return sendSuccessResponse('Commission change history', $results);
     }
 }

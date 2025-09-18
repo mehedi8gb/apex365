@@ -1,11 +1,16 @@
 <?php
+
 // app/Services/CommissionService.php
+
 namespace App\Services\Admin;
 
 use App\Models\CommissionSetting;
 use App\Models\CommissionSettingHistory;
 use Auth;
+use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Facades\DB;
+use Throwable;
 
 class CommissionService
 {
@@ -15,33 +20,39 @@ class CommissionService
     {
         return Cache::remember($this->cacheKey, 3600 * 24 * 30, function () {
             return CommissionSetting::all()
-                ->mapWithKeys(fn($item) => [$item->type => $item->levels])
+                ->mapWithKeys(fn ($item) => [$item->type => $item->levels])
                 ->toArray();
         });
     }
 
-    public function update(string $type, array $levels): CommissionSetting
+    /**
+     * @throws Throwable
+     */
+    public function update(string $type, array $levels, ?int $adminId = null): CommissionSetting
     {
-        $userId = Auth::id();
-        $setting = CommissionSetting::where('type', $type)->first();
+        $adminId = $adminId ?? Auth::id();
 
-        $oldLevels = $setting ? $setting->levels : [];
+        return DB::transaction(function () use ($type, $levels, $adminId) {
+            $setting = CommissionSetting::where('type', $type)->first();
 
-        $setting = CommissionSetting::updateOrCreate(
-            ['type' => $type],
-            ['levels' => $levels]
-        );
+            if (!$setting) {
+                throw new ModelNotFoundException("CommissionSetting not found for type: {$type}");
+            }
 
-        // Save history
-        CommissionSettingHistory::create([
-            'commission_setting_id' => $setting->id,
-            'admin_id' => $userId,
-            'old_levels' => $oldLevels,
-            'new_levels' => $levels,
-        ]);
+            $oldLevels = $setting->levels;
 
-        Cache::forget('commission_settings'); // refresh cache
+            $setting->update(['levels' => $levels]);
 
-        return $setting;
+            CommissionSettingHistory::create([
+                'commission_setting_id' => $setting->id,
+                'admin_id' => $adminId,
+                'old_levels' => $oldLevels,
+                'new_levels' => $levels,
+            ]);
+
+            Cache::forget('commission_settings');
+
+            return $setting->fresh();
+        });
     }
 }
