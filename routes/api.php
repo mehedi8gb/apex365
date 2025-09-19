@@ -14,7 +14,10 @@ use App\Http\Middleware\JwtMiddleware;
 use App\Http\Middleware\RefreshTokenMiddleware;
 use Illuminate\Support\Facades\Route;
 
-require __DIR__ . '/api/v2/admin.php';
+foreach (glob(__DIR__ . '/api/v2/*.php') as $routeFile) {
+    require $routeFile;
+}
+
 
 Route::group(['prefix' => 'auth'], function () {
     // Authentication routes
