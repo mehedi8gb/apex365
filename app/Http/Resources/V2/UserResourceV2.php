@@ -3,12 +3,18 @@
 namespace App\Http\Resources\V2;
 
 use App\Enums\WithdrawStatus;
+use App\Helpers\ResourceHelpers;
 use App\Http\Resources\CommissionResource;
 use App\Http\Resources\LeaderboardResource;
 use App\Models\Commission;
 use App\Models\User;
 use Illuminate\Http\Resources\Json\JsonResource;
 
+/**
+ * mark as abandoned after v3 is stable
+ * Class UserResourceV2
+ * @package App\Http\Resources\V2
+ */
 class UserResourceV2 extends JsonResource
 {
     protected mixed $purchaseCommissions;
@@ -33,10 +39,6 @@ class UserResourceV2 extends JsonResource
             ->latest()
             ->get();
 
-
-        // Get max referral depth from config (signup only)
-        $maxLevel = config('commissions.signup') ? count(config('commissions.signup')) : 5;
-
         return [
             'id' => $this->resource->id,
             'role' => $this->resource->getRoleNames()->first(),
@@ -54,35 +56,12 @@ class UserResourceV2 extends JsonResource
             'profile_picture' => config('apex365.microservice.file_api_server').'/data/profile/'.$this->resource->id,
             'referral_code' => $this->resource->theReferralCode?->code,
             'account_created_at' => getFormatedDate($this->resource->created_at),
-            'referred_by_chain' => $this->buildReferralChain($this->resource, $maxLevel),
+            'referred_by_chain' => ResourceHelpers::buildReferralChain($this->resource),
             'leaderboard' => new LeaderboardResource($this->whenLoaded('leaderboard')),
             'purchase_commissions' => CommissionResource::collection($this->purchaseCommissions),
             'purchase_commissions_count' => $this->purchaseCommissions->count(),
             'signup_commissions' => CommissionResource::collection($this->signupCommissions),
             'signup_commissions_count' => $this->signupCommissions->count(),
-        ];
-    }
-
-    /**
-     * Recursively build referral chain up to $maxLevel
-     */
-    protected function buildReferralChain(User $user, int $maxLevel, int $currentLevel = 1): array
-    {
-        // Stop if max level reached, no referrer
-        if ($currentLevel > $maxLevel || ! $user->referredBy) return [];
-
-
-        $referrer = $user->referredBy->referrer;
-
-        if (! $referrer) {
-            return [];
-        }
-
-        return [
-            'level' => $currentLevel,
-            'name' => $referrer->name,
-            'phone' => $referrer->phone,
-            'referred_by' => $this->buildReferralChain($referrer, $maxLevel, $currentLevel + 1),
         ];
     }
 }

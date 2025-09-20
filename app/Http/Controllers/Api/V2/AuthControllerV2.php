@@ -3,10 +3,9 @@
 namespace App\Http\Controllers\Api\V2;
 
 use App\Http\Controllers\Controller;
-use App\Http\Resources\V3\UserResourceV3;
+use App\Http\Resources\V2\UserResourceV2;
 use App\Models\User;
 use Illuminate\Http\JsonResponse;
-use Illuminate\Http\Request;
 
 
 class AuthControllerV2 extends Controller
@@ -29,7 +28,7 @@ class AuthControllerV2 extends Controller
         }
 
         return sendSuccessResponse('User details', [
-            'user' => new UserResourceV3($user),
+            'user' => new UserResourceV2($user),
         ]);
     }
 }
