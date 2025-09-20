@@ -3,6 +3,7 @@
 namespace App\Models;
 
 // use Illuminate\Contracts\Auth\MustVerifyEmail;
+use App\Enums\UserStatus;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\HasOne;
@@ -22,6 +23,7 @@ class User extends Authenticatable implements JWTSubject
     protected $fillable = [
         'name',
         'email',
+        'status',
         'phone',
         'password',
         'nid',
@@ -114,6 +116,7 @@ class User extends Authenticatable implements JWTSubject
             'date_of_birth' => 'datetime',
             'created_at' => 'datetime',
             'updated_at' => 'datetime',
+            'status' => UserStatus::class,
         ];
     }
 

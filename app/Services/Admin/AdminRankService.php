@@ -1,9 +1,12 @@
 <?php
+
 namespace App\Services\Admin;
 
 use App\Models\AdminRankSetting;
-use Illuminate\Support\Facades\Cache;
+use Illuminate\Http\Client\ConnectionException;
 use Illuminate\Support\Collection;
+use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Facades\Http;
 
 class AdminRankService
 {
@@ -21,38 +24,53 @@ class AdminRankService
     public function allAsObjects(): array
     {
         return $this->all()
-            ->map(fn($rank) => (object) [
-                'name'      => $rank->name,
+            ->map(fn ($rank) => (object) [
+                'name' => $rank->name,
                 'threshold' => $rank->threshold,
-                'coins'     => (float) $rank->coins,
+                'coins' => (float) $rank->coins,
             ])
             ->toArray();
     }
 
     // Update or create ranks dynamically
-    public function updateRanks(array $ranks): void
+    public function updateRanks(array $ranks): array
     {
-        foreach ($ranks as $rank) {
-            AdminRankSetting::updateOrCreate(
-                [
-                    'name' => $rank['name']
-                ],
-                [
-                    'name'      => $rank['name'],
-                    'threshold' => $rank['threshold'],
-                    'coins'     => $rank['coins'],
-                ]
-            );
+        $results = [];
+
+        foreach ($ranks as $i => $rank) {
+            if (! empty($rank['id'])) {
+                // Update existing by ID
+                $updated = AdminRankSetting::where('id', $rank['id'])->update($rank);
+                $results[] = AdminRankSetting::find($rank['id']); // return updated model
+            } elseif (! empty($rank['name'])) {
+                // Update existing by unique name
+                $updated = AdminRankSetting::where('name', $rank['name'])->update($rank);
+
+                if (! $updated) {
+                    // Create new if name not exists
+                    $existing = AdminRankSetting::create([
+                        'name' => $rank['name'],
+                        'threshold' => $rank['threshold'] ?? 1,
+                        'coins' => $rank['coins'] ?? 0.0,
+                    ]);
+                    $results[] = $existing;
+                } else {
+                    $results[] = AdminRankSetting::where('name', $rank['name'])->first();
+                }
+            }
         }
 
+        // Clear cache after updates
         Cache::forget($this->cacheKey);
+
+        return $results; // return all updated/created ranks
     }
 
     public function delete(int $id): bool
     {
         $rank = AdminRankSetting::find($id);
 
-        if (!$rank) {
+        if (! $rank) {
             return false;
         }
 
@@ -63,5 +81,4 @@ class AdminRankService
 
         return true;
     }
-
 }

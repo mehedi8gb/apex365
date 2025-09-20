@@ -9,6 +9,7 @@ use App\Services\Admin\CommissionService;
 use App\Services\Admin\ProfileRankService;
 use Illuminate\Contracts\Debug\ExceptionHandler;
 use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\ServiceProvider;
 
 class AppServiceProvider extends ServiceProvider
@@ -32,6 +33,11 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot(CommissionService $service): void
     {
+        // Only run after DB + table exists
+        if (app()->runningInConsole() && !Schema::hasTable('commissions')) {
+            return;
+        }
+
         $commissions = $service->getAll();
 
         // Dynamically override config

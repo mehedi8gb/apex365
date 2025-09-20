@@ -4,7 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Actions\CustomerAction;
 use App\Http\Requests\UpdateUserRequest;
-use App\Http\Resources\CustomerResource;
+use App\Http\Resources\V2\UserResourceV2;
 use App\Models\User;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -26,7 +26,7 @@ class CustomerController extends Controller
             'withdraws:id,user_id,amount,status',
             'leaderboard:user_id,total_nodes,total_commissions,total_earned_coins,profile_rank',
             'theReferralCode:id,user_id,code',
-        ]);
+        ], UserResourceV2::class);
 
         return sendSuccessResponse('Customers retrieved successfully', $result);
     }
@@ -48,19 +48,27 @@ class CustomerController extends Controller
         $user = User::create($validated);
         $user->assignRole($validated['role']);
 
-        return sendSuccessResponse('Records created successfully', CustomerResource::make($user));
+        return sendSuccessResponse('Records created successfully', UserResourceV2::make($user));
     }
 
     // show function to show the data
     public function show($id): JsonResponse
     {
-        $user = User::find($id);
+        $user = User::with([
+            'roles',
+            'account:id,user_id,balance,total_withdrawn',
+            'referredBy:referrer_id,user_id',
+            'withdraws:id,user_id,amount,status',
+            'leaderboard:user_id,total_nodes,total_commissions,total_earned_coins,profile_rank',
+            'theReferralCode:id,user_id,code',
+            'commissions:id,user_id,from_user_id,amount', // optional if needed
+        ])->find($id);
 
         if (! $user) {
             return sendErrorResponse('Customer not found', 404);
         }
 
-        return sendSuccessResponse('Records retrieved successfully', CustomerResource::make($user));
+        return sendSuccessResponse('Records retrieved successfully', UserResourceV2::make($user));
     }
 
     // update function to update the data
@@ -72,7 +80,7 @@ class CustomerController extends Controller
 
         $user = CustomerAction::handleUpdate($request->validated(), $user);
 
-        return sendSuccessResponse('Record updated successfully', new CustomerResource($user));
+        return sendSuccessResponse('Record updated successfully', new UserResourceV2($user));
     }
 
     // destroy function to delete the data

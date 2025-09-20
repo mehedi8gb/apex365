@@ -2,6 +2,7 @@
 
 namespace App\Http\Middleware;
 
+use App\Enums\UserStatus;
 use Closure;
 use Illuminate\Http\Request;
 use Symfony\Component\HttpFoundation\Response;
@@ -25,6 +26,11 @@ class JwtMiddleware
             if ($userUpdatedAt && $userUpdatedAt > $issuedAt && app()->environment('production')) {
                 return sendErrorResponse('Token invalid due to recent account update. Please login again.', 401);
             }
+
+            if ($user->status === UserStatus::Inactive || $user->status === UserStatus::Suspended) {
+                return sendErrorResponse('User is '. $user->status->value .'. Please contact support.', 403);
+            }
+
         } catch (JWTException $e) {
             return sendErrorResponse($e->getMessage(), 401);
         }

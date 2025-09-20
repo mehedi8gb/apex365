@@ -5,6 +5,7 @@ namespace App\Helpers;
 use App\Enums\EarningType;
 use App\Models\Account;
 use App\Models\Commission;
+use App\Models\CommissionSetting;
 use App\Models\Leaderboard;
 use App\Models\ReferralCode;
 use App\Models\ReferralUser;
@@ -24,6 +25,8 @@ class ReferralHelper
     private array $commissions = [];
 
     private string $commissionType = 'signup';
+
+    private int $commissionTypeId = 0;
 
     private User $currentUser;
 
@@ -66,6 +69,7 @@ class ReferralHelper
             throw new Exception('Invalid referral user or referrer.');
         }
         $this->commissionType = $commissionType;
+        $this->commissionTypeId = CommissionSetting::where('type', $commissionType)->first()->id;
 
         DB::beginTransaction();
         try {
@@ -109,6 +113,7 @@ class ReferralHelper
             'from_user_id' => $fromUser->id,
             'level' => $level,
             'amount' => $amounts[$level],
+            'commission_type_id' => $this->commissionTypeId,
         ]);
 
         $this->commissions[$level]->save();

@@ -2,6 +2,7 @@
 
 namespace App\Http\Resources;
 
+use App\Enums\WithdrawStatus;
 use App\Models\AdminRankSetting;
 use App\Models\Commission;
 use App\Models\ReferralUser;
@@ -30,8 +31,8 @@ class DashboardResource extends JsonResource
                 'total_transaction_ids_count' => Transaction::count(),
                 'total_ranks_count' => AdminRankSetting::count(),
                 'total_spinners' => Spinner::count(),
-                'total_paid_withdrawals' => 'Tk '.number_format((float) Withdraw::where('status', 'paid')->sum('amount'), 2),
-                'total_unpaid_withdrawals' => 'Tk '.number_format((float) Withdraw::where('status', 'due')->sum('amount'), 2),
+                'total_paid_withdrawals' => 'Tk '.number_format((float) Withdraw::where('status', WithdrawStatus::Approved)->sum('amount'), 2),
+                'total_unpaid_withdrawals' => 'Tk '.number_format((float) Withdraw::where('status', WithdrawStatus::Pending)->sum('amount'), 2),
                 'total_referrals_count' => ReferralUser::distinct('user_id')->count('user_id'),
                 'last_updated_at' => Carbon::now()->toDateTimeString(),
             ];

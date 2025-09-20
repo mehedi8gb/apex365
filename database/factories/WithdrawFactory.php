@@ -2,7 +2,7 @@
 
 namespace Database\Factories;
 
-use App\Models\Account;
+use App\Enums\WithdrawStatus;
 use App\Models\User;
 use Illuminate\Database\Eloquent\Factories\Factory;
 
@@ -20,7 +20,7 @@ class WithdrawFactory extends Factory
             'amount' => $this->faker->randomFloat(2, 10, 500),
             'mobile_number' => $this->faker->phoneNumber,
             'payment_method' => $this->faker->randomElement(['bkash', 'nagad', 'rocket']),
-            'status' => 'due',
+            'status' => $this->faker->randomElement(WithdrawStatus::cases())->value,
         ];
     }
 }

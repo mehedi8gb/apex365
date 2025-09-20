@@ -5,15 +5,18 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
+use App\Http\Resources\CommissionSettingHistoryResource;
+use App\Http\Resources\CommissionSettingResource;
 use App\Models\CommissionSetting;
 use App\Models\CommissionSettingHistory;
 use App\Services\Admin\CommissionService;
 use Exception;
 use Illuminate\Http\Request;
+use Throwable;
 
 class CommissionSettingController extends Controller
 {
-    public function __construct(private CommissionService $service) {}
+    public function __construct(private readonly CommissionService $service) {}
 
     /**
      * @throws Exception
@@ -27,6 +30,9 @@ class CommissionSettingController extends Controller
         return sendSuccessResponse('Get all commissions values', $results);
     }
 
+    /**
+     * @throws Throwable
+     */
     public function update(Request $request, string $type)
     {
         $request->validate([
@@ -35,12 +41,7 @@ class CommissionSettingController extends Controller
 
         $setting = $this->service->update($type, $request->levels);
 
-        return sendSuccessResponse('Commission setting updated successfully', $setting);
-    }
-
-    public function delete($id, string $type)
-    {
-        $this->service->delete($id);
+        return sendSuccessResponse('Commission setting updated successfully', CommissionSettingResource::make($setting));
     }
 
     /**

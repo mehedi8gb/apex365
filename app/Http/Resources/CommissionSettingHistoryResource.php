@@ -15,14 +15,14 @@ class CommissionSettingHistoryResource extends JsonResource
     public function toArray(Request $request): array
     {
         return [
-            'id' => $this->id,
+            'id' => $this->resource->id,
             'changed_by' => [
-                'name' => $this->admin->name,
-                'phone' => $this->admin->phone,
+                'name' => $this->resource->admin->name,
+                'phone' => $this->resource->admin->phone,
             ],
-            'new_levels' => $this->new_levels,
-            'old_levels' => $this->old_levels,
-            'commission_setting' => $this->commissionSetting,
+            'new_levels' => $this->resource->new_levels,
+            'old_levels' => $this->resource->old_levels,
+            'commission_setting' => $this->resource->commissionSetting,
         ];
     }
 }

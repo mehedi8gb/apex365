@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Enums\WithdrawStatus;
 use Exception;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model as MainModel;
@@ -9,13 +10,14 @@ use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Arr;
 use Illuminate\Support\Carbon;
+use Illuminate\Validation\Rules\Enum;
 
 /**
  * Class Model
  *
  * @property int $id
  * @property string $academic_year
- * @property bool|null $status
+ * @property WithdrawStatus $status
  * @property string|null $createdBy
  * @property Carbon|null $created_at
  * @property Carbon|null $updated_at
