@@ -140,4 +140,9 @@ class User extends Authenticatable implements JWTSubject
             ? url('storage/'.$this->profile_photo_path)
             : null;
     }
+
+    public function primaryRole(): string
+    {
+        return $this->getRoleNames()?->first();
+    }
 }
