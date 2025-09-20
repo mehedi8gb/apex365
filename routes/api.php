@@ -14,9 +14,16 @@ use App\Http\Middleware\JwtMiddleware;
 use App\Http\Middleware\RefreshTokenMiddleware;
 use Illuminate\Support\Facades\Route;
 
-foreach (glob(__DIR__ . '/api/v2/*.php') as $routeFile) {
-    require $routeFile;
+$apiBasePath = __DIR__ . '/api';
+
+// Scan all version directories (v1, v2, v3...)
+foreach (glob($apiBasePath . '/v*', GLOB_ONLYDIR) as $versionDir) {
+    // Load all PHP route files inside this version directory
+    foreach (glob($versionDir . '/*.php') as $routeFile) {
+        require $routeFile;
+    }
 }
+
 
 
 Route::group(['prefix' => 'auth'], function () {
