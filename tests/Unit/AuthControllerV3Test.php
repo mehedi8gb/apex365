@@ -2,17 +2,13 @@
 
 namespace Tests\Unit;
 
-use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Artisan;
-use Illuminate\Support\Str;
 use PHPUnit\Framework\Attributes\Test;
 use Symfony\Component\HttpFoundation\Response;
 use Tests\TestCase;
 
 class AuthControllerV3Test extends TestCase
 {
-//    use RefreshDatabase;
-
     protected function setUp(): void
     {
         parent::setUp();

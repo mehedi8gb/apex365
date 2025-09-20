@@ -17,7 +17,7 @@ class TestDatabaseSeeder extends Seeder
             AdminRankSettingSeeder::class,
             TransactionSeeder::class,
             ReferralCodeSeeder::class,
-            UsersSeeder::class,
+            AdminUsersSeeder::class,
         ]);
     }
 }
