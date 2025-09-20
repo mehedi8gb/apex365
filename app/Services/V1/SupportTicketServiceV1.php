@@ -32,7 +32,7 @@ class SupportTicketServiceV1
         $query = SupportTicket::query();
         $query->where('user_id', $userId);
 
-        return handleApiRequest(request(), $query, ['messages'], SupportTicketResourceV1::class);
+        return handleApiRequest(request(), $query, ['messages'],SupportTicketResourceV1::class);
     }
 
     public function find(int $ticketId): SupportTicket
