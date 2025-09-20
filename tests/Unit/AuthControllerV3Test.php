@@ -20,19 +20,19 @@ class AuthControllerV3Test extends TestCase
     protected function registerUser(array $payload = []): array
     {
         $default = [
-            'referralId'    => $payload['referralId'] ?? null,
-            'password'      => '123456',
-            'phone'         => '+880' . str_pad(rand(1000000000, 9999999999), 10, '0', STR_PAD_LEFT),
-            'name'          => $payload['name'] ?? 'User ' . rand(1, 1000),
-            'nid'           => (string)rand(20000000000000000, 29999999999999999),
-            'address'       => 'Fake Address',
+            'referralId' => $payload['referralId'] ?? 'REF-12345678',
+            'password' => '123456',
+            'phone' => '+880' . str_pad(rand(1000000000, 9999999999), 10, '0', STR_PAD_LEFT),
+            'name' => $payload['name'] ?? 'User ' . rand(1, 1000),
+            'nid' => (string)rand(20000000000000000, 29999999999999999),
+            'address' => 'Fake Address',
             'date_of_birth' => '2002-04-08',
-            'transactionId' => 'TRX-' . rand(100000, 999999) . '-TEST',
+            'transactionId' => 'TRX-000111-AAAJJJ',
         ];
 
         $response = $this->postJson('/api/auth/register', array_merge($default, $payload));
         $response->assertStatus(Response::HTTP_CREATED);
-        return $response->json('data');
+        return array_merge($default, $payload);
     }
 
     protected function loginUser(string $phone, string $password = '123456'): string
@@ -59,18 +59,8 @@ class AuthControllerV3Test extends TestCase
     public function it_can_register_login_and_fetch_authenticated_user_details()
     {
         $this->withoutExceptionHandling();
-        $payload = [
-            'referralId' => 'REF-12345678',
-            'password' => '123456',
-            'phone'        => '+880' . str_pad(rand(1000000000, 9999999999), 10, '0', STR_PAD_LEFT),
-            'name'         => 'First User',
-            'nid'          => (string)rand(20000000000000000, 29999999999999999), // 17 digits
-            'address' => 'Fake Address',
-            'date_of_birth' => '2002-04-08',
-            'transactionId' => 'TRX-000111-AAAJJJ',
-        ];
         // Step 1: Register a user
-        $this->registerUser($payload);
+        $payload = $this->registerUser(['name' => 'First User']);
 
         $token = $this->loginUser($payload['phone']);
 
@@ -84,33 +74,51 @@ class AuthControllerV3Test extends TestCase
     }
 
     #[Test]
-    public function it_can_build_referral_chain_and_check_nodes()
+    public function it_can_build_sequential_referral_chain()
     {
+        $this->withoutExceptionHandling();
+
         // Step 1: Register root user
         $rootUser = $this->registerUser(['name' => 'Root User']);
         $rootToken = $this->loginUser($rootUser['phone']);
         $rootData = $this->fetchMe($rootToken);
-        $rootReferralCode = $rootData['user']['referral_code'];
+        $currentReferralCode = $rootData['user']['referral_code'];
 
-        // Step 2: Register 5 nodes under root referral
-        $nodes = [];
-        for ($i = 1; $i <= 5; $i++) {
-            $nodes[] = $this->registerUser([
+        $users = [
+            ['name' => 'Root User', 'data' => $rootData]
+        ];
+
+        // Step 2: Register 5 nodes in chain (each referred by the last user)
+        foreach (range(1, 5) as $i) {
+            $newUser = $this->registerUser([
                 'name' => "Node $i",
-                'referralId' => $rootReferralCode,
+                'referralId' => $currentReferralCode,
             ]);
+
+            $newToken = $this->loginUser($newUser['phone']);
+            $newData = $this->fetchMe($newToken);
+
+            $users[] = ['name' => "Node $i", 'data' => $newData];
+            $currentReferralCode = $newData['user']['referral_code'];
         }
 
-        // Step 3: Fetch root user again to check referral chain
-        $rootDataAfter = $this->fetchMe($rootToken);
+        // Step 3: Validate referral chains
+        foreach ($users as $index => $user) {
+            $chain = $user['data']['user']['referred_by_chain'];
 
-        // Basic assertions
-        $this->assertEquals('Root User', $rootDataAfter['user']['name']);
-        $this->assertCount(5, $rootDataAfter['user']['referred_by_chain'] ?? []);
+            // Node i should have exactly i items in chain
+            $this->assertCount($index, $chain, "{$user['name']} should have {$index} in chain");
 
-        foreach ($nodes as $index => $node) {
-            $this->assertStringContainsString('Node', $node['name']);
-            $this->assertArrayHasKey('id', $node);
+            // Verify that chain is ordered properly back to root
+            $expectedNames = array_reverse(array_column(array_slice($users, 0, $index), 'name'));
+            $actualNames = array_column($chain, 'name');
+
+            $this->assertEquals(
+                $expectedNames,
+                $actualNames,
+                "Referral chain mismatch for {$user['name']}"
+            );
         }
     }
+
 }
