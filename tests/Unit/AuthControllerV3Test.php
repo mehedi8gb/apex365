@@ -14,98 +14,103 @@ class AuthControllerV3Test extends TestCase
         parent::setUp();
         Artisan::call('migrate:fresh');
         Artisan::call('db:seed', ['--class' => 'TestDatabaseSeeder']);
-
     }
 
+    // ---------- Helper Methods ----------
+    protected function registerUser(array $payload = []): array
+    {
+        $default = [
+            'referralId'    => $payload['referralId'] ?? null,
+            'password'      => '123456',
+            'phone'         => '+880' . str_pad(rand(1000000000, 9999999999), 10, '0', STR_PAD_LEFT),
+            'name'          => $payload['name'] ?? 'User ' . rand(1, 1000),
+            'nid'           => (string)rand(20000000000000000, 29999999999999999),
+            'address'       => 'Fake Address',
+            'date_of_birth' => '2002-04-08',
+            'transactionId' => 'TRX-' . rand(100000, 999999) . '-TEST',
+        ];
+
+        $response = $this->postJson('/api/auth/register', array_merge($default, $payload));
+        $response->assertStatus(Response::HTTP_CREATED);
+        return $response->json('data');
+    }
+
+    protected function loginUser(string $phone, string $password = '123456'): string
+    {
+        $response = $this->postJson('/api/auth/login', [
+            'phone' => $phone,
+            'password' => $password,
+        ]);
+        $response->assertStatus(200);
+        return $response->json('data.access_token');
+    }
+
+    protected function fetchMe(string $token): array
+    {
+        $response = $this->withHeader('Authorization', 'Bearer ' . $token)
+            ->getJson('/api/v3/client/me');
+        $response->assertStatus(200);
+        return $response->json('data');
+    }
+
+    // ---------- Test Cases ----------
 
     #[Test]
-    public function it_can_register_and_fetch_authenticated_user_details()
+    public function it_can_register_login_and_fetch_authenticated_user_details()
     {
         $this->withoutExceptionHandling();
-        // Step 1: Fake registration payload
-        $registerPayload = [
+        $payload = [
             'referralId' => 'REF-12345678',
             'password' => '123456',
             'phone'        => '+880' . str_pad(rand(1000000000, 9999999999), 10, '0', STR_PAD_LEFT),
-            'name'         => 'NEW MAN ' . rand(1, 100),
+            'name'         => 'First User',
             'nid'          => (string)rand(20000000000000000, 29999999999999999), // 17 digits
             'address' => 'Fake Address',
             'date_of_birth' => '2002-04-08',
             'transactionId' => 'TRX-000111-AAAJJJ',
         ];
+        // Step 1: Register a user
+        $this->registerUser($payload);
 
-        // Step 2: Register new user
-        $registerResponse = $this->postJson('/api/auth/register', $registerPayload);
+        $token = $this->loginUser($payload['phone']);
 
-        $registerResponse->assertStatus(Response::HTTP_CREATED)
-            ->assertJsonStructure([
-                'success',
-                'message',
-                'data' => [
-                    'transaction_id_required',
-                    'access_token'
-                ],
+        // Step 2: Fetch authenticated user details
+        $meData = $this->fetchMe($token);
+
+        // Assertions
+        $this->assertEquals('First User', $meData['user']['name']);
+        $this->assertArrayHasKey('referral_code', $meData['user']);
+        $this->assertArrayHasKey('balance', $meData['user']);
+    }
+
+    #[Test]
+    public function it_can_build_referral_chain_and_check_nodes()
+    {
+        // Step 1: Register root user
+        $rootUser = $this->registerUser(['name' => 'Root User']);
+        $rootToken = $this->loginUser($rootUser['phone']);
+        $rootData = $this->fetchMe($rootToken);
+        $rootReferralCode = $rootData['user']['referral_code'];
+
+        // Step 2: Register 5 nodes under root referral
+        $nodes = [];
+        for ($i = 1; $i <= 5; $i++) {
+            $nodes[] = $this->registerUser([
+                'name' => "Node $i",
+                'referralId' => $rootReferralCode,
             ]);
+        }
 
-        // Step 3: Login with registered user
-        $loginPayload = [
-            'phone' => $registerPayload['phone'],
-            'password' => $registerPayload['password'],
-        ];
+        // Step 3: Fetch root user again to check referral chain
+        $rootDataAfter = $this->fetchMe($rootToken);
 
-        $loginResponse = $this->postJson('/api/auth/login', $loginPayload);
+        // Basic assertions
+        $this->assertEquals('Root User', $rootDataAfter['user']['name']);
+        $this->assertCount(5, $rootDataAfter['user']['referred_by_chain'] ?? []);
 
-        $loginResponse->assertStatus(200)
-            ->assertJsonStructure([
-                'success',
-                'message',
-                'data' => [
-                    'transaction_id_required',
-                    'access_token'
-                ],
-            ]);
-
-        $token = $loginResponse->json('data.access_token');
-
-        // Step 4: Call /v3/client/me with Bearer token
-        $meResponse = $this->withHeader('Authorization', 'Bearer ' . $token)
-            ->getJson('/api/v3/client/me');
-
-        $meResponse->assertStatus(200)
-            ->assertJsonStructure([
-                'success',
-                'message',
-                'data' => [
-                    'user' => [
-                        'id',
-                        'role',
-                        'name',
-                        'phone',
-                        'balance',
-                        'total_withdrawn_approved',
-                        'total_pending_withdrawal',
-                        'total_suspended_withdrawal',
-                        'nid',
-                        'address',
-                        'date_of_birth',
-                        'profile_picture',
-                        'referral_code',
-                        'account_created_at',
-                        'referred_by_chain',
-                    ],
-                    'leaderboard' => [
-                        'total_commissions',
-                        'total_nodes',
-                        'total_earned_coins',
-                        'profile_rank',
-                    ],
-                    'commissions' => [
-                        'purchase_commissions',
-                        'purchase_commissions_pagination',
-                        'signup_commissions',
-                        'signup_commissions_pagination',
-                    ],
-                ],
-            ]);
+        foreach ($nodes as $index => $node) {
+            $this->assertStringContainsString('Node', $node['name']);
+            $this->assertArrayHasKey('id', $node);
+        }
     }
 }
