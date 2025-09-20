@@ -59,7 +59,7 @@ class ResourceHelpers
             'level' => $currentLevel,
             'name' => $referrer->name,
             'phone' => $referrer->phone,
-            'referred_by' => self::buildReferralChain($referrer, $maxLevel, $currentLevel + 1),
+            'referred_by' => self::buildReferralChain($referrer, $currentLevel + 1, $maxLevel),
         ];
     }
 
