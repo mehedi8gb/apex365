@@ -2,7 +2,7 @@
 
 use App\Http\Controllers\Admin\AdminRankSettingController;
 use App\Http\Controllers\Admin\CommissionSettingController;
-use App\Http\Controllers\Api\V1\AuthControllerV3;
+use App\Http\Controllers\Api\V2\DashboardControllerV2;
 use App\Http\Controllers\Api\V2\TransactionControllerV2;
 use App\Http\Controllers\CustomerController;
 use App\Http\Controllers\WithdrawController;
@@ -23,5 +23,5 @@ Route::middleware([JwtMiddleware::class, isAdminMiddleware::class])->prefix('v2/
     Route::get('transactions/user/{userId}', [TransactionControllerV2::class, 'userTransactions'])->middleware([isAdminMiddleware::class]);
     Route::get('transactions/users', [TransactionControllerV2::class, 'usersTransactions'])->middleware([isAdminMiddleware::class]);
     Route::apiResource('transactions', TransactionControllerV2::class);
-    Route::get('/dashboard', [AuthControllerV3::class, 'index']);
+    Route::get('/dashboard', [DashboardControllerV2::class, 'index']);
 });
