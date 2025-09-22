@@ -2,11 +2,10 @@
 
 namespace App\Services\V1;
 
-use App\Http\Resources\V1\SupportMessageResourceV1;
+use App\Http\Resources\V1\AdminSupportTicketResourceV1;
 use App\Http\Resources\V1\SupportTicketResourceV1;
 use App\Models\SupportTicket;
 use Exception;
-use Illuminate\Pagination\LengthAwarePaginator;
 
 class SupportTicketServiceV1
 {
@@ -21,7 +20,7 @@ class SupportTicketServiceV1
     public function getAllForAdmin(): array
     {
         $query = SupportTicket::query();
-        return handleApiRequest(request(), $query, ['messages'], SupportTicketResourceV1::class);
+        return handleApiRequest(request(), $query, ['messages', 'user:id,name,phone'], AdminSupportTicketResourceV1::class);
     }
 
     /**

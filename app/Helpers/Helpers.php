@@ -222,20 +222,20 @@ function handleApiRequest(Request $request, Builder $query, array $with = [], $r
     }
 
     // Apply filters
-    foreach ($request->query() as $key => $value) {
-        // Match keys that end with "-limit" or "-page"
-        if (!preg_match('/.*-(limit|page)$/', $key) && !in_array($key, [
-                'page', 'limit', 'search', 'searchTerm', 'sortBy', 'sortDirection',
-                'select', 'where', 'orWhere', 'exclude', 'company', 'q', 'or', 'operator', 'commissions_page'
-            ])) {
-            $query->where($key, $value);
-        }
-    }
+//    foreach ($request->query() as $key => $value) {
+//        // Match keys that end with "-limit" or "-page"
+//        if (!preg_match('/.*-(limit|page)$/', $key) && !in_array($key, [
+//                'page', 'limit', 'search', 'searchTerm', 'sortBy', 'sortDirection',
+//                'select', 'where', 'orWhere', 'exclude', 'company', 'q', 'or', 'operator', 'commissions_page'
+//            ])) {
+//            $query->where($key, $value);
+//        }
+//    }
 
     // Apply search
-    $searchTerm = $request->query('searchTerm');
-    if ($searchTerm !== null) {
-        $columns = Schema::getColumnListing($query->getModel()->getTable());
+//    $searchTerm = $request->query('searchTerm');
+//    if ($searchTerm !== null) {
+//        $columns = Schema::getColumnListing($query->getModel()->getTable());
 
         //        if ($request->query('or')) {
         //            $query->orWhere(function ($query) use ($operator, $searchTerm, $columns) {
@@ -245,12 +245,12 @@ function handleApiRequest(Request $request, Builder $query, array $with = [], $r
         //            });
         //        }
 
-        $query->where(function ($query) use ($operator, $searchTerm, $columns) {
-            foreach ($columns as $column) {
-                $query->orWhere($column, $operator, "%$searchTerm%");
-            }
-        });
-    }
+//        $query->where(function ($query) use ($operator, $searchTerm, $columns) {
+//            foreach ($columns as $column) {
+//                $query->orWhere($column, $operator, "%$searchTerm%");
+//            }
+//        });
+//    }
 
     // Check for the 'where' parameter
     if ($request->query('where')) {

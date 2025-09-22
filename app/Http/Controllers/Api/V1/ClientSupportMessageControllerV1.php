@@ -8,7 +8,7 @@ use App\Services\V1\SupportMessageServiceV1;
 use Exception;
 use Illuminate\Http\Request;
 
-class SupportMessageControllerV1 extends Controller
+class ClientSupportMessageControllerV1 extends Controller
 {
     public function __construct(protected SupportMessageServiceV1 $messageService) {}
 
