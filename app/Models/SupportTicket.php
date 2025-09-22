@@ -3,20 +3,23 @@
 namespace App\Models;
 
 use App\Enums\SupportTicketStatus;
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class SupportTicket extends Model
 {
+    use HasFactory;
+
     protected $fillable = [
         'user_id',
         'subject',
-        'status'
+        'status',
     ];
 
     protected $casts = [
-        'status' => SupportTicketStatus::class
+        'status' => SupportTicketStatus::class,
     ];
 
     public function messages(): HasMany

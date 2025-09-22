@@ -21,6 +21,7 @@ class DatabaseSeeder extends Seeder
             ReferralUserSeeder::class,
             AccountSeeder::class,
             WithdrawSeeder::class,
+            SupportTicketSeeder::class,
         ]);
     }
 }
