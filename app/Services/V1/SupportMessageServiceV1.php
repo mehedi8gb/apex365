@@ -3,7 +3,7 @@
 namespace App\Services\V1;
 
 use App\Http\Resources\V1\AdminSupportMessageResourceV1;
-use App\Http\Resources\V1\SupportMessageResourceV1;
+use App\Http\Resources\V1\ClientSupportMessageResourceV1;
 use App\Models\SupportMessage;
 use Exception;
 
@@ -22,7 +22,7 @@ class SupportMessageServiceV1
         $query = SupportMessage::query();
         $query->where('ticket_id', $ticketId);
 
-        return handleApiRequest(request(), $query, [], SupportMessageResourceV1::class);
+        return handleApiRequest(request(), $query, [], ClientSupportMessageResourceV1::class);
     }
 
     /**

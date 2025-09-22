@@ -7,7 +7,7 @@ use App\Models\SupportMessage;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
 
-class SupportTicketResourceV1 extends JsonResource
+class ClientSupportTicketResourceV1 extends JsonResource
 {
     /**
      * Transform the resource into an array.
@@ -29,7 +29,7 @@ class SupportTicketResourceV1 extends JsonResource
             'subject'   => $this->resource->subject,
             'status'    => $this->resource->status,
             'created_at'=> getFormatedDate($this->resource->created_at),
-            'messages'  => SupportMessageResourceV1::collection($messages),
+            'messages'  => ClientSupportMessageResourceV1::collection($messages),
             'messages_pagination' => ResourceHelpers::paginationMeta($messages),
         ];
     }

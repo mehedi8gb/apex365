@@ -3,7 +3,7 @@
 namespace App\Services\V1;
 
 use App\Http\Resources\V1\AdminSupportTicketResourceV1;
-use App\Http\Resources\V1\SupportTicketResourceV1;
+use App\Http\Resources\V1\ClientSupportTicketResourceV1;
 use App\Models\SupportTicket;
 use Exception;
 
@@ -31,7 +31,7 @@ class SupportTicketServiceV1
         $query = SupportTicket::query();
         $query->where('user_id', $userId);
 
-        return handleApiRequest(request(), $query, ['messages'],SupportTicketResourceV1::class);
+        return handleApiRequest(request(), $query, ['messages'],ClientSupportTicketResourceV1::class);
     }
 
     public function find(int $ticketId): SupportTicket

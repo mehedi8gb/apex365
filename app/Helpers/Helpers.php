@@ -14,20 +14,24 @@ use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
 
 function getResourceClass($model): string
 {
-    // Derive the model class name without namespace
+    // Base model class name without namespace
     $modelClassName = class_basename($model);
 
-    // Construct the corresponding resource class name
-    $resourceClass = "App\\Http\\Resources\\{$modelClassName}Resource";
+    // Possible suffixes in order of priority
+    $suffixes = ['Resource', 'ResourceV1'];
 
-    // Check if the resource class exists
-    if (class_exists($resourceClass)) {
-        return $resourceClass;
+    foreach ($suffixes as $suffix) {
+        $resourceClass = "App\\Http\\Resources\\{$modelClassName}{$suffix}";
+
+        if (class_exists($resourceClass)) {
+            return $resourceClass;
+        }
     }
 
-    // Fallback to a default resource class if not found
+    // Fallback if none exist
     return DefaultResource::class;
 }
+
 
 /**
  * Convert boolean status to 1/0.

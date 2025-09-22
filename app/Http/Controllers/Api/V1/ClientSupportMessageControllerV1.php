@@ -3,7 +3,7 @@
 namespace App\Http\Controllers\Api\V1;
 
 use App\Http\Controllers\Controller;
-use App\Http\Resources\V1\SupportMessageResourceV1;
+use App\Http\Resources\V1\ClientSupportMessageResourceV1;
 use App\Services\V1\SupportMessageServiceV1;
 use Exception;
 use Illuminate\Http\Request;
@@ -32,6 +32,6 @@ class ClientSupportMessageControllerV1 extends Controller
             'attachments' => $request->input('attachments', []),
         ]);
 
-        return sendSuccessResponse('Support message created successfully', new SupportMessageResourceV1($message));
+        return sendSuccessResponse('Support message created successfully', new ClientSupportMessageResourceV1($message));
     }
 }
