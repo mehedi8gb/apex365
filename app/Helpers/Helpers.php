@@ -405,5 +405,8 @@ function isAdmin(): bool
  */
 function getFormatedDate(Carbon $date): string
 {
-    return $date->diffForHumans() . ' (' . $date->format('jS F Y') . ')';
+    // Format: 14th September at 08:21 AM in 2025
+    $formatted = $date->format('jS F \a\t h:i A \i\n Y');
+
+    return $date->diffForHumans() . " ({$formatted})";
 }
