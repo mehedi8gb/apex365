@@ -15,6 +15,7 @@ class DatabaseSeeder extends Seeder
             RolesAndPermissionsSeeder::class,
             CommissionSettingsSeeder::class,
             AdminRankSettingSeeder::class,
+            SpinnerItemsSeeder::class,
             TransactionSeeder::class,
             ReferralCodeSeeder::class,
             UsersSeeder::class,
