@@ -22,7 +22,6 @@ use Illuminate\Validation\Rules\Enum;
  * @property string|null $createdBy
  * @property Carbon|null $created_at
  * @property Carbon|null $updated_at
- * @method static \Database\Factories\AcademicYearFactory factory($count = null, $state = [])
  * @method static Builder<static>|Model newModelQuery()
  * @method static Builder<static>|Model newQuery()
  * @method static Builder<static>|Model query()
