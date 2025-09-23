@@ -26,10 +26,10 @@ class SupportTicketServiceV1
     /**
      * @throws Exception
      */
-    public function getAllForAuthUser($userId): array
+    public function getAllForAuthUser(): array
     {
         $query = SupportTicket::query();
-        $query->where('user_id', $userId);
+        $query->where('user_id', auth()->id());
 
         return handleApiRequest(request(), $query, ['messages'],ClientSupportTicketResourceV1::class);
     }
