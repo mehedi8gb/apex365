@@ -10,6 +10,7 @@ use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Arr;
 use Illuminate\Support\Carbon;
+use Illuminate\Support\Str;
 use Illuminate\Validation\Rules\Enum;
 
 /**
@@ -62,12 +63,11 @@ class Model extends MainModel
     public static function findOrCustomFail($id, $message = 'not found'): null|Model|Builder|ModelNotFoundException
     {
         try {
-            if (!$id) return null;
-
             return static::findOrFail($id);
         } catch (ModelNotFoundException $e) {
             $modelName = class_basename(static::class);
-            $customMessage = "{$modelName} {$message}";
+            $normalized = Str::lower(Str::headline($modelName));
+            $customMessage = "{$normalized} {$message}";
 
             throw new ModelNotFoundException($customMessage, 404);
         }
