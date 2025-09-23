@@ -25,10 +25,10 @@ class ClientSupportMessageControllerV1 extends Controller
     public function store(Request $request, $ticketId)
     {
         $message = $this->messageService->create([
-            'ticket_id'   => $ticketId,
-            'sender_id'   => auth()->id(),
+            'ticket_id' => $ticketId,
+            'sender_id' => auth()->id(),
             'sender_type' => auth()->user()->primaryRole(),
-            'message'     => $request->input('message'),
+            'message' => $request->input('message'),
             'attachments' => $request->input('attachments', []),
         ]);
 

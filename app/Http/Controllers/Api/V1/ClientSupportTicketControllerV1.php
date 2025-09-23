@@ -20,7 +20,7 @@ class ClientSupportTicketControllerV1 extends Controller
      */
     public function index()
     {
-        $tickets = $this->ticketService->getAllForCustomer(auth()->id());
+        $tickets = $this->ticketService->getAllForAuthUser(auth()->id());
 
         return sendSuccessResponse('Support tickets retrieved successfully', $tickets);
     }

@@ -26,7 +26,7 @@ class SupportTicketServiceV1
     /**
      * @throws Exception
      */
-    public function getAllForCustomer($userId): array
+    public function getAllForAuthUser($userId): array
     {
         $query = SupportTicket::query();
         $query->where('user_id', $userId);
