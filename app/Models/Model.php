@@ -17,7 +17,7 @@ use Illuminate\Validation\Rules\Enum;
  * Class Model
  *
  * @property int $id
- * @property string $academic_year
+ * @property string $user_id
  * @property WithdrawStatus $status
  * @property string|null $createdBy
  * @property Carbon|null $created_at
@@ -65,7 +65,10 @@ class Model extends MainModel
             return static::findOrFail($id);
         } catch (ModelNotFoundException $e) {
             $modelName = class_basename(static::class);
-            $normalized = Str::lower(Str::headline($modelName));
+            $normalized = Str::of($modelName)
+                ->headline()
+                ->lower()
+                ->ucfirst();
             $customMessage = "{$normalized} {$message}";
 
             throw new ModelNotFoundException($customMessage, 404);
