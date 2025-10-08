@@ -362,7 +362,7 @@ function handleApiRequest(Request $request, Builder $query, array $with = [], $r
 
     // Meta information for pagination
     $meta = [
-        'page' => $page,
+        'page' => (int) $page,
         'limit' => $limit === 'all' ? $total : $limit,
         'total' => $total,
         'totalPage' => $limit === 'all' ? 1 : $results->lastPage(),
