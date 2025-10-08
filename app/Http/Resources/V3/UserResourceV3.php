@@ -4,26 +4,18 @@ namespace App\Http\Resources\V3;
 
 use App\Enums\WithdrawStatus;
 use App\Helpers\ResourceHelpers;
-use App\Http\Resources\CommissionResource;
 use App\Http\Resources\LeaderboardResource;
 use Illuminate\Http\Resources\Json\JsonResource;
 
 class UserResourceV3 extends JsonResource
 {
-    protected mixed $purchaseCommissions;
-    protected mixed $signupCommissions;
-
-    public function __construct($resource, $purchaseCommissions = null, $signupCommissions = null)
+    public function __construct($resource)
     {
         parent::__construct($resource);
-        $this->purchaseCommissions = $purchaseCommissions;
-        $this->signupCommissions = $signupCommissions;
     }
 
     public function toArray($request): array
     {
-        $referrer = $this->resource->referredBy?->referrer;
-
         return [
             'user' => [
                 'id' => $this->resource->id,
@@ -45,14 +37,6 @@ class UserResourceV3 extends JsonResource
             ],
 
             'leaderboard' => new LeaderboardResource($this->whenLoaded('leaderboard')),
-
-            'commissions' => [
-                'purchase_commissions' => CommissionResource::collection($this->purchaseCommissions),
-                'purchase_commissions_pagination' => ResourceHelpers::paginationMeta($this->purchaseCommissions),
-
-                'signup_commissions' => CommissionResource::collection($this->signupCommissions),
-                'signup_commissions_pagination' => ResourceHelpers::paginationMeta($this->signupCommissions)
-            ],
         ];
     }
 }
