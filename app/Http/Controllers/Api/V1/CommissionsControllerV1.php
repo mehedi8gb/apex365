@@ -28,7 +28,12 @@ class CommissionsControllerV1 extends Controller
     public function signupIndex()
     {
         $query = Commission::query();
-        $query->where('user_id', auth()->id())->ofType('signup');
+        $query->where('user_id', auth()->id())
+            ->where(function ($query) {
+                $query->whereHas('commissionSetting', function ($q) {
+                    $q->where('type', 'signup');
+                })->orWhereNull('commission_type_id');
+            });
 
         $result = handleApiRequest(request(), $query, ['fromUser:id,name'], CommissionResource::class);
 
