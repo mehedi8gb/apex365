@@ -191,7 +191,7 @@ function sendSuccessResponse(string $message, mixed $data = null, int $statusCod
         'success' => true,
         'message' => $message,
         'data' => $data,
-    ], $statusCode);
+    ], $statusCode, [], JSON_PRESERVE_ZERO_FRACTION);
 }
 
 /**
