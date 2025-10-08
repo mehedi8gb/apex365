@@ -3,10 +3,15 @@
 // api/v1/client.php
 use App\Http\Controllers\Api\V1\ClientSupportMessageControllerV1;
 use App\Http\Controllers\Api\V1\ClientSupportTicketControllerV1;
+use App\Http\Controllers\Api\V1\CommissionsControllerV1;
 use App\Http\Middleware\EnsureTicketOwner;
 use App\Http\Middleware\JwtMiddleware;
 
 Route::middleware([JwtMiddleware::class])->prefix('v1/client')->as('client.v1.')->group(function () {
+
+    // Commissions
+    Route::get('purchase/commissions', [CommissionsControllerV1::class, 'purchaseIndex']);
+    Route::get('signup/commissions', [CommissionsControllerV1::class, 'signupIndex']);
 
     // Tickets
     Route::get('support/tickets', [ClientSupportTicketControllerV1::class, 'index']);
