@@ -4,11 +4,12 @@ namespace App\Services;
 
 use App\Models\Commission;
 use App\Models\User;
+use Illuminate\Contracts\Auth\Authenticatable;
 use Illuminate\Pagination\LengthAwarePaginator;
 
 class UserServiceV3
 {
-    public function getAuthenticatedUserWithRelations(int $userId): ?User
+    public function getAuthenticatedUserWithRelations(): ?User
     {
         return User::with([
             'roles',
@@ -17,7 +18,7 @@ class UserServiceV3
             'withdraws:id,user_id,amount,status',
             'leaderboard:user_id,total_nodes,total_commissions,total_earned_coins,profile_rank',
             'theReferralCode:id,user_id,code',
-        ])->withCount('commissions')->find($userId);
+        ])->withCount('commissions')->find(auth()->id());
     }
 
     public function getPaginatedPurchaseCommissions(int $userId, int $page = 1): array|LengthAwarePaginator
@@ -41,4 +42,23 @@ class UserServiceV3
             ->latest()
             ->paginate(15, ['*'], 'signup_commissions_page', $page);
     }
+
+    public function updateAuthenticatedUser(array $data): ?User
+    {
+        $user = auth()->user();
+
+        // Hash only if password is present
+        if (!empty($data['password'])) {
+            $data['password'] = bcrypt($data['password']);
+        } else {
+            unset($data['password']);
+        }
+
+        // Update only non-null validated fields
+        $filtered = array_filter($data, fn($v) => !is_null($v));
+        $user->update($filtered);
+
+        return $user->fresh();
+    }
+
 }
