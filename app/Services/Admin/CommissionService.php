@@ -55,4 +55,34 @@ class CommissionService
             return $setting->fresh();
         });
     }
+
+    public function getAllStructured(): array
+    {
+        // Get raw commission values from service
+        $rawResults = $this->getAll();
+
+        $result = [];
+        $id = 1;
+
+        foreach ($rawResults as $type => $levels) {
+            $levelData = [];
+
+            foreach ($levels as $level => $value) {
+                $levelData[] = [
+                    'level' => (int) $level,
+                    'value' => $value,
+                ];
+            }
+
+            $result[] = [
+                'id' => $id,
+                'type' => $type,
+                'levels' => $levelData
+            ];
+
+            $id++;
+        }
+
+        return $result;
+    }
 }
