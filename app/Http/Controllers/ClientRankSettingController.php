@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Http\Resources\V2\RankSettingResource;
 use App\Services\Admin\AdminRankService;
 use Symfony\Component\HttpFoundation\Response;
 
@@ -11,8 +12,12 @@ class ClientRankSettingController extends Controller
 
     public function index()
     {
-        $results = $this->service->allAsObjects();
+        $results = $this->service->all();
 
-        return sendSuccessResponse('Get all rank values', $results, Response::HTTP_OK);
+        return sendSuccessResponse(
+            'Get all ranks',
+            RankSettingResource::collection($results),
+            Response::HTTP_OK
+        );
     }
 }
