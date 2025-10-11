@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Api\V1;
 
 use App\Http\Controllers\Controller;
 use App\Http\Resources\CommissionResource;
+use App\Http\Resources\LeaderboardResource;
 use App\Models\Commission;
 use Exception;
 
@@ -19,7 +20,7 @@ class CommissionsControllerV1 extends Controller
 
         $result = handleApiRequest(request(), $query, ['fromUser:id,name'], CommissionResource::class);
 
-        return sendSuccessResponse("Commissions retrieved successfully", $result);
+        return sendSuccessResponse("Purchase commissions retrieved successfully", $result);
     }
 
     /**
@@ -36,7 +37,16 @@ class CommissionsControllerV1 extends Controller
             });
 
         $result = handleApiRequest(request(), $query, ['fromUser:id,name'], CommissionResource::class);
+        // Get history
+        $history = new LeaderboardResource(auth()->user()->leaderboard);
 
-        return sendSuccessResponse("Commissions retrieved successfully", $result);
+        // Rebuild $result to insert history after meta
+        $resultWithHistory = [
+            'meta' => $result['meta'] ?? [],
+            'history' => $history,
+            'result' => $result['result'] ?? []
+        ];
+
+        return sendSuccessResponse("Signup commissions retrieved successfully", $resultWithHistory);
     }
 }

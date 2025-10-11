@@ -34,9 +34,7 @@ class UserResourceV3 extends JsonResource
                 'referral_code' => $this->resource->theReferralCode?->code,
                 'account_created_at' => getFormatedDate($this->resource->created_at),
                 'referred_by_chain' => ResourceHelpers::buildReferralChain($this->resource),
-            ],
-
-            'leaderboard' => new LeaderboardResource($this->whenLoaded('leaderboard')),
+            ]
         ];
     }
 }
