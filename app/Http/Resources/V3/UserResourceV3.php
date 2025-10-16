@@ -32,8 +32,9 @@ class UserResourceV3 extends JsonResource
                 'date_of_birth' => $this->resource->date_of_birth?->format('Y-m-d'),
                 'profile_picture' => config('apex365.microservice.file_api_server') . '/data/profile/' . $this->resource->id,
                 'referral_code' => $this->resource->theReferralCode?->code,
-                'account_created_at' => getFormatedDate($this->resource->created_at),
                 'referred_by_chain' => ResourceHelpers::buildReferralChain($this->resource),
+                'leaderboard' => new LeaderboardResource($this->whenLoaded('leaderboard')),
+                'account_created_at' => getFormatedDate($this->resource->created_at),
             ]
         ];
     }
