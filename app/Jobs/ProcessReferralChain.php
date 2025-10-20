@@ -1,30 +1,23 @@
 <?php
+// File: app/Jobs/ProcessReferralChain.php
 
 namespace App\Jobs;
 
-use App\Helpers\ReferralHelper;
+use App\Jobs\Base\BaseReferralJob;
 use App\Models\ReferralCode;
 use App\Models\User;
-use Illuminate\Bus\Queueable;
-use Illuminate\Contracts\Queue\ShouldQueue;
-use Illuminate\Foundation\Bus\Dispatchable;
-use Illuminate\Queue\InteractsWithQueue;
-use Illuminate\Queue\SerializesModels;
 use Throwable;
 
-class ProcessReferralChain implements ShouldQueue
+class ProcessReferralChain extends BaseReferralJob
 {
-    use Dispatchable, InteractsWithQueue, Queueable, SerializesModels;
-
-    public User $user;
-    public ReferralCode $referrerAndCode;
+    private User $user;
+    private ReferralCode $referrerAndCode;
 
     public function __construct(User $user, ReferralCode $referrerAndCode)
     {
+        parent::__construct();
         $this->user = $user;
         $this->referrerAndCode = $referrerAndCode;
-
-        $this->onQueue('referral-chain'); // named queue for clarity (optional)
     }
 
     /**
@@ -32,12 +25,9 @@ class ProcessReferralChain implements ShouldQueue
      */
     public function handle(): void
     {
-        $helper = new ReferralHelper();
-
-        $helper->createReferralChain($this->user, $this->referrerAndCode);
-        $helper->distributeReferralPoints();
-        $helper->updateReferralLeaderboard();
-        $helper->generateReferralCode();
+        $this->createReferralChain($this->user, $this->referrerAndCode);
+        $this->distributeReferralPoints();
+        $this->updateReferralLeaderboard();
+        $this->generateReferralCode();
     }
 }
-
