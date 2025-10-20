@@ -45,7 +45,7 @@ Route::middleware([JwtMiddleware::class])->group(function () {
     Route::get('me', [AuthController::class, 'me']);
 
     Route::delete('transactions/all-delete', [TransactionController::class, 'deleteMultiple'])->middleware([isAdminMiddleware::class]);
-    Route::post('transactions/apply-commissions', [TransactionController::class, 'ApplyCommissions'])->middleware([isAdminMiddleware::class]);
+    Route::post('transactions/apply-commissions', [TransactionController::class, 'ApplyCommissions']);
     Route::get('transactions/user/{userId}', [TransactionController::class, 'userTransactions'])->middleware([isAdminMiddleware::class]);
     Route::get('transactions/users', [TransactionController::class, 'usersTransactions'])->middleware([isAdminMiddleware::class]);
     Route::apiResource('transactions', TransactionController::class);
