@@ -1,6 +1,7 @@
 <?php
 
 // api/v1/client.php
+use App\Http\Controllers\Api\V1\ClientReferralControllerV1;
 use App\Http\Controllers\Api\V1\ClientSupportMessageControllerV1;
 use App\Http\Controllers\Api\V1\ClientSupportTicketControllerV1;
 use App\Http\Controllers\Api\V1\CommissionsControllerV1;
@@ -12,6 +13,9 @@ Route::middleware([JwtMiddleware::class])->prefix('v1/client')->as('client.v1.')
     // Commissions
     Route::get('purchase/commissions', [CommissionsControllerV1::class, 'purchaseIndex']);
     Route::get('signup/commissions', [CommissionsControllerV1::class, 'signupIndex']);
+
+    // Referred Profiles
+    Route::get('referred-profiles', [ClientReferralControllerV1::class, 'index']);
 
     // Tickets
     Route::get('support/tickets', [ClientSupportTicketControllerV1::class, 'index']);
