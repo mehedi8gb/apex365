@@ -17,7 +17,7 @@ class ClientReferralProfilesResourceV1 extends JsonResource
         $u = $this->resource->user; // the referred user
 
         return [
-            'id'              => $this->id,
+            'id'              => $this->resource->id,
             'user_id'         => $u->id,
             'name'            => $u->name,
             'profile_picture' => getProfileImageUrl($u->id),
