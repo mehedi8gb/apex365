@@ -12,6 +12,15 @@ use Illuminate\Pagination\LengthAwarePaginator;
 use Illuminate\Support\Facades\Schema;
 use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
 
+
+if (!function_exists('getProfileImageUrl')) {
+    function getProfileImageUrl(int|string $userId): string
+    {
+        return rtrim(config('apex365.microservice.file_api_server'), '/') .
+            '/data/profile/' . $userId;
+    }
+}
+
 function getResourceClass($model): string
 {
     // Base model class name without namespace
