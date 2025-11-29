@@ -1,0 +1,3625 @@
+{
+  "info": {
+    "_postman_id": "83f85977-c264-41a9-9055-640a1711b094",
+    "name": "Apex Api",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+    "_exporter_id": "33643028"
+  },
+  "item": [
+    {
+      "name": "Auth",
+      "item": [
+        {
+          "name": "Login",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "id": "e8180d97-01ce-4caf-a57b-ddb9f2a16e49",
+                "exec": [
+                  "// Parse JSON response",
+                  "let response = pm.response.json();",
+                  "",
+                  "// Check if access_token exists",
+                  "if (response && response.data && response.data.access_token) {",
+                  "    const token = response.data.access_token;",
+                  "    ",
+                  "    // Store token in environment variable",
+                  "    pm.environment.set(\"token\", token);",
+                  "    ",
+                  "    // Optional: log for debugging",
+                  "    console.log(\"✅ Access token updated:\", token);",
+                  "} else {",
+                  "    console.warn(\"⚠️ No access_token found in response:\", response);",
+                  "}",
+                  ""
+                ],
+                "type": "text/javascript",
+                "packages": {},
+                "requests": {}
+              }
+            }
+          ],
+          "id": "77e9e099-77ed-4d10-bf4f-6c945c08500a",
+          "request": {
+            "auth": {
+              "type": "noauth"
+            },
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\r\n    \"phone\": \"+8801757575757\",\r\n    \"password\": \"123456\"\r\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/auth/login",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "auth",
+                "login"
+              ]
+            },
+            "description": "This returns a `token` that you can use to retrieve information later on.\n\nWe have included a test to confirm if a token is returned. We have also added test scripts to copy the token to the `token` collection variable. This makes it easy for us to reuse this token in other requests in the collection."
+          },
+          "response": []
+        },
+        {
+          "name": "Register",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"An access token is returned\", () => {",
+                  "    pm.expect(pm.response.json()).to.have.property('token')",
+                  "    pm.expect(pm.response.json().token).to.be.a('string')",
+                  "    // Set the collection-scope \"token\" variable to the token received from the API",
+                  "    // This lets us use it in other requests",
+                  "    pm.collectionVariables.set('token', pm.response.json().token)",
+                  "})",
+                  ""
+                ],
+                "type": "text/javascript",
+                "packages": {},
+                "id": "1c547213-db50-4061-970b-795872a50893"
+              }
+            }
+          ],
+          "id": "beffd07d-a2c9-4c7e-aa0e-8efe8080967b",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "3|ZikR4Fuc2zfQuJzFXzoTKrk7Fi5AUkBWMDK9GzBib86dc802",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\r\n\t\"referralId\": \"REF-12345678\", // admins code\r\n\t// \"referralId\": \"REF-HU9L7HRN\",\r\n\t\"password\": \"123456\",\r\n    \"phone\": \"+8801903549167\",\r\n\t\"name\": \"NODE 4\",\r\n\t\"nid\": 30000004075300049,\r\n\t\"address\": \"dssss\",\r\n    \"date_of_birth\": \"2002-04-08\",\r\n\t// \"transactionId\": \"TRX-393256-Y8N4W\" // staging\r\n    \"transactionId\": \"TRX-000111-AAAJJJ\" // local\r\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/auth/register",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "auth",
+                "register"
+              ]
+            },
+            "description": "This returns a `token` that you can use to retrieve information later on.\n\nWe have included a test to confirm if a token is returned. We have also added test scripts to copy the token to the `token` collection variable. This makes it easy for us to reuse this token in other requests in the collection."
+          },
+          "response": []
+        },
+        {
+          "name": "Forget Password",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"An access token is returned\", () => {",
+                  "    pm.expect(pm.response.json()).to.have.property('token')",
+                  "    pm.expect(pm.response.json().token).to.be.a('string')",
+                  "    // Set the collection-scope \"token\" variable to the token received from the API",
+                  "    // This lets us use it in other requests",
+                  "    pm.collectionVariables.set('token', pm.response.json().token)",
+                  "})",
+                  ""
+                ],
+                "type": "text/javascript",
+                "packages": {},
+                "id": "ff3d04f7-f9f3-44fa-9445-322f4bcf99b3"
+              }
+            }
+          ],
+          "id": "d9b897cf-41c6-44e3-8f31-6f9b7f54506b",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "3|ZikR4Fuc2zfQuJzFXzoTKrk7Fi5AUkBWMDK9GzBib86dc802",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "body": {
+              "mode": "formdata",
+              "formdata": [
+                {
+                  "key": "email",
+                  "value": "mehidy.gb@gmail.com",
+                  "type": "text"
+                },
+                {
+                  "key": "phone",
+                  "value": "01757575757",
+                  "type": "text",
+                  "disabled": true
+                }
+              ]
+            },
+            "url": {
+              "raw": "{{baseUrl}}/auth/forget",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "auth",
+                "forget"
+              ]
+            },
+            "description": "This returns a `token` that you can use to retrieve information later on.\n\nWe have included a test to confirm if a token is returned. We have also added test scripts to copy the token to the `token` collection variable. This makes it easy for us to reuse this token in other requests in the collection."
+          },
+          "response": []
+        },
+        {
+          "name": "OTP Validate",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"An access token is returned\", () => {",
+                  "    pm.expect(pm.response.json()).to.have.property('token')",
+                  "    pm.expect(pm.response.json().token).to.be.a('string')",
+                  "    // Set the collection-scope \"token\" variable to the token received from the API",
+                  "    // This lets us use it in other requests",
+                  "    pm.collectionVariables.set('token', pm.response.json().token)",
+                  "})",
+                  ""
+                ],
+                "type": "text/javascript",
+                "packages": {},
+                "id": "d3c75561-be7d-4ea3-be0d-6d0db9cba68b"
+              }
+            }
+          ],
+          "id": "95f64ca6-9483-429e-91b6-9dcae71ab187",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "3|ZikR4Fuc2zfQuJzFXzoTKrk7Fi5AUkBWMDK9GzBib86dc802",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "body": {
+              "mode": "formdata",
+              "formdata": [
+                {
+                  "key": "email",
+                  "value": "mehidy.gb@gmail.com",
+                  "type": "text"
+                },
+                {
+                  "key": "otp",
+                  "value": "7801",
+                  "type": "text"
+                }
+              ]
+            },
+            "url": {
+              "raw": "{{baseUrl}}/auth/validate",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "auth",
+                "validate"
+              ]
+            },
+            "description": "This returns a `token` that you can use to retrieve information later on.\n\nWe have included a test to confirm if a token is returned. We have also added test scripts to copy the token to the `token` collection variable. This makes it easy for us to reuse this token in other requests in the collection."
+          },
+          "response": []
+        },
+        {
+          "name": "Reset Password",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"An access token is returned\", () => {",
+                  "    pm.expect(pm.response.json()).to.have.property('token')",
+                  "    pm.expect(pm.response.json().token).to.be.a('string')",
+                  "    // Set the collection-scope \"token\" variable to the token received from the API",
+                  "    // This lets us use it in other requests",
+                  "    pm.collectionVariables.set('token', pm.response.json().token)",
+                  "})",
+                  ""
+                ],
+                "type": "text/javascript",
+                "packages": {},
+                "id": "e9b7b6a3-33ab-48bd-9c00-54e2b8b3c039"
+              }
+            }
+          ],
+          "id": "537bcd8b-14ac-4260-aa4b-47910c097a25",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "3|ZikR4Fuc2zfQuJzFXzoTKrk7Fi5AUkBWMDK9GzBib86dc802",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "body": {
+              "mode": "formdata",
+              "formdata": [
+                {
+                  "key": "email",
+                  "value": "admin@demo.com",
+                  "type": "text"
+                },
+                {
+                  "key": "newPassword",
+                  "value": "1234567",
+                  "type": "text"
+                },
+                {
+                  "key": "token",
+                  "value": "aswfasdfaqsdf",
+                  "type": "text"
+                }
+              ]
+            },
+            "url": {
+              "raw": "{{baseUrl}}/auth/reset",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "auth",
+                "reset"
+              ]
+            },
+            "description": "This returns a `token` that you can use to retrieve information later on.\n\nWe have included a test to confirm if a token is returned. We have also added test scripts to copy the token to the `token` collection variable. This makes it easy for us to reuse this token in other requests in the collection."
+          },
+          "response": []
+        },
+        {
+          "name": "Refresh Token",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"A name is returned\", () => {",
+                  "    pm.expect(pm.response.json()).to.have.property('name');",
+                  "    pm.expect(pm.response.json().name).to.be.a('string');",
+                  "})"
+                ],
+                "type": "text/javascript",
+                "packages": {},
+                "id": "c389debc-889e-42b3-b864-0ce8573ea0d4"
+              }
+            }
+          ],
+          "id": "9d00b26f-017d-4583-99ea-e43d23762913",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json",
+                "type": "text"
+              },
+              {
+                "key": "Cookie",
+                "value": "PHPSESSID=your-session-id",
+                "type": "text",
+                "disabled": true
+              }
+            ],
+            "body": {
+              "mode": "formdata",
+              "formdata": []
+            },
+            "url": {
+              "raw": "{{baseUrl}}/auth/refresh",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "auth",
+                "refresh"
+              ]
+            },
+            "description": "This request uses the saved `token` collection variable to access a secret 'name' stored against that token.\n\nIn this request, we used the `token` collection variable as a query param to fetch the name generated for that token. We have added a test to check that a name is correctly returned."
+          },
+          "response": []
+        },
+        {
+          "name": "Logout",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Returns 200 OK status\", () => {",
+                  "    pm.response.to.have.status(200)",
+                  "})"
+                ],
+                "type": "text/javascript",
+                "packages": {},
+                "id": "e1e1b7d9-e054-40e4-85b1-6275eab67667"
+              }
+            }
+          ],
+          "id": "96dea9fd-a859-4954-9799-ddcd590bd6c0",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n    \"token\": \"{{token}}\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/auth/logout",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "auth",
+                "logout"
+              ]
+            },
+            "description": "This request un-registers a token by using the token collection variable in the POST body.\n\nWe also added a test to ensure the response has a 200 OK status code."
+          },
+          "response": []
+        },
+        {
+          "name": "Me",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "id": "dcb996d1-96bb-4c1c-b8ad-412e39fdfbc8",
+                "exec": [
+                  "pm.test(\"A name is returned\", () => {",
+                  "    pm.expect(pm.response.json()).to.have.property('name');",
+                  "    pm.expect(pm.response.json().name).to.be.a('string');",
+                  "})"
+                ],
+                "type": "text/javascript",
+                "packages": {}
+              }
+            }
+          ],
+          "id": "ee59606b-eeac-4285-aacf-ec920029cd1b",
+          "protocolProfileBehavior": {
+            "disableBodyPruning": true,
+            "disabledSystemHeaders": {}
+          },
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/me",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "me"
+              ]
+            },
+            "description": "This request uses the saved `token` collection variable to access a secret 'name' stored against that token.\n\nIn this request, we used the `token` collection variable as a query param to fetch the name generated for that token. We have added a test to check that a name is correctly returned."
+          },
+          "response": []
+        },
+        {
+          "name": "Me V2",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "id": "dcb996d1-96bb-4c1c-b8ad-412e39fdfbc8",
+                "exec": [
+                  "pm.test(\"A name is returned\", () => {",
+                  "    pm.expect(pm.response.json()).to.have.property('name');",
+                  "    pm.expect(pm.response.json().name).to.be.a('string');",
+                  "})"
+                ],
+                "type": "text/javascript",
+                "packages": {},
+                "requests": {}
+              }
+            }
+          ],
+          "id": "0d8c4d60-8ef6-4d16-accd-f611f0c7166b",
+          "protocolProfileBehavior": {
+            "disableBodyPruning": true,
+            "disabledSystemHeaders": {}
+          },
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/v2/client/me",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "v2",
+                "client",
+                "me"
+              ]
+            },
+            "description": "This request uses the saved `token` collection variable to access a secret 'name' stored against that token.\n\nIn this request, we used the `token` collection variable as a query param to fetch the name generated for that token. We have added a test to check that a name is correctly returned."
+          },
+          "response": []
+        },
+        {
+          "name": "Me V3",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "id": "437c45fc-502b-4296-9aa5-98e3093d6e76",
+                "exec": [
+                  "// pm.test(\"A name is returned\", () => {",
+                  "//     pm.expect(pm.response.json()).to.have.property('name');",
+                  "//     pm.expect(pm.response.json().name).to.be.a('string');",
+                  "// })"
+                ],
+                "type": "text/javascript",
+                "packages": {},
+                "requests": {}
+              }
+            }
+          ],
+          "id": "15022e8f-fb2f-4750-a51a-51f6f05a9c39",
+          "protocolProfileBehavior": {
+            "disableBodyPruning": true,
+            "disabledSystemHeaders": {}
+          },
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/v3/client/me",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "v3",
+                "client",
+                "me"
+              ]
+            },
+            "description": "This request uses the saved `token` collection variable to access a secret 'name' stored against that token.\n\nIn this request, we used the `token` collection variable as a query param to fetch the name generated for that token. We have added a test to check that a name is correctly returned."
+          },
+          "response": []
+        },
+        {
+          "name": "Me V3",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "id": "437c45fc-502b-4296-9aa5-98e3093d6e76",
+                "exec": [
+                  "pm.test(\"A name is returned\", () => {",
+                  "    pm.expect(pm.response.json()).to.have.property('name');",
+                  "    pm.expect(pm.response.json().name).to.be.a('string');",
+                  "})"
+                ],
+                "type": "text/javascript",
+                "packages": {},
+                "requests": {}
+              }
+            }
+          ],
+          "id": "e061313c-7fae-4462-9155-78dc7883d1ed",
+          "protocolProfileBehavior": {
+            "disabledSystemHeaders": {}
+          },
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\r\n    \"name\": \"Mehedi Hasan\",\r\n    \"email\": \"admin@demo.com\",\r\n    \"phone\": \"+8801757575757\",\r\n    \"nid\": 30000004075300080,\r\n    \"date_of_birth\": \"1998-03-12\",\r\n    \"address\": \"House 32, Road 5, Dhanmondi, Dhaka\"\r\n    // ,\r\n    // \"password\": \"1234567\"\r\n    // ,\r\n    // \"password_confirmation\": \"1234567\"\r\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/v3/client/me",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "v3",
+                "client",
+                "me"
+              ]
+            },
+            "description": "This request uses the saved `token` collection variable to access a secret 'name' stored against that token.\n\nIn this request, we used the `token` collection variable as a query param to fetch the name generated for that token. We have added a test to check that a name is correctly returned."
+          },
+          "response": []
+        },
+        {
+          "name": "update shop info",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"A name is returned\", () => {",
+                  "    pm.expect(pm.response.json()).to.have.property('name');",
+                  "    pm.expect(pm.response.json().name).to.be.a('string');",
+                  "})"
+                ],
+                "type": "text/javascript",
+                "packages": {},
+                "id": "71197a81-8016-4fb4-b6a1-f22ee19587df"
+              }
+            }
+          ],
+          "id": "105a78ff-7131-4e63-900f-c67c38f193af",
+          "protocolProfileBehavior": {
+            "disableBodyPruning": true
+          },
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/shop-details",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "shop-details"
+              ]
+            },
+            "description": "This request uses the saved `token` collection variable to access a secret 'name' stored against that token.\n\nIn this request, we used the `token` collection variable as a query param to fetch the name generated for that token. We have added a test to check that a name is correctly returned."
+          },
+          "response": []
+        }
+      ],
+      "id": "1877dc4f-609d-4351-b918-62e1da2551e1"
+    },
+    {
+      "name": "Withdraw",
+      "item": [
+        {
+          "name": "index",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "id": "1d441651-99dd-4d58-a7fb-907be9a0f2a3",
+                "exec": [
+                  "pm.test(\"An access token is returned\", () => {",
+                  "    pm.expect(pm.response.json()).to.have.property('token')",
+                  "    pm.expect(pm.response.json().token).to.be.a('string')",
+                  "    // Set the collection-scope \"token\" variable to the token received from the API",
+                  "    // This lets us use it in other requests",
+                  "    pm.collectionVariables.set('token', pm.response.json().token)",
+                  "})",
+                  ""
+                ],
+                "type": "text/javascript",
+                "packages": {}
+              }
+            }
+          ],
+          "id": "a84e1f4b-2f75-4140-8eba-27f560a8301b",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/withdraws",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "withdraws"
+              ],
+              "query": [
+                {
+                  "key": "q",
+                  "value": "user_id=1",
+                  "disabled": true
+                }
+              ]
+            },
+            "description": "This returns a `token` that you can use to retrieve information later on.\n\nWe have included a test to confirm if a token is returned. We have also added test scripts to copy the token to the `token` collection variable. This makes it easy for us to reuse this token in other requests in the collection."
+          },
+          "response": []
+        },
+        {
+          "name": "post",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "id": "2d7cf410-cb73-43d3-b9d2-6282cb554614",
+                "exec": [
+                  "pm.test(\"An access token is returned\", () => {",
+                  "    pm.expect(pm.response.json()).to.have.property('token')",
+                  "    pm.expect(pm.response.json().token).to.be.a('string')",
+                  "    // Set the collection-scope \"token\" variable to the token received from the API",
+                  "    // This lets us use it in other requests",
+                  "    pm.collectionVariables.set('token', pm.response.json().token)",
+                  "})",
+                  ""
+                ],
+                "type": "text/javascript",
+                "packages": {}
+              }
+            }
+          ],
+          "id": "9bca6a94-6e72-4306-b422-6d13910940da",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "body": {
+              "mode": "formdata",
+              "formdata": [
+                {
+                  "key": "email",
+                  "value": "customer@demo.com",
+                  "type": "text",
+                  "disabled": true
+                },
+                {
+                  "key": "password",
+                  "value": "12345678",
+                  "type": "text",
+                  "disabled": true
+                },
+                {
+                  "key": "phone",
+                  "value": "0190254697",
+                  "type": "text",
+                  "disabled": true
+                }
+              ]
+            },
+            "url": {
+              "raw": "{{baseUrl}}/withdraws?amount=50&payment_method=rocket&mobile_number=01535555551",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "withdraws"
+              ],
+              "query": [
+                {
+                  "key": "amount",
+                  "value": "50"
+                },
+                {
+                  "key": "payment_method",
+                  "value": "rocket"
+                },
+                {
+                  "key": "mobile_number",
+                  "value": "01535555551"
+                }
+              ]
+            },
+            "description": "This returns a `token` that you can use to retrieve information later on.\n\nWe have included a test to confirm if a token is returned. We have also added test scripts to copy the token to the `token` collection variable. This makes it easy for us to reuse this token in other requests in the collection."
+          },
+          "response": []
+        },
+        {
+          "name": "approve",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "id": "a96db1b6-477d-4206-aa63-9cf22c48483b",
+                "exec": [
+                  "pm.test(\"An access token is returned\", () => {",
+                  "    pm.expect(pm.response.json()).to.have.property('token')",
+                  "    pm.expect(pm.response.json().token).to.be.a('string')",
+                  "    // Set the collection-scope \"token\" variable to the token received from the API",
+                  "    // This lets us use it in other requests",
+                  "    pm.collectionVariables.set('token', pm.response.json().token)",
+                  "})",
+                  ""
+                ],
+                "type": "text/javascript",
+                "packages": {}
+              }
+            }
+          ],
+          "id": "ad4b8e8f-4ead-4304-a727-9a83fb75aace",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": ""
+            },
+            "url": {
+              "raw": "{{baseUrl}}/v2/admin/withdraws/140/approve",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "v2",
+                "admin",
+                "withdraws",
+                "140",
+                "approve"
+              ]
+            },
+            "description": "This returns a `token` that you can use to retrieve information later on.\n\nWe have included a test to confirm if a token is returned. We have also added test scripts to copy the token to the `token` collection variable. This makes it easy for us to reuse this token in other requests in the collection."
+          },
+          "response": []
+        },
+        {
+          "name": "suspend",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "id": "a96db1b6-477d-4206-aa63-9cf22c48483b",
+                "exec": [
+                  "pm.test(\"An access token is returned\", () => {",
+                  "    pm.expect(pm.response.json()).to.have.property('token')",
+                  "    pm.expect(pm.response.json().token).to.be.a('string')",
+                  "    // Set the collection-scope \"token\" variable to the token received from the API",
+                  "    // This lets us use it in other requests",
+                  "    pm.collectionVariables.set('token', pm.response.json().token)",
+                  "})",
+                  ""
+                ],
+                "type": "text/javascript",
+                "packages": {}
+              }
+            }
+          ],
+          "id": "a83ec4e3-845f-430d-92e8-96f29c0575c0",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": ""
+            },
+            "url": {
+              "raw": "{{baseUrl}}/v2/admin/withdraws/51/suspend",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "v2",
+                "admin",
+                "withdraws",
+                "51",
+                "suspend"
+              ]
+            },
+            "description": "This returns a `token` that you can use to retrieve information later on.\n\nWe have included a test to confirm if a token is returned. We have also added test scripts to copy the token to the `token` collection variable. This makes it easy for us to reuse this token in other requests in the collection."
+          },
+          "response": []
+        }
+      ],
+      "id": "accbffa9-8a51-440d-9f22-16cba0815bdc"
+    },
+    {
+      "name": "Client",
+      "item": [
+        {
+          "name": "Signup Commissions",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "id": "1d441651-99dd-4d58-a7fb-907be9a0f2a3",
+                "exec": [
+                  "pm.test(\"An access token is returned\", () => {",
+                  "    pm.expect(pm.response.json()).to.have.property('token')",
+                  "    pm.expect(pm.response.json().token).to.be.a('string')",
+                  "    // Set the collection-scope \"token\" variable to the token received from the API",
+                  "    // This lets us use it in other requests",
+                  "    pm.collectionVariables.set('token', pm.response.json().token)",
+                  "})",
+                  ""
+                ],
+                "type": "text/javascript",
+                "packages": {},
+                "requests": {}
+              }
+            }
+          ],
+          "id": "78f9e8a3-ead0-4853-94f5-00079a315a32",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/v1/client/signup/commissions",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "v1",
+                "client",
+                "signup",
+                "commissions"
+              ],
+              "query": [
+                {
+                  "key": "q",
+                  "value": "amount=5.00",
+                  "disabled": true
+                },
+                {
+                  "key": "page",
+                  "value": "2",
+                  "disabled": true
+                },
+                {
+                  "key": "limit",
+                  "value": "all",
+                  "disabled": true
+                }
+              ]
+            },
+            "description": "This returns a `token` that you can use to retrieve information later on.\n\nWe have included a test to confirm if a token is returned. We have also added test scripts to copy the token to the `token` collection variable. This makes it easy for us to reuse this token in other requests in the collection."
+          },
+          "response": []
+        },
+        {
+          "name": "Purchase Commissions",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "id": "1d441651-99dd-4d58-a7fb-907be9a0f2a3",
+                "exec": [
+                  "pm.test(\"An access token is returned\", () => {",
+                  "    pm.expect(pm.response.json()).to.have.property('token')",
+                  "    pm.expect(pm.response.json().token).to.be.a('string')",
+                  "    // Set the collection-scope \"token\" variable to the token received from the API",
+                  "    // This lets us use it in other requests",
+                  "    pm.collectionVariables.set('token', pm.response.json().token)",
+                  "})",
+                  ""
+                ],
+                "type": "text/javascript",
+                "packages": {},
+                "requests": {}
+              }
+            }
+          ],
+          "id": "30b51145-9000-4ac8-b18c-a3efabaee555",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/v1/client/purchase/commissions",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "v1",
+                "client",
+                "purchase",
+                "commissions"
+              ],
+              "query": [
+                {
+                  "key": "q",
+                  "value": "user_id=1",
+                  "disabled": true
+                },
+                {
+                  "key": "page",
+                  "value": "3",
+                  "disabled": true
+                }
+              ]
+            },
+            "description": "This returns a `token` that you can use to retrieve information later on.\n\nWe have included a test to confirm if a token is returned. We have also added test scripts to copy the token to the `token` collection variable. This makes it easy for us to reuse this token in other requests in the collection."
+          },
+          "response": []
+        }
+      ],
+      "id": "5e9e6250-6ab8-40f2-8539-01f05adbea15"
+    },
+    {
+      "name": "Withdraw V2",
+      "item": [
+        {
+          "name": "index",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "id": "8a03d65d-826e-4d38-ac19-0d18ce4d1e76",
+                "exec": [
+                  "pm.test(\"An access token is returned\", () => {",
+                  "    pm.expect(pm.response.json()).to.have.property('token')",
+                  "    pm.expect(pm.response.json().token).to.be.a('string')",
+                  "    // Set the collection-scope \"token\" variable to the token received from the API",
+                  "    // This lets us use it in other requests",
+                  "    pm.collectionVariables.set('token', pm.response.json().token)",
+                  "})",
+                  ""
+                ],
+                "type": "text/javascript",
+                "packages": {},
+                "requests": {}
+              }
+            }
+          ],
+          "id": "2fc58c29-f495-4b45-b208-c4f5dcafe2e1",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/withdraws",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "withdraws"
+              ],
+              "query": [
+                {
+                  "key": "q",
+                  "value": "user_id=1",
+                  "disabled": true
+                }
+              ]
+            },
+            "description": "This returns a `token` that you can use to retrieve information later on.\n\nWe have included a test to confirm if a token is returned. We have also added test scripts to copy the token to the `token` collection variable. This makes it easy for us to reuse this token in other requests in the collection."
+          },
+          "response": []
+        },
+        {
+          "name": "post",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"An access token is returned\", () => {",
+                  "    pm.expect(pm.response.json()).to.have.property('token')",
+                  "    pm.expect(pm.response.json().token).to.be.a('string')",
+                  "    // Set the collection-scope \"token\" variable to the token received from the API",
+                  "    // This lets us use it in other requests",
+                  "    pm.collectionVariables.set('token', pm.response.json().token)",
+                  "})",
+                  ""
+                ],
+                "type": "text/javascript",
+                "packages": {},
+                "id": "3eb88f2d-4acb-4ffc-bc07-0d30c68597bc"
+              }
+            }
+          ],
+          "id": "a8b1cc81-37a3-48e7-bb29-fee196265193",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "body": {
+              "mode": "formdata",
+              "formdata": [
+                {
+                  "key": "email",
+                  "value": "customer@demo.com",
+                  "type": "text",
+                  "disabled": true
+                },
+                {
+                  "key": "password",
+                  "value": "12345678",
+                  "type": "text",
+                  "disabled": true
+                },
+                {
+                  "key": "phone",
+                  "value": "0190254697",
+                  "type": "text",
+                  "disabled": true
+                }
+              ]
+            },
+            "url": {
+              "raw": "{{baseUrl}}/v2/client/withdraws?amount=50&payment_method=rocket&mobile_number=01535555511",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "v2",
+                "client",
+                "withdraws"
+              ],
+              "query": [
+                {
+                  "key": "amount",
+                  "value": "50"
+                },
+                {
+                  "key": "payment_method",
+                  "value": "rocket"
+                },
+                {
+                  "key": "mobile_number",
+                  "value": "01535555511"
+                }
+              ]
+            },
+            "description": "This returns a `token` that you can use to retrieve information later on.\n\nWe have included a test to confirm if a token is returned. We have also added test scripts to copy the token to the `token` collection variable. This makes it easy for us to reuse this token in other requests in the collection."
+          },
+          "response": []
+        },
+        {
+          "name": "approve",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"An access token is returned\", () => {",
+                  "    pm.expect(pm.response.json()).to.have.property('token')",
+                  "    pm.expect(pm.response.json().token).to.be.a('string')",
+                  "    // Set the collection-scope \"token\" variable to the token received from the API",
+                  "    // This lets us use it in other requests",
+                  "    pm.collectionVariables.set('token', pm.response.json().token)",
+                  "})",
+                  ""
+                ],
+                "type": "text/javascript",
+                "packages": {},
+                "id": "3d997ac4-6eec-41d6-8bc6-743b6c577beb"
+              }
+            }
+          ],
+          "id": "cf93faff-ee07-4461-8408-cb4eb8d928ac",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": ""
+            },
+            "url": {
+              "raw": "{{baseUrl}}/v2/admin/withdraws/53/approve",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "v2",
+                "admin",
+                "withdraws",
+                "53",
+                "approve"
+              ]
+            },
+            "description": "This returns a `token` that you can use to retrieve information later on.\n\nWe have included a test to confirm if a token is returned. We have also added test scripts to copy the token to the `token` collection variable. This makes it easy for us to reuse this token in other requests in the collection."
+          },
+          "response": []
+        },
+        {
+          "name": "suspend",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"An access token is returned\", () => {",
+                  "    pm.expect(pm.response.json()).to.have.property('token')",
+                  "    pm.expect(pm.response.json().token).to.be.a('string')",
+                  "    // Set the collection-scope \"token\" variable to the token received from the API",
+                  "    // This lets us use it in other requests",
+                  "    pm.collectionVariables.set('token', pm.response.json().token)",
+                  "})",
+                  ""
+                ],
+                "type": "text/javascript",
+                "packages": {},
+                "id": "d0d8b0c5-6c78-4e91-95e6-12ea15030b18"
+              }
+            }
+          ],
+          "id": "13467cc6-a550-4461-8856-e1494dbb2bdd",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": ""
+            },
+            "url": {
+              "raw": "{{baseUrl}}/v2/admin/withdraws/53/suspend",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "v2",
+                "admin",
+                "withdraws",
+                "53",
+                "suspend"
+              ]
+            },
+            "description": "This returns a `token` that you can use to retrieve information later on.\n\nWe have included a test to confirm if a token is returned. We have also added test scripts to copy the token to the `token` collection variable. This makes it easy for us to reuse this token in other requests in the collection."
+          },
+          "response": []
+        }
+      ],
+      "id": "dab79a79-ebb9-4f54-9aaf-df6ff0652e9d"
+    },
+    {
+      "name": "Commissions Settings",
+      "item": [
+        {
+          "name": "index",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "id": "1d441651-99dd-4d58-a7fb-907be9a0f2a3",
+                "exec": [
+                  "pm.test(\"An access token is returned\", () => {",
+                  "    pm.expect(pm.response.json()).to.have.property('token')",
+                  "    pm.expect(pm.response.json().token).to.be.a('string')",
+                  "    // Set the collection-scope \"token\" variable to the token received from the API",
+                  "    // This lets us use it in other requests",
+                  "    pm.collectionVariables.set('token', pm.response.json().token)",
+                  "})",
+                  ""
+                ],
+                "type": "text/javascript",
+                "packages": {}
+              }
+            }
+          ],
+          "id": "52634b51-c0bb-41c5-97ca-54cb7afead49",
+          "protocolProfileBehavior": {
+            "disableBodyPruning": true
+          },
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "body": {
+              "mode": "formdata",
+              "formdata": [
+                {
+                  "key": "email",
+                  "value": "customer@demo.com",
+                  "type": "text",
+                  "disabled": true
+                },
+                {
+                  "key": "password",
+                  "value": "12345678",
+                  "type": "text",
+                  "disabled": true
+                },
+                {
+                  "key": "phone",
+                  "value": "0190254697",
+                  "type": "text",
+                  "disabled": true
+                }
+              ]
+            },
+            "url": {
+              "raw": "{{baseUrl}}/v2/admin/commissions",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "v2",
+                "admin",
+                "commissions"
+              ]
+            },
+            "description": "This returns a `token` that you can use to retrieve information later on.\n\nWe have included a test to confirm if a token is returned. We have also added test scripts to copy the token to the `token` collection variable. This makes it easy for us to reuse this token in other requests in the collection."
+          },
+          "response": []
+        },
+        {
+          "name": "client commissions settings",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "id": "1d441651-99dd-4d58-a7fb-907be9a0f2a3",
+                "exec": [
+                  "pm.test(\"An access token is returned\", () => {",
+                  "    pm.expect(pm.response.json()).to.have.property('token')",
+                  "    pm.expect(pm.response.json().token).to.be.a('string')",
+                  "    // Set the collection-scope \"token\" variable to the token received from the API",
+                  "    // This lets us use it in other requests",
+                  "    pm.collectionVariables.set('token', pm.response.json().token)",
+                  "})",
+                  ""
+                ],
+                "type": "text/javascript",
+                "packages": {},
+                "requests": {}
+              }
+            }
+          ],
+          "id": "224ad7f0-5a34-4f31-978d-757eb66c6a1c",
+          "protocolProfileBehavior": {
+            "disableBodyPruning": true
+          },
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "body": {
+              "mode": "formdata",
+              "formdata": [
+                {
+                  "key": "email",
+                  "value": "customer@demo.com",
+                  "type": "text",
+                  "disabled": true
+                },
+                {
+                  "key": "password",
+                  "value": "12345678",
+                  "type": "text",
+                  "disabled": true
+                },
+                {
+                  "key": "phone",
+                  "value": "0190254697",
+                  "type": "text",
+                  "disabled": true
+                }
+              ]
+            },
+            "url": {
+              "raw": "{{baseUrl}}/v2/client/commissions-settings",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "v2",
+                "client",
+                "commissions-settings"
+              ]
+            },
+            "description": "This returns a `token` that you can use to retrieve information later on.\n\nWe have included a test to confirm if a token is returned. We have also added test scripts to copy the token to the `token` collection variable. This makes it easy for us to reuse this token in other requests in the collection."
+          },
+          "response": []
+        },
+        {
+          "name": "commissions change logs",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "id": "1d441651-99dd-4d58-a7fb-907be9a0f2a3",
+                "exec": [
+                  "pm.test(\"An access token is returned\", () => {",
+                  "    pm.expect(pm.response.json()).to.have.property('token')",
+                  "    pm.expect(pm.response.json().token).to.be.a('string')",
+                  "    // Set the collection-scope \"token\" variable to the token received from the API",
+                  "    // This lets us use it in other requests",
+                  "    pm.collectionVariables.set('token', pm.response.json().token)",
+                  "})",
+                  ""
+                ],
+                "type": "text/javascript",
+                "packages": {}
+              }
+            }
+          ],
+          "id": "149956df-5abc-4541-bf2a-9b0b8aed95a9",
+          "protocolProfileBehavior": {
+            "disableBodyPruning": true
+          },
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "body": {
+              "mode": "formdata",
+              "formdata": [
+                {
+                  "key": "email",
+                  "value": "customer@demo.com",
+                  "type": "text",
+                  "disabled": true
+                },
+                {
+                  "key": "password",
+                  "value": "12345678",
+                  "type": "text",
+                  "disabled": true
+                },
+                {
+                  "key": "phone",
+                  "value": "0190254697",
+                  "type": "text",
+                  "disabled": true
+                }
+              ]
+            },
+            "url": {
+              "raw": "{{baseUrl}}/v2/admin/commissions-history",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "v2",
+                "admin",
+                "commissions-history"
+              ]
+            },
+            "description": "This returns a `token` that you can use to retrieve information later on.\n\nWe have included a test to confirm if a token is returned. We have also added test scripts to copy the token to the `token` collection variable. This makes it easy for us to reuse this token in other requests in the collection."
+          },
+          "response": []
+        },
+        {
+          "name": "update comissions",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "id": "2d7cf410-cb73-43d3-b9d2-6282cb554614",
+                "exec": [
+                  "pm.test(\"An access token is returned\", () => {",
+                  "    pm.expect(pm.response.json()).to.have.property('token')",
+                  "    pm.expect(pm.response.json().token).to.be.a('string')",
+                  "    // Set the collection-scope \"token\" variable to the token received from the API",
+                  "    // This lets us use it in other requests",
+                  "    pm.collectionVariables.set('token', pm.response.json().token)",
+                  "})",
+                  ""
+                ],
+                "type": "text/javascript",
+                "packages": {}
+              }
+            }
+          ],
+          "id": "5a435609-2b17-4bac-8999-c20aaba40d8d",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\r\n    \"levels\": {\r\n        \"1\": 30,\r\n        \"2\": 85,\r\n        \"3\": 5,\r\n        \"4\": 2.5,\r\n        \"5\": 1\r\n        // ,\r\n        // \"6\": 0.5\r\n        // ,\r\n        // \"7\": 0.25\r\n    }\r\n}\r\n",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/v2/admin/commissions/signup",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "v2",
+                "admin",
+                "commissions",
+                "signup"
+              ]
+            },
+            "description": "This returns a `token` that you can use to retrieve information later on.\n\nWe have included a test to confirm if a token is returned. We have also added test scripts to copy the token to the `token` collection variable. This makes it easy for us to reuse this token in other requests in the collection."
+          },
+          "response": []
+        }
+      ],
+      "id": "f7c60065-cc9d-41da-a069-45b585c6f3f8"
+    },
+    {
+      "name": "Ranks Settings",
+      "item": [
+        {
+          "name": "rank settings",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "id": "1d441651-99dd-4d58-a7fb-907be9a0f2a3",
+                "exec": [
+                  "pm.test(\"An access token is returned\", () => {",
+                  "    pm.expect(pm.response.json()).to.have.property('token')",
+                  "    pm.expect(pm.response.json().token).to.be.a('string')",
+                  "    // Set the collection-scope \"token\" variable to the token received from the API",
+                  "    // This lets us use it in other requests",
+                  "    pm.collectionVariables.set('token', pm.response.json().token)",
+                  "})",
+                  ""
+                ],
+                "type": "text/javascript",
+                "packages": {}
+              }
+            }
+          ],
+          "id": "1975ad15-723f-468a-8b55-0df58cb917fd",
+          "protocolProfileBehavior": {
+            "disableBodyPruning": true
+          },
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "body": {
+              "mode": "formdata",
+              "formdata": [
+                {
+                  "key": "email",
+                  "value": "customer@demo.com",
+                  "type": "text",
+                  "disabled": true
+                },
+                {
+                  "key": "password",
+                  "value": "12345678",
+                  "type": "text",
+                  "disabled": true
+                },
+                {
+                  "key": "phone",
+                  "value": "0190254697",
+                  "type": "text",
+                  "disabled": true
+                }
+              ]
+            },
+            "url": {
+              "raw": "{{baseUrl}}/v2/admin/rank-settings",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "v2",
+                "admin",
+                "rank-settings"
+              ]
+            },
+            "description": "This returns a `token` that you can use to retrieve information later on.\n\nWe have included a test to confirm if a token is returned. We have also added test scripts to copy the token to the `token` collection variable. This makes it easy for us to reuse this token in other requests in the collection."
+          },
+          "response": []
+        },
+        {
+          "name": "client rank settings",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "id": "1d441651-99dd-4d58-a7fb-907be9a0f2a3",
+                "exec": [
+                  "pm.test(\"An access token is returned\", () => {",
+                  "    pm.expect(pm.response.json()).to.have.property('token')",
+                  "    pm.expect(pm.response.json().token).to.be.a('string')",
+                  "    // Set the collection-scope \"token\" variable to the token received from the API",
+                  "    // This lets us use it in other requests",
+                  "    pm.collectionVariables.set('token', pm.response.json().token)",
+                  "})",
+                  ""
+                ],
+                "type": "text/javascript",
+                "packages": {},
+                "requests": {}
+              }
+            }
+          ],
+          "id": "2fba3b89-8b63-439c-a04a-ff6860bf36ec",
+          "protocolProfileBehavior": {
+            "disableBodyPruning": true
+          },
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "body": {
+              "mode": "formdata",
+              "formdata": [
+                {
+                  "key": "email",
+                  "value": "customer@demo.com",
+                  "type": "text",
+                  "disabled": true
+                },
+                {
+                  "key": "password",
+                  "value": "12345678",
+                  "type": "text",
+                  "disabled": true
+                },
+                {
+                  "key": "phone",
+                  "value": "0190254697",
+                  "type": "text",
+                  "disabled": true
+                }
+              ]
+            },
+            "url": {
+              "raw": "{{baseUrl}}/v2/client/rank-settings",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "v2",
+                "client",
+                "rank-settings"
+              ]
+            },
+            "description": "This returns a `token` that you can use to retrieve information later on.\n\nWe have included a test to confirm if a token is returned. We have also added test scripts to copy the token to the `token` collection variable. This makes it easy for us to reuse this token in other requests in the collection."
+          },
+          "response": []
+        },
+        {
+          "name": "rank update",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "id": "2d7cf410-cb73-43d3-b9d2-6282cb554614",
+                "exec": [
+                  "pm.test(\"An access token is returned\", () => {",
+                  "    pm.expect(pm.response.json()).to.have.property('token')",
+                  "    pm.expect(pm.response.json().token).to.be.a('string')",
+                  "    // Set the collection-scope \"token\" variable to the token received from the API",
+                  "    // This lets us use it in other requests",
+                  "    pm.collectionVariables.set('token', pm.response.json().token)",
+                  "})",
+                  ""
+                ],
+                "type": "text/javascript",
+                "packages": {}
+              }
+            }
+          ],
+          "id": "e176309b-1090-49e0-89b3-3e6498eea996",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "[\r\n    {\r\n        \"id\": 14,\r\n        \"name\": \"Pro Platinum 2\"\r\n        ,\r\n        \"threshold\": 200,\r\n        \"coins\": 200500\r\n    }\r\n    // ,\r\n    // {\r\n    //     \"name\": \"Pro Platinum\",\r\n    //     \"threshold\": 10,\r\n    //     \"coins\": 50000\r\n    // },\r\n    // {\r\n    //     \"name\": \"Platinum\",\r\n    //     \"threshold\": 8,\r\n    //     \"coins\": 20000\r\n    // },\r\n    // {\r\n    //     \"name\": \"Diamond\",\r\n    //     \"threshold\": 6,\r\n    //     \"coins\": 10000\r\n    // },\r\n    // {\r\n    //     \"name\": \"Gold\",\r\n    //     \"threshold\": 4,\r\n    //     \"coins\": 5000\r\n    // },\r\n    // {\r\n    //     \"name\": \"Silver\",\r\n    //     \"threshold\": 2,\r\n    //     \"coins\": 3000\r\n    // },\r\n    // {\r\n    //     \"name\": \"Bronze\",\r\n    //     \"threshold\": 1,\r\n    //     \"coins\": 1000\r\n    // }\r\n]",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/v2/admin/rank-settings",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "v2",
+                "admin",
+                "rank-settings"
+              ]
+            },
+            "description": "This returns a `token` that you can use to retrieve information later on.\n\nWe have included a test to confirm if a token is returned. We have also added test scripts to copy the token to the `token` collection variable. This makes it easy for us to reuse this token in other requests in the collection."
+          },
+          "response": []
+        },
+        {
+          "name": "rank delete",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "id": "2d7cf410-cb73-43d3-b9d2-6282cb554614",
+                "exec": [
+                  "pm.test(\"An access token is returned\", () => {",
+                  "    pm.expect(pm.response.json()).to.have.property('token')",
+                  "    pm.expect(pm.response.json().token).to.be.a('string')",
+                  "    // Set the collection-scope \"token\" variable to the token received from the API",
+                  "    // This lets us use it in other requests",
+                  "    pm.collectionVariables.set('token', pm.response.json().token)",
+                  "})",
+                  ""
+                ],
+                "type": "text/javascript",
+                "packages": {}
+              }
+            }
+          ],
+          "id": "9ab10b6a-fce2-4b5c-ac75-bac924333471",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\r\n    \"id\": 14\r\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/v2/admin/rank-settings",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "v2",
+                "admin",
+                "rank-settings"
+              ]
+            },
+            "description": "This returns a `token` that you can use to retrieve information later on.\n\nWe have included a test to confirm if a token is returned. We have also added test scripts to copy the token to the `token` collection variable. This makes it easy for us to reuse this token in other requests in the collection."
+          },
+          "response": []
+        }
+      ],
+      "id": "b2a8783d-1cfc-4f9d-8c0a-c02c85e960d9"
+    },
+    {
+      "name": "Spinner",
+      "item": [
+        {
+          "name": "index",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"An access token is returned\", () => {",
+                  "    pm.expect(pm.response.json()).to.have.property('token')",
+                  "    pm.expect(pm.response.json().token).to.be.a('string')",
+                  "    // Set the collection-scope \"token\" variable to the token received from the API",
+                  "    // This lets us use it in other requests",
+                  "    pm.collectionVariables.set('token', pm.response.json().token)",
+                  "})",
+                  ""
+                ],
+                "type": "text/javascript",
+                "packages": {},
+                "id": "aa005d77-76da-4663-ac34-5eec6ad8fd77"
+              }
+            }
+          ],
+          "id": "6499549d-e4b6-4eba-8a90-3ef67be34e47",
+          "protocolProfileBehavior": {
+            "disableBodyPruning": true
+          },
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "body": {
+              "mode": "formdata",
+              "formdata": [
+                {
+                  "key": "email",
+                  "value": "customer@demo.com",
+                  "type": "text",
+                  "disabled": true
+                },
+                {
+                  "key": "password",
+                  "value": "12345678",
+                  "type": "text",
+                  "disabled": true
+                },
+                {
+                  "key": "phone",
+                  "value": "0190254697",
+                  "type": "text",
+                  "disabled": true
+                }
+              ]
+            },
+            "url": {
+              "raw": "{{baseUrl}}/spinner",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "spinner"
+              ]
+            },
+            "description": "This returns a `token` that you can use to retrieve information later on.\n\nWe have included a test to confirm if a token is returned. We have also added test scripts to copy the token to the `token` collection variable. This makes it easy for us to reuse this token in other requests in the collection."
+          },
+          "response": []
+        },
+        {
+          "name": "post spin time",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "id": "81a415c7-0cb0-46fe-8a96-4f5fe5426674",
+                "exec": [
+                  "pm.test(\"An access token is returned\", () => {",
+                  "    pm.expect(pm.response.json()).to.have.property('token')",
+                  "    pm.expect(pm.response.json().token).to.be.a('string')",
+                  "    // Set the collection-scope \"token\" variable to the token received from the API",
+                  "    // This lets us use it in other requests",
+                  "    pm.collectionVariables.set('token', pm.response.json().token)",
+                  "})",
+                  ""
+                ],
+                "type": "text/javascript",
+                "packages": {}
+              }
+            }
+          ],
+          "id": "f22f898d-e3ce-41a9-af98-b57012ecb919",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "body": {
+              "mode": "formdata",
+              "formdata": [
+                {
+                  "key": "rotation_point",
+                  "value": "7",
+                  "type": "text"
+                },
+                {
+                  "key": "spin_time",
+                  "value": "15:51:00",
+                  "type": "text"
+                }
+              ]
+            },
+            "url": {
+              "raw": "{{baseUrl}}/spinner",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "spinner"
+              ]
+            },
+            "description": "This returns a `token` that you can use to retrieve information later on.\n\nWe have included a test to confirm if a token is returned. We have also added test scripts to copy the token to the `token` collection variable. This makes it easy for us to reuse this token in other requests in the collection."
+          },
+          "response": []
+        },
+        {
+          "name": "patch spin time",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "id": "81a415c7-0cb0-46fe-8a96-4f5fe5426674",
+                "exec": [
+                  "pm.test(\"An access token is returned\", () => {",
+                  "    pm.expect(pm.response.json()).to.have.property('token')",
+                  "    pm.expect(pm.response.json().token).to.be.a('string')",
+                  "    // Set the collection-scope \"token\" variable to the token received from the API",
+                  "    // This lets us use it in other requests",
+                  "    pm.collectionVariables.set('token', pm.response.json().token)",
+                  "})",
+                  ""
+                ],
+                "type": "text/javascript",
+                "packages": {}
+              }
+            }
+          ],
+          "id": "d539c6f7-b70f-4ad5-89f4-075972bc36b1",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\r\n    \"spin_time\": \"14:42:00\"\r\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/spinner/3",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "spinner",
+                "3"
+              ]
+            },
+            "description": "This returns a `token` that you can use to retrieve information later on.\n\nWe have included a test to confirm if a token is returned. We have also added test scripts to copy the token to the `token` collection variable. This makes it easy for us to reuse this token in other requests in the collection."
+          },
+          "response": []
+        },
+        {
+          "name": "items post",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "id": "af8ec28f-7cdc-45b8-bf65-8cf473e97d1e",
+                "exec": [
+                  "pm.test(\"An access token is returned\", () => {",
+                  "    pm.expect(pm.response.json()).to.have.property('token')",
+                  "    pm.expect(pm.response.json().token).to.be.a('string')",
+                  "    // Set the collection-scope \"token\" variable to the token received from the API",
+                  "    // This lets us use it in other requests",
+                  "    pm.collectionVariables.set('token', pm.response.json().token)",
+                  "})",
+                  ""
+                ],
+                "type": "text/javascript",
+                "packages": {}
+              }
+            }
+          ],
+          "id": "fb311355-d563-46dd-b1e8-0a51cf870cc2",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\r\n    \"items\": [\r\n            {\r\n                \"value\": \"10\",\r\n                \"rotation_point\": 0\r\n            },\r\n            {\r\n                \"value\": \"20\",\r\n                \"rotation_point\": 1\r\n            },\r\n            {\r\n                \"value\": \"50\",\r\n                \"rotation_point\": 2\r\n            },\r\n            {\r\n                \"value\": \"300\",\r\n                \"rotation_point\": 3\r\n            },\r\n            {\r\n                \"value\": \"100\",\r\n                \"rotation_point\": 4\r\n            },\r\n            {\r\n                \"value\": \"200\",\r\n                \"rotation_point\": 5\r\n            },\r\n            {\r\n                \"value\": \"350\",\r\n                \"rotation_point\": 6\r\n            },\r\n            {\r\n                \"value\": \"400\",\r\n                \"rotation_point\": 7\r\n            }\r\n        ]\r\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/spinner-items",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "spinner-items"
+              ]
+            },
+            "description": "This returns a `token` that you can use to retrieve information later on.\n\nWe have included a test to confirm if a token is returned. We have also added test scripts to copy the token to the `token` collection variable. This makes it easy for us to reuse this token in other requests in the collection."
+          },
+          "response": []
+        },
+        {
+          "name": "items patch",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "id": "b20fc5fb-6a3a-417d-9049-79620975ba9f",
+                "exec": [
+                  "pm.test(\"An access token is returned\", () => {",
+                  "    pm.expect(pm.response.json()).to.have.property('token')",
+                  "    pm.expect(pm.response.json().token).to.be.a('string')",
+                  "    // Set the collection-scope \"token\" variable to the token received from the API",
+                  "    // This lets us use it in other requests",
+                  "    pm.collectionVariables.set('token', pm.response.json().token)",
+                  "})",
+                  ""
+                ],
+                "type": "text/javascript",
+                "packages": {},
+                "requests": {}
+              }
+            }
+          ],
+          "id": "87201a05-1152-43ec-97da-bb8ee794f5e4",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\r\n    \"items\": [\r\n        {\r\n            \"value\": \"100\",\r\n            \"rotation_point\": 0\r\n        },\r\n        {\r\n            \"value\": \"200\",\r\n            \"rotation_point\": 1\r\n        },\r\n        {\r\n            \"value\": \"300\",\r\n            \"rotation_point\": 2\r\n        },\r\n        {\r\n            \"value\": \"400\",\r\n            \"rotation_point\": 3\r\n        },\r\n        {\r\n            \"value\": \"500\",\r\n            \"rotation_point\": 4\r\n        },\r\n        {\r\n            \"value\": \"600\",\r\n            \"rotation_point\": 5\r\n        },\r\n        {\r\n            \"value\": \"700\",\r\n            \"rotation_point\": 6\r\n        },\r\n        {\r\n            \"value\": \"800\",\r\n            \"rotation_point\": 7\r\n        },\r\n        {\r\n            \"value\": \"900\",\r\n            \"rotation_point\": 8\r\n        },\r\n        {\r\n            \"value\": \"1000\",\r\n            \"rotation_point\": 9\r\n        }\r\n    ]\r\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/spinner-items",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "spinner-items"
+              ]
+            },
+            "description": "This returns a `token` that you can use to retrieve information later on.\n\nWe have included a test to confirm if a token is returned. We have also added test scripts to copy the token to the `token` collection variable. This makes it easy for us to reuse this token in other requests in the collection."
+          },
+          "response": []
+        },
+        {
+          "name": "delete",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"An access token is returned\", () => {",
+                  "    pm.expect(pm.response.json()).to.have.property('token')",
+                  "    pm.expect(pm.response.json().token).to.be.a('string')",
+                  "    // Set the collection-scope \"token\" variable to the token received from the API",
+                  "    // This lets us use it in other requests",
+                  "    pm.collectionVariables.set('token', pm.response.json().token)",
+                  "})",
+                  ""
+                ],
+                "type": "text/javascript",
+                "packages": {},
+                "id": "9155f210-0004-4b93-9cb6-15a49fd5d353"
+              }
+            }
+          ],
+          "id": "931f2f8a-9009-4681-a5d4-cef8bfb15a76",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "body": {
+              "mode": "formdata",
+              "formdata": [
+                {
+                  "key": "email",
+                  "value": "customer@demo.com",
+                  "type": "text",
+                  "disabled": true
+                },
+                {
+                  "key": "password",
+                  "value": "12345678",
+                  "type": "text",
+                  "disabled": true
+                },
+                {
+                  "key": "phone",
+                  "value": "0190254697",
+                  "type": "text",
+                  "disabled": true
+                }
+              ]
+            },
+            "url": {
+              "raw": "{{baseUrl}}/spinner/5",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "spinner",
+                "5"
+              ]
+            },
+            "description": "This returns a `token` that you can use to retrieve information later on.\n\nWe have included a test to confirm if a token is returned. We have also added test scripts to copy the token to the `token` collection variable. This makes it easy for us to reuse this token in other requests in the collection."
+          },
+          "response": []
+        }
+      ],
+      "id": "87f638cc-26fd-4978-ba85-d675a2f5064a"
+    },
+    {
+      "name": "Customers",
+      "item": [
+        {
+          "name": "index",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "id": "bb20ebc2-d771-436d-9242-766087993df3",
+                "exec": [
+                  "pm.test(\"An access token is returned\", () => {",
+                  "    pm.expect(pm.response.json()).to.have.property('token')",
+                  "    pm.expect(pm.response.json().token).to.be.a('string')",
+                  "    // Set the collection-scope \"token\" variable to the token received from the API",
+                  "    // This lets us use it in other requests",
+                  "    pm.collectionVariables.set('token', pm.response.json().token)",
+                  "})",
+                  ""
+                ],
+                "type": "text/javascript",
+                "packages": {}
+              }
+            }
+          ],
+          "id": "e10697f0-e410-4789-871a-e2f1d6797639",
+          "protocolProfileBehavior": {
+            "disableBodyPruning": true
+          },
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "body": {
+              "mode": "formdata",
+              "formdata": [
+                {
+                  "key": "email",
+                  "value": "customer@demo.com",
+                  "type": "text",
+                  "disabled": true
+                },
+                {
+                  "key": "password",
+                  "value": "12345678",
+                  "type": "text",
+                  "disabled": true
+                },
+                {
+                  "key": "phone",
+                  "value": "0190254697",
+                  "type": "text",
+                  "disabled": true
+                }
+              ]
+            },
+            "url": {
+              "raw": "{{baseUrl}}/v2/admin/users?q=phone=%2B8801708899339",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "v2",
+                "admin",
+                "users"
+              ],
+              "query": [
+                {
+                  "key": "q",
+                  "value": "referredBy.referrer.id=26",
+                  "disabled": true
+                },
+                {
+                  "key": "page",
+                  "value": "14433",
+                  "disabled": true
+                },
+                {
+                  "key": "operator",
+                  "value": "=",
+                  "disabled": true
+                },
+                {
+                  "key": "q",
+                  "value": "phone=%2B8801708899339"
+                }
+              ]
+            },
+            "description": "This returns a `token` that you can use to retrieve information later on.\n\nWe have included a test to confirm if a token is returned. We have also added test scripts to copy the token to the `token` collection variable. This makes it easy for us to reuse this token in other requests in the collection."
+          },
+          "response": []
+        },
+        {
+          "name": "Show",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "id": "c45404b1-4d87-4d97-a3fe-92e2f06e4f82",
+                "exec": [
+                  "pm.test(\"An access token is returned\", () => {",
+                  "    pm.expect(pm.response.json()).to.have.property('token')",
+                  "    pm.expect(pm.response.json().token).to.be.a('string')",
+                  "    // Set the collection-scope \"token\" variable to the token received from the API",
+                  "    // This lets us use it in other requests",
+                  "    pm.collectionVariables.set('token', pm.response.json().token)",
+                  "})",
+                  ""
+                ],
+                "type": "text/javascript",
+                "packages": {}
+              }
+            }
+          ],
+          "id": "088d2279-5c1c-4854-8612-251505d549fe",
+          "protocolProfileBehavior": {
+            "disableBodyPruning": true
+          },
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "body": {
+              "mode": "formdata",
+              "formdata": [
+                {
+                  "key": "email",
+                  "value": "customer@demo.com",
+                  "type": "text",
+                  "disabled": true
+                },
+                {
+                  "key": "password",
+                  "value": "12345678",
+                  "type": "text",
+                  "disabled": true
+                },
+                {
+                  "key": "phone",
+                  "value": "0190254697",
+                  "type": "text",
+                  "disabled": true
+                }
+              ]
+            },
+            "url": {
+              "raw": "{{baseUrl}}/v2/admin/users/27",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "v2",
+                "admin",
+                "users",
+                "27"
+              ]
+            },
+            "description": "This returns a `token` that you can use to retrieve information later on.\n\nWe have included a test to confirm if a token is returned. We have also added test scripts to copy the token to the `token` collection variable. This makes it easy for us to reuse this token in other requests in the collection."
+          },
+          "response": []
+        },
+        {
+          "name": "patch",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "id": "3b5d4f39-6de9-4776-bc16-be2208360c7e",
+                "exec": [
+                  "pm.test(\"An access token is returned\", () => {",
+                  "    pm.expect(pm.response.json()).to.have.property('token')",
+                  "    pm.expect(pm.response.json().token).to.be.a('string')",
+                  "    // Set the collection-scope \"token\" variable to the token received from the API",
+                  "    // This lets us use it in other requests",
+                  "    pm.collectionVariables.set('token', pm.response.json().token)",
+                  "})",
+                  ""
+                ],
+                "type": "text/javascript",
+                "packages": {}
+              }
+            }
+          ],
+          "id": "57396a7c-633a-4a5e-b49b-20b0c090d593",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\r\n    // \"nid\": 1234567890,\r\n    // \"address\": \"123 Main Street, Dhaka\",\r\n    // \"password\": \"secret123\",\r\n    // \"role\": \"customer\",\r\n    // \"name\": \"NEW MAN 3\",\r\n    // \"email\": null,\r\n    // \"phone\": \"+8801902549161\",\r\n    \"status\": \"active\"\r\n    // \"status\": \"inactive\"\r\n    // \"status\": \"suspended\"\r\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/v2/admin/users/28",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "v2",
+                "admin",
+                "users",
+                "28"
+              ]
+            },
+            "description": "This returns a `token` that you can use to retrieve information later on.\n\nWe have included a test to confirm if a token is returned. We have also added test scripts to copy the token to the `token` collection variable. This makes it easy for us to reuse this token in other requests in the collection."
+          },
+          "response": []
+        },
+        {
+          "name": "post",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"An access token is returned\", () => {",
+                  "    pm.expect(pm.response.json()).to.have.property('token')",
+                  "    pm.expect(pm.response.json().token).to.be.a('string')",
+                  "    // Set the collection-scope \"token\" variable to the token received from the API",
+                  "    // This lets us use it in other requests",
+                  "    pm.collectionVariables.set('token', pm.response.json().token)",
+                  "})",
+                  ""
+                ],
+                "type": "text/javascript",
+                "packages": {},
+                "id": "3532655d-a317-4f75-b5b8-c96a93ff6efe"
+              }
+            }
+          ],
+          "id": "3c4dd81c-07b5-4978-84dd-50ef79481fac",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\r\n        \"name\": \"level 2\",\r\n        \"phone\": \"01795721808\",\r\n        \"nid\": \"11111111111\",\r\n        \"address\": \"asss\",\r\n        \"password\": \"abal123\",\r\n        \"role\" : \"customer\"\r\n    }",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/customers",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "customers"
+              ]
+            },
+            "description": "This returns a `token` that you can use to retrieve information later on.\n\nWe have included a test to confirm if a token is returned. We have also added test scripts to copy the token to the `token` collection variable. This makes it easy for us to reuse this token in other requests in the collection."
+          },
+          "response": []
+        },
+        {
+          "name": "delete",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"An access token is returned\", () => {",
+                  "    pm.expect(pm.response.json()).to.have.property('token')",
+                  "    pm.expect(pm.response.json().token).to.be.a('string')",
+                  "    // Set the collection-scope \"token\" variable to the token received from the API",
+                  "    // This lets us use it in other requests",
+                  "    pm.collectionVariables.set('token', pm.response.json().token)",
+                  "})",
+                  ""
+                ],
+                "type": "text/javascript",
+                "packages": {},
+                "id": "7e8f9736-8d92-4ff0-99b3-94ba9ec099e1"
+              }
+            }
+          ],
+          "id": "0b0c5e23-2f7c-49df-8511-686f3db6a454",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "body": {
+              "mode": "formdata",
+              "formdata": [
+                {
+                  "key": "email",
+                  "value": "customer@demo.com",
+                  "type": "text",
+                  "disabled": true
+                },
+                {
+                  "key": "password",
+                  "value": "12345678",
+                  "type": "text",
+                  "disabled": true
+                },
+                {
+                  "key": "phone",
+                  "value": "0190254697",
+                  "type": "text",
+                  "disabled": true
+                }
+              ]
+            },
+            "url": {
+              "raw": "{{baseUrl}}/spinner/5",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "spinner",
+                "5"
+              ]
+            },
+            "description": "This returns a `token` that you can use to retrieve information later on.\n\nWe have included a test to confirm if a token is returned. We have also added test scripts to copy the token to the `token` collection variable. This makes it easy for us to reuse this token in other requests in the collection."
+          },
+          "response": []
+        }
+      ],
+      "id": "bdb6cfab-41cd-4efb-ba53-c3c29e835e45"
+    },
+    {
+      "name": "LeaderBoard",
+      "item": [
+        {
+          "name": "Collections",
+          "id": "43ca4a19-5400-4a75-b729-5dc695680a67",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/leaderboard?limit=5",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "leaderboard"
+              ],
+              "query": [
+                {
+                  "key": "limit",
+                  "value": "5"
+                }
+              ]
+            }
+          },
+          "response": []
+        }
+      ],
+      "id": "b0dd7674-9fcc-4129-aa87-af4936ba4dce"
+    },
+    {
+      "name": "Transactions",
+      "item": [
+        {
+          "name": "Apply New Commissions",
+          "id": "2f16cbbc-089e-4f9e-a9bb-32faee8eff85",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "accept",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\r\n    \"userId\": 22,\r\n    \"transactionId\": \"TRX-067532-CAZCS\"\r\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/transactions/apply-commissions",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "transactions",
+                "apply-commissions"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "update transactionId",
+          "id": "aacfec25-9a25-4c5b-ab17-ea70bebfcb33",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "accept",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\r\n    \"userId\": 28,\r\n    \"transactionId\": \"TRX-000111-AAAJJJ\",\r\n    // \"status\": \"suspend\"\r\n    \"status\": \"activate\"\r\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/v2/admin/transactions/TRX-000111-AAAJJJ",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "v2",
+                "admin",
+                "transactions",
+                "TRX-000111-AAAJJJ"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Collections",
+          "id": "d04d19da-9714-4c76-bcb2-712eacf6e654",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/transactions",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "transactions"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Set Transactions",
+          "id": "7b0d5567-172d-44c7-b7ec-12c4bfe19c33",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\r\n    \"transactions\": [\r\n        {\r\n            \"transactionId\": \"TRX-393256-VBQYE\",\r\n            \"date\": \"2025-08-05\"\r\n        },\r\n        {\r\n            \"transactionId\": \"TRX-393256-TD7FC\",\r\n            \"date\": \"2025-08-05\"\r\n        },\r\n        {\r\n            \"transactionId\": \"TRX-393256-9YWAG\",\r\n            \"date\": \"2025-08-05\"\r\n        },\r\n        {\r\n            \"transactionId\": \"TRX-393256-78I1I\",\r\n            \"date\": \"2025-08-05\"\r\n        },\r\n        {\r\n            \"transactionId\": \"TRX-393256-Y8N4W\",\r\n            \"date\": \"2025-08-05\"\r\n        },\r\n        {\r\n            \"transactionId\": \"TRX-393256-4AZZJ\",\r\n            \"date\": \"2025-08-05\"\r\n        },\r\n        {\r\n            \"transactionId\": \"TRX-393256-Y1IVE\",\r\n            \"date\": \"2025-08-05\"\r\n        },\r\n        {\r\n            \"transactionId\": \"TRX-393256-N09QK\",\r\n            \"date\": \"2025-08-05\"\r\n        },\r\n        {\r\n            \"transactionId\": \"TRX-393256-AMXJR\",\r\n            \"date\": \"2025-08-05\"\r\n        },\r\n        {\r\n            \"transactionId\": \"TRX-393256-V17VB\",\r\n            \"date\": \"2025-08-05\"\r\n        },\r\n        {\r\n            \"transactionId\": \"TRX-393256-N46I2\",\r\n            \"date\": \"2025-08-05\"\r\n        },\r\n        {\r\n            \"transactionId\": \"TRX-393256-T8K3A\",\r\n            \"date\": \"2025-08-05\"\r\n        },\r\n        {\r\n            \"transactionId\": \"TRX-393256-VB6DD\",\r\n            \"date\": \"2025-08-05\"\r\n        },\r\n        {\r\n            \"transactionId\": \"TRX-393256-2MDLC\",\r\n            \"date\": \"2025-08-05\"\r\n        },\r\n        {\r\n            \"transactionId\": \"TRX-393256-BEWE5\",\r\n            \"date\": \"2025-08-05\"\r\n        },\r\n        {\r\n            \"transactionId\": \"TRX-393256-ZU44J\",\r\n            \"date\": \"2025-08-05\"\r\n        },\r\n        {\r\n            \"transactionId\": \"TRX-393256-LAFIY\",\r\n            \"date\": \"2025-08-05\"\r\n        },\r\n        {\r\n            \"transactionId\": \"TRX-393256-E4KGL\",\r\n            \"date\": \"2025-08-05\"\r\n        },\r\n        {\r\n            \"transactionId\": \"TRX-393256-O8U4I\",\r\n            \"date\": \"2025-08-05\"\r\n        },\r\n        {\r\n            \"transactionId\": \"TRX-393256-PMLQW\",\r\n            \"date\": \"2025-08-05\"\r\n        },\r\n        {\r\n            \"transactionId\": \"TRX-393256-U68RY\",\r\n            \"date\": \"2025-08-05\"\r\n        },\r\n        {\r\n            \"transactionId\": \"TRX-393256-CC7GJ\",\r\n            \"date\": \"2025-08-05\"\r\n        },\r\n        {\r\n            \"transactionId\": \"TRX-393256-BAYKT\",\r\n            \"date\": \"2025-08-05\"\r\n        },\r\n        {\r\n            \"transactionId\": \"TRX-393256-7L57P\",\r\n            \"date\": \"2025-08-05\"\r\n        },\r\n        {\r\n            \"transactionId\": \"TRX-393256-DZ5FH\",\r\n            \"date\": \"2025-08-05\"\r\n        },\r\n        {\r\n            \"transactionId\": \"TRX-393256-QC71E\",\r\n            \"date\": \"2025-08-05\"\r\n        },\r\n        {\r\n            \"transactionId\": \"TRX-393256-50OCP\",\r\n            \"date\": \"2025-08-05\"\r\n        },\r\n        {\r\n            \"transactionId\": \"TRX-393256-D0TDU\",\r\n            \"date\": \"2025-08-05\"\r\n        },\r\n        {\r\n            \"transactionId\": \"TRX-393256-2Q8W3\",\r\n            \"date\": \"2025-08-05\"\r\n        },\r\n        {\r\n            \"transactionId\": \"TRX-393256-JYI4L\",\r\n            \"date\": \"2025-08-05\"\r\n        },\r\n        {\r\n            \"transactionId\": \"TRX-393256-BSMQ9\",\r\n            \"date\": \"2025-08-05\"\r\n        },\r\n        {\r\n            \"transactionId\": \"TRX-393256-Z3LZV\",\r\n            \"date\": \"2025-08-05\"\r\n        },\r\n        {\r\n            \"transactionId\": \"TRX-393256-X2QJL\",\r\n            \"date\": \"2025-08-05\"\r\n        },\r\n        {\r\n            \"transactionId\": \"TRX-393256-8POHJ\",\r\n            \"date\": \"2025-08-05\"\r\n        },\r\n        {\r\n            \"transactionId\": \"TRX-393256-VMXSN\",\r\n            \"date\": \"2025-08-05\"\r\n        },\r\n        {\r\n            \"transactionId\": \"TRX-393256-SWC2W\",\r\n            \"date\": \"2025-08-05\"\r\n        },\r\n        {\r\n            \"transactionId\": \"TRX-393256-75LBJ\",\r\n            \"date\": \"2025-08-05\"\r\n        },\r\n        {\r\n            \"transactionId\": \"TRX-393256-UA861\",\r\n            \"date\": \"2025-08-05\"\r\n        },\r\n        {\r\n            \"transactionId\": \"TRX-393256-17PA2\",\r\n            \"date\": \"2025-08-05\"\r\n        },\r\n        {\r\n            \"transactionId\": \"TRX-393256-V6J78\",\r\n            \"date\": \"2025-08-05\"\r\n        },\r\n        {\r\n            \"transactionId\": \"TRX-393256-KB681\",\r\n            \"date\": \"2025-08-05\"\r\n        },\r\n        {\r\n            \"transactionId\": \"TRX-393256-Z9R6S\",\r\n            \"date\": \"2025-08-05\"\r\n        },\r\n        {\r\n            \"transactionId\": \"TRX-393256-E5TJF\",\r\n            \"date\": \"2025-08-05\"\r\n        },\r\n        {\r\n            \"transactionId\": \"TRX-393256-OMWKG\",\r\n            \"date\": \"2025-08-05\"\r\n        },\r\n        {\r\n            \"transactionId\": \"TRX-393256-82CPE\",\r\n            \"date\": \"2025-08-05\"\r\n        },\r\n        {\r\n            \"transactionId\": \"TRX-393256-YX4UV\",\r\n            \"date\": \"2025-08-05\"\r\n        },\r\n        {\r\n            \"transactionId\": \"TRX-393256-QAW1E\",\r\n            \"date\": \"2025-08-05\"\r\n        },\r\n        {\r\n            \"transactionId\": \"TRX-393256-K6B3M\",\r\n            \"date\": \"2025-08-05\"\r\n        },\r\n        {\r\n            \"transactionId\": \"TRX-393256-8C9DW\",\r\n            \"date\": \"2025-08-05\"\r\n        },\r\n        {\r\n            \"transactionId\": \"TRX-393256-ON4SY\",\r\n            \"date\": \"2025-08-05\"\r\n        }\r\n    ]\r\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/transactions",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "transactions"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "User Transactions",
+          "id": "eef004da-101e-4c49-b8a6-749251903f8e",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/v2/admin/transactions/user/22",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "v2",
+                "admin",
+                "transactions",
+                "user",
+                "22"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Users Transactions",
+          "id": "abda1068-4320-4468-88b7-903650c03d19",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/transactions/users",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "transactions",
+                "users"
+              ],
+              "query": [
+                {
+                  "key": "transactions-limit",
+                  "value": "10",
+                  "disabled": true
+                },
+                {
+                  "key": "transactions-page",
+                  "value": "1",
+                  "disabled": true
+                }
+              ]
+            }
+          },
+          "response": []
+        }
+      ],
+      "id": "5fbabe7f-5389-49f3-a0c5-f93158fb0641"
+    },
+    {
+      "name": "Dashboard",
+      "item": [
+        {
+          "name": "admin dashboard",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "id": "8efcfa5b-3cd8-4c53-bd11-d5df6d206eb0",
+                "exec": [
+                  ""
+                ],
+                "type": "text/javascript",
+                "packages": {}
+              }
+            }
+          ],
+          "id": "a08b675c-4cb6-4437-99fe-53ee28b036b9",
+          "protocolProfileBehavior": {
+            "disabledSystemHeaders": {}
+          },
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/v2/admin/dashboard?revalidate=true",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "v2",
+                "admin",
+                "dashboard"
+              ],
+              "query": [
+                {
+                  "key": "revalidate",
+                  "value": "true"
+                }
+              ]
+            },
+            "description": "This request uses the saved `token` collection variable to access a secret 'name' stored against that token.\n\nIn this request, we used the `token` collection variable as a query param to fetch the name generated for that token. We have added a test to check that a name is correctly returned."
+          },
+          "response": []
+        }
+      ],
+      "id": "5023abf2-468e-43bd-a741-20e52db89055"
+    },
+    {
+      "name": "Support Tickets",
+      "item": [
+        {
+          "name": "Client",
+          "item": [
+            {
+              "name": "List all tickets for the logged-in customer",
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "id": "2814bb39-9b4e-4704-b3b7-5bce4dbc6b71",
+                    "exec": [
+                      ""
+                    ],
+                    "type": "text/javascript",
+                    "packages": {},
+                    "requests": {}
+                  }
+                }
+              ],
+              "id": "e1c47853-9c96-468f-83a2-22bb50b72289",
+              "protocolProfileBehavior": {
+                "disabledSystemHeaders": {}
+              },
+              "request": {
+                "method": "GET",
+                "header": [
+                  {
+                    "key": "Accept",
+                    "value": "application/json",
+                    "type": "text"
+                  }
+                ],
+                "url": {
+                  "raw": "{{baseUrl}}/v1/client/support/tickets",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "v1",
+                    "client",
+                    "support",
+                    "tickets"
+                  ],
+                  "query": [
+                    {
+                      "key": "message_page",
+                      "value": "2",
+                      "disabled": true
+                    }
+                  ]
+                },
+                "description": "This request uses the saved `token` collection variable to access a secret 'name' stored against that token.\n\nIn this request, we used the `token` collection variable as a query param to fetch the name generated for that token. We have added a test to check that a name is correctly returned."
+              },
+              "response": []
+            },
+            {
+              "name": "Create a new ticket",
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "id": "3a90c23c-9326-419d-8df0-4598857645ca",
+                    "exec": [
+                      ""
+                    ],
+                    "type": "text/javascript",
+                    "packages": {},
+                    "requests": {}
+                  }
+                }
+              ],
+              "id": "93323fa5-54ed-44ee-b84a-b4f76267dabd",
+              "protocolProfileBehavior": {
+                "disabledSystemHeaders": {}
+              },
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Accept",
+                    "value": "application/json",
+                    "type": "text"
+                  }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{ \"subject\": \"ticket from new user\" }",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                },
+                "url": {
+                  "raw": "{{baseUrl}}/v1/client/support/tickets",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "v1",
+                    "client",
+                    "support",
+                    "tickets"
+                  ]
+                },
+                "description": "This request uses the saved `token` collection variable to access a secret 'name' stored against that token.\n\nIn this request, we used the `token` collection variable as a query param to fetch the name generated for that token. We have added a test to check that a name is correctly returned."
+              },
+              "response": []
+            },
+            {
+              "name": "ticket show",
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "id": "8190c217-d610-449e-9050-ea5de818c630",
+                    "exec": [
+                      ""
+                    ],
+                    "type": "text/javascript",
+                    "packages": {},
+                    "requests": {}
+                  }
+                }
+              ],
+              "id": "49aa9656-d306-4043-8608-61026792dce4",
+              "protocolProfileBehavior": {
+                "disabledSystemHeaders": {}
+              },
+              "request": {
+                "method": "GET",
+                "header": [
+                  {
+                    "key": "Accept",
+                    "value": "application/json",
+                    "type": "text"
+                  }
+                ],
+                "url": {
+                  "raw": "{{baseUrl}}/v1/client/support/tickets/35",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "v1",
+                    "client",
+                    "support",
+                    "tickets",
+                    "35"
+                  ]
+                },
+                "description": "This request uses the saved `token` collection variable to access a secret 'name' stored against that token.\n\nIn this request, we used the `token` collection variable as a query param to fetch the name generated for that token. We have added a test to check that a name is correctly returned."
+              },
+              "response": []
+            },
+            {
+              "name": "messages from single ticket",
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "id": "113248ea-0102-4cf5-a6dd-30bcc26febf3",
+                    "exec": [
+                      ""
+                    ],
+                    "type": "text/javascript",
+                    "packages": {},
+                    "requests": {}
+                  }
+                }
+              ],
+              "id": "bb24901e-5adc-43b7-97e1-f500f73878b4",
+              "protocolProfileBehavior": {
+                "disabledSystemHeaders": {}
+              },
+              "request": {
+                "method": "GET",
+                "header": [
+                  {
+                    "key": "Accept",
+                    "value": "application/json",
+                    "type": "text"
+                  }
+                ],
+                "url": {
+                  "raw": "{{baseUrl}}/v1/client/support/tickets/32/messages",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "v1",
+                    "client",
+                    "support",
+                    "tickets",
+                    "32",
+                    "messages"
+                  ],
+                  "query": [
+                    {
+                      "key": "page",
+                      "value": "2",
+                      "disabled": true
+                    },
+                    {
+                      "key": "limit",
+                      "value": "1",
+                      "disabled": true
+                    }
+                  ]
+                },
+                "description": "This request uses the saved `token` collection variable to access a secret 'name' stored against that token.\n\nIn this request, we used the `token` collection variable as a query param to fetch the name generated for that token. We have added a test to check that a name is correctly returned."
+              },
+              "response": []
+            },
+            {
+              "name": "add message to ticket",
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "id": "94ca51de-1bca-431e-91af-8aaca18bbbe0",
+                    "exec": [
+                      ""
+                    ],
+                    "type": "text/javascript",
+                    "packages": {},
+                    "requests": {}
+                  }
+                }
+              ],
+              "id": "6668f2f2-384b-44fa-a2e8-92f9c86e0e97",
+              "protocolProfileBehavior": {
+                "disabledSystemHeaders": {}
+              },
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Accept",
+                    "value": "application/json",
+                    "type": "text"
+                  }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\r\n    \"message\": \"Hii admin\"\r\n    // ,\r\n    // \"attachments\": [\r\n    //     \"uuid1\"\r\n    // ]\r\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                },
+                "url": {
+                  "raw": "{{baseUrl}}/v1/client/support/tickets/32/messages",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "v1",
+                    "client",
+                    "support",
+                    "tickets",
+                    "32",
+                    "messages"
+                  ]
+                },
+                "description": "This request uses the saved `token` collection variable to access a secret 'name' stored against that token.\n\nIn this request, we used the `token` collection variable as a query param to fetch the name generated for that token. We have added a test to check that a name is correctly returned."
+              },
+              "response": []
+            },
+            {
+              "name": "ticket status",
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "id": "c98bee8f-c750-48f8-ac37-1fc3893c6c9f",
+                    "exec": [
+                      ""
+                    ],
+                    "type": "text/javascript",
+                    "packages": {},
+                    "requests": {}
+                  }
+                }
+              ],
+              "id": "6a11e369-c827-4df1-9890-95bf79b21ba3",
+              "protocolProfileBehavior": {
+                "disabledSystemHeaders": {}
+              },
+              "request": {
+                "method": "PATCH",
+                "header": [
+                  {
+                    "key": "Accept",
+                    "value": "application/json",
+                    "type": "text"
+                  }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\r\n    \"status\": \"open\" \r\n    //  \"status\": \"pending\" \r\n    // \"status\": \"closed\"\r\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                },
+                "url": {
+                  "raw": "{{baseUrl}}/v1/client/support/tickets/32/status",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "v1",
+                    "client",
+                    "support",
+                    "tickets",
+                    "32",
+                    "status"
+                  ]
+                },
+                "description": "This request uses the saved `token` collection variable to access a secret 'name' stored against that token.\n\nIn this request, we used the `token` collection variable as a query param to fetch the name generated for that token. We have added a test to check that a name is correctly returned."
+              },
+              "response": []
+            }
+          ],
+          "id": "71f47ead-dc23-435e-99cf-fa9708c95634"
+        },
+        {
+          "name": "Admin",
+          "item": [
+            {
+              "name": "List all tickets",
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "id": "8a622398-d0eb-48dc-b03f-0f604f98fb16",
+                    "exec": [
+                      ""
+                    ],
+                    "type": "text/javascript",
+                    "packages": {},
+                    "requests": {}
+                  }
+                }
+              ],
+              "id": "ec80eb0f-b401-4cba-a77c-804deb64e4ba",
+              "protocolProfileBehavior": {
+                "disabledSystemHeaders": {}
+              },
+              "request": {
+                "method": "GET",
+                "header": [
+                  {
+                    "key": "Accept",
+                    "value": "application/json",
+                    "type": "text"
+                  }
+                ],
+                "url": {
+                  "raw": "{{baseUrl}}/v1/admin/support/tickets",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "v1",
+                    "admin",
+                    "support",
+                    "tickets"
+                  ]
+                },
+                "description": "This request uses the saved `token` collection variable to access a secret 'name' stored against that token.\n\nIn this request, we used the `token` collection variable as a query param to fetch the name generated for that token. We have added a test to check that a name is correctly returned."
+              },
+              "response": []
+            },
+            {
+              "name": "Create a new ticket",
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "exec": [
+                      ""
+                    ],
+                    "type": "text/javascript",
+                    "packages": {},
+                    "id": "b7b2e321-b94e-473e-8ae3-fc36f36abe5f"
+                  }
+                }
+              ],
+              "id": "01014b20-cb66-4a0c-ac97-9e48a3ec4a22",
+              "protocolProfileBehavior": {
+                "disabledSystemHeaders": {}
+              },
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Accept",
+                    "value": "application/json",
+                    "type": "text"
+                  }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{ \"subject\": \"Issue subject\" }",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                },
+                "url": {
+                  "raw": "{{baseUrl}}/v1/client/support/tickets",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "v1",
+                    "client",
+                    "support",
+                    "tickets"
+                  ]
+                },
+                "description": "This request uses the saved `token` collection variable to access a secret 'name' stored against that token.\n\nIn this request, we used the `token` collection variable as a query param to fetch the name generated for that token. We have added a test to check that a name is correctly returned."
+              },
+              "response": []
+            },
+            {
+              "name": "ticket show",
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "exec": [
+                      ""
+                    ],
+                    "type": "text/javascript",
+                    "packages": {},
+                    "id": "7736e5b0-39d3-4960-a88e-afed3a85d268"
+                  }
+                }
+              ],
+              "id": "570e2624-56fa-4aff-abac-36512ddbe2e1",
+              "protocolProfileBehavior": {
+                "disabledSystemHeaders": {}
+              },
+              "request": {
+                "method": "GET",
+                "header": [
+                  {
+                    "key": "Accept",
+                    "value": "application/json",
+                    "type": "text"
+                  }
+                ],
+                "url": {
+                  "raw": "{{baseUrl}}/v1/admin/support/tickets/1",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "v1",
+                    "admin",
+                    "support",
+                    "tickets",
+                    "1"
+                  ]
+                },
+                "description": "This request uses the saved `token` collection variable to access a secret 'name' stored against that token.\n\nIn this request, we used the `token` collection variable as a query param to fetch the name generated for that token. We have added a test to check that a name is correctly returned."
+              },
+              "response": []
+            },
+            {
+              "name": "messages from single ticket",
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "exec": [
+                      ""
+                    ],
+                    "type": "text/javascript",
+                    "packages": {},
+                    "id": "e027f8c1-56b5-4b16-852b-09fab4df0d0c"
+                  }
+                }
+              ],
+              "id": "4022d7fc-5940-4138-9748-88c55ba31de3",
+              "protocolProfileBehavior": {
+                "disabledSystemHeaders": {}
+              },
+              "request": {
+                "method": "GET",
+                "header": [
+                  {
+                    "key": "Accept",
+                    "value": "application/json",
+                    "type": "text"
+                  }
+                ],
+                "url": {
+                  "raw": "{{baseUrl}}/v1/admin/support/tickets/1/messages",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "v1",
+                    "admin",
+                    "support",
+                    "tickets",
+                    "1",
+                    "messages"
+                  ]
+                },
+                "description": "This request uses the saved `token` collection variable to access a secret 'name' stored against that token.\n\nIn this request, we used the `token` collection variable as a query param to fetch the name generated for that token. We have added a test to check that a name is correctly returned."
+              },
+              "response": []
+            },
+            {
+              "name": "add message to ticket",
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "exec": [
+                      ""
+                    ],
+                    "type": "text/javascript",
+                    "packages": {},
+                    "id": "4888ab80-93ca-4b16-b705-e3ae09d14128"
+                  }
+                }
+              ],
+              "id": "2bb43156-ae4c-4752-8b75-ef06ee0dcc36",
+              "protocolProfileBehavior": {
+                "disabledSystemHeaders": {}
+              },
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Accept",
+                    "value": "application/json",
+                    "type": "text"
+                  }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\r\n    \"message\": \"Hii customer\"\r\n    // ,\r\n    // \"attachments\": [\r\n    //     \"uuid1\",\r\n    //     \"uuid2\"\r\n    // ]\r\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                },
+                "url": {
+                  "raw": "{{baseUrl}}/v1/admin/support/tickets/1/messages",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "v1",
+                    "admin",
+                    "support",
+                    "tickets",
+                    "1",
+                    "messages"
+                  ]
+                },
+                "description": "This request uses the saved `token` collection variable to access a secret 'name' stored against that token.\n\nIn this request, we used the `token` collection variable as a query param to fetch the name generated for that token. We have added a test to check that a name is correctly returned."
+              },
+              "response": []
+            },
+            {
+              "name": "ticket status",
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "id": "c98bee8f-c750-48f8-ac37-1fc3893c6c9f",
+                    "exec": [
+                      ""
+                    ],
+                    "type": "text/javascript",
+                    "packages": {}
+                  }
+                }
+              ],
+              "id": "cfa1d45f-774d-4daa-87f8-630e14553dd6",
+              "protocolProfileBehavior": {
+                "disabledSystemHeaders": {}
+              },
+              "request": {
+                "method": "PATCH",
+                "header": [
+                  {
+                    "key": "Accept",
+                    "value": "application/json",
+                    "type": "text"
+                  }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\r\n    // \"status\": \"open\" \r\n    //  \"status\": \"pending\" \r\n    \"status\": \"closed\"\r\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                },
+                "url": {
+                  "raw": "{{baseUrl}}/v1/admin/support/tickets/3/status",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "v1",
+                    "admin",
+                    "support",
+                    "tickets",
+                    "3",
+                    "status"
+                  ]
+                },
+                "description": "This request uses the saved `token` collection variable to access a secret 'name' stored against that token.\n\nIn this request, we used the `token` collection variable as a query param to fetch the name generated for that token. We have added a test to check that a name is correctly returned."
+              },
+              "response": []
+            }
+          ],
+          "id": "c2959c39-4384-4033-9af9-5673bf18ec77"
+        }
+      ],
+      "id": "a6fd1a71-c034-47eb-b281-8dc4de7c9969"
+    }
+  ],
+  "auth": {
+    "type": "bearer",
+    "bearer": [
+      {
+        "key": "token",
+        "value": "{{token}}",
+        "type": "string"
+      }
+    ]
+  },
+  "event": [
+    {
+      "listen": "prerequest",
+      "script": {
+        "id": "30e6ab18-b941-4870-a0fc-e5a6bcdca28c",
+        "type": "text/javascript",
+        "packages": {},
+        "exec": [
+          ""
+        ]
+      }
+    },
+    {
+      "listen": "test",
+      "script": {
+        "id": "c0340c2e-ff01-4d5b-9e26-adc8542c37a0",
+        "type": "text/javascript",
+        "packages": {},
+        "exec": [
+          ""
+        ]
+      }
+    }
+  ],
+  "variable": [
+    {
+      "id": "6e3ee880-520d-4cfb-84cc-403716be3350",
+      "key": "baseUrl",
+      "value": "https://staging.apexdrive365.com/api"
+    },
+    {
+      "id": "53c27780-7a9c-440e-a6c7-ffde42d4a4ef",
+      "key": "token",
+      "value": "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJpc3MiOiJodHRwOi8vbG9jYWxob3N0OjgwMDAvYXBpL2F1dGgvcmVnaXN0ZXIiLCJpYXQiOjE3NDIzMDQ2NjQsImV4cCI6MTc0ODMwNDY2NCwibmJmIjoxNzQyMzA0NjY0LCJqdGkiOiJIelNEanBoMzBUZzdpalBiIiwic3ViIjoiMjIiLCJwcnYiOiIyM2JkNWM4OTQ5ZjYwMGFkYjM5ZTcwMWM0MDA4NzJkYjdhNTk3NmY3IiwiZW1haWwiOiJkZEBnbWFpbC5jb20iLCJuYW1lIjoibGV2ZWwgMiIsInJvbGUiOlsiY3VzdG9tZXIiXSwicmVmcmVzaCI6dHJ1ZX0.sILeMS96roBDa2_8xvLVZiVTssENGilRDyiojAVyi8k"
+    },
+    {
+      "id": "741b989f-6903-4510-ab59-02031cf89d38",
+      "key": "adminToken",
+      "value": ""
+    },
+    {
+      "id": "f2971975-ae28-4f42-b56b-84c85bf8d227",
+      "key": "customerToken",
+      "value": ""
+    }
+  ]
+}
