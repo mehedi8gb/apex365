@@ -19,6 +19,7 @@ class SpinnerLeaderboardResource extends JsonResource
             'rank' => $this->rank,
             'user' => [
                 'name' => $this->user->name,
+                'phone' => $this->user->phone,
                 'avatar' => $this->user->avatar ?? null, // Assuming avatar is a field in the users table
             ],
             'points' => $this->points,

@@ -4,10 +4,14 @@ namespace App\Http\Controllers;
 
 use App\Models\Spinner;
 use App\Models\SpinnerLeaderboard;
+use Exception;
 use Illuminate\Http\Request;
 
 class SpinnerLeaderboardController extends Controller
 {
+    /**
+     * @throws Exception
+     */
     public function index(Request $request): \Illuminate\Http\JsonResponse
     {
         $data = SpinnerLeaderboard::query();

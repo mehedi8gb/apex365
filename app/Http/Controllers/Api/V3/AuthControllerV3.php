@@ -3,6 +3,8 @@
 namespace App\Http\Controllers\Api\V3;
 
 use App\Http\Controllers\Controller;
+use App\Http\Requests\UpdateUserProfileRequest;
+use App\Http\Requests\UpdateUserRequest;
 use App\Http\Resources\V3\UserResourceV3;
 use App\Services\UserServiceV3;
 use Illuminate\Http\JsonResponse;
@@ -15,26 +17,25 @@ class AuthControllerV3 extends Controller
 
     public function me(): JsonResponse
     {
-        $user = $this->userService->getAuthenticatedUserWithRelations(auth()->id());
+        $user = $this->userService->getAuthenticatedUserWithRelations();
 
         if (!$user) {
             return sendErrorResponse('User not found', 404);
         }
 
-        // Fetch paginated commissions here (not in Resource)
-        $purchaseCommissions = $this->userService->getPaginatedPurchaseCommissions(
-            $user->id,
-            request()->query('purchase_commissions_page', 1)
-        );
-
-        $signupCommissions = $this->userService->getPaginatedSignupCommissions(
-            $user->id,
-            request()->query('signup_commissions_page', 1)
-        );
-
         return sendSuccessResponse(
             'User details',
-            new UserResourceV3($user, $purchaseCommissions, $signupCommissions)
+            new UserResourceV3($user)
+        );
+    }
+
+    public function updateProfile(UpdateUserProfileRequest $request)
+    {
+        $data = $this->userService->updateAuthenticatedUser($request->validated());
+
+        return sendSuccessResponse(
+            'Profile updated successfully',
+            new UserResourceV3($data)
         );
     }
 }
