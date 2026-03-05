@@ -2,11 +2,12 @@
 
 namespace App\Http\Middleware;
 
+use App\Enums\UserStatus;
 use Closure;
 use Illuminate\Http\Request;
 use Symfony\Component\HttpFoundation\Response;
-use Tymon\JWTAuth\Facades\JWTAuth;
 use Tymon\JWTAuth\Exceptions\JWTException;
+use Tymon\JWTAuth\Facades\JWTAuth;
 
 class JwtMiddleware
 {
@@ -17,8 +18,21 @@ class JwtMiddleware
     {
         try {
             $user = JWTAuth::parseToken()->authenticate();
+            $payload = JWTAuth::parseToken()->getPayload();
+
+            $issuedAt = $payload->get('iat');
+            $userUpdatedAt = $user->updated_at?->timestamp;
+
+            if ($userUpdatedAt && $userUpdatedAt > $issuedAt && app()->environment('production')) {
+                return sendErrorResponse('Token invalid due to recent account update. Please login again.', 401);
+            }
+
+            if ($user->status === UserStatus::Inactive || $user->status === UserStatus::Suspended) {
+                return sendErrorResponse('User is '. $user->status->value .'. Please contact support.', 403);
+            }
+
         } catch (JWTException $e) {
-            return sendErrorResponse('Token not valid', 401);
+            return sendErrorResponse($e->getMessage(), 401);
         }
 
         return $next($request);

@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\Admin\CommissionSettingController;
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\CommissionController;
 use App\Http\Controllers\CustomerController;
@@ -12,6 +13,18 @@ use App\Http\Middleware\isAdminMiddleware;
 use App\Http\Middleware\JwtMiddleware;
 use App\Http\Middleware\RefreshTokenMiddleware;
 use Illuminate\Support\Facades\Route;
+
+$apiBasePath = __DIR__ . '/api';
+
+// Scan all version directories (v1, v2, v3...)
+foreach (glob($apiBasePath . '/v*', GLOB_ONLYDIR) as $versionDir) {
+    // Load all PHP route files inside this version directory
+    foreach (glob($versionDir . '/*.php') as $routeFile) {
+        require $routeFile;
+    }
+}
+
+
 
 Route::group(['prefix' => 'auth'], function () {
     // Authentication routes
@@ -32,7 +45,7 @@ Route::middleware([JwtMiddleware::class])->group(function () {
     Route::get('me', [AuthController::class, 'me']);
 
     Route::delete('transactions/all-delete', [TransactionController::class, 'deleteMultiple'])->middleware([isAdminMiddleware::class]);
-    Route::post('transactions/apply-commissions', [TransactionController::class, 'ApplyCommissions'])->middleware([isAdminMiddleware::class]);
+    Route::post('transactions/apply-commissions', [TransactionController::class, 'ApplyCommissions']);
     Route::get('transactions/user/{userId}', [TransactionController::class, 'userTransactions'])->middleware([isAdminMiddleware::class]);
     Route::get('transactions/users', [TransactionController::class, 'usersTransactions'])->middleware([isAdminMiddleware::class]);
     Route::apiResource('transactions', TransactionController::class);
@@ -55,4 +68,3 @@ Route::middleware([JwtMiddleware::class])->group(function () {
     Route::post('/shop-details', [UserShopController::class, 'updateShopDetails']);
     Route::get('/shop-details', [UserShopController::class, 'getShopDetails']);
 });
-// role based route system has to be integrated

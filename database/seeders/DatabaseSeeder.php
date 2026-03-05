@@ -13,11 +13,16 @@ class DatabaseSeeder extends Seeder
     {
         $this->call([
             RolesAndPermissionsSeeder::class,
+            CommissionSettingsSeeder::class,
+            AdminRankSettingSeeder::class,
+            SpinnerItemsSeeder::class,
+            TransactionSeeder::class,
             ReferralCodeSeeder::class,
             UsersSeeder::class,
+            ReferralUserSeeder::class,
             AccountSeeder::class,
             WithdrawSeeder::class,
-            TransactionSeeder::class,
+            SupportTicketSeeder::class,
         ]);
     }
 }

@@ -3,7 +3,13 @@
 namespace App\Providers;
 
 use App\Exceptions\Handler;
+use App\Models\AdminRankSetting;
+use App\Services\Admin\AdminRankService;
+use App\Services\Admin\CommissionService;
+use App\Services\Admin\ProfileRankService;
 use Illuminate\Contracts\Debug\ExceptionHandler;
+use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\ServiceProvider;
 
 class AppServiceProvider extends ServiceProvider
@@ -14,13 +20,27 @@ class AppServiceProvider extends ServiceProvider
     public function register(): void
     {
         $this->app->singleton(ExceptionHandler::class, Handler::class);
+        $this->app->singleton(ProfileRankService::class, function ($app) {
+            $service = $app->make(AdminRankService::class);
+            return new ProfileRankService($service->allAsObjects());
+        });
+
+
     }
 
     /**
      * Bootstrap any application services.
      */
-    public function boot(): void
+    public function boot(CommissionService $service): void
     {
-        //
+        // Only run after DB + table exists
+        if (app()->runningInConsole() && !Schema::hasTable('commissions')) {
+            return;
+        }
+
+        $commissions = $service->getAll();
+
+        // Dynamically override config
+        config(['commissions' => $commissions]);
     }
 }

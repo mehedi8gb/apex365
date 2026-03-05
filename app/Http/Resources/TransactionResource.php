@@ -14,19 +14,22 @@ class TransactionResource extends JsonResource
      */
     public function toArray(Request $request): array
     {
-        if ($this->userId) {
+        if ($this->resource->userId) {
             $user = [
-                'name' => $this->user?->name,
-                'phone' => $this->user?->phone,
-                'referral_code' => $this->user?->theReferralCode?->code,
+                'id' => $this->resource->user?->id,
+                'name' => $this->resource->user?->name,
+                'phone' => $this->resource->user?->phone,
+                'referral_code' => $this->resource->user?->theReferralCode?->code,
             ];
         }
 
         return [
-            'id' => $this->id,
+            'id' => $this->resource->id,
+            'is_assigned' => (bool)$this->resource->userId,
             'user' => $user ?? "not assigned",
-            'transactionId' => $this->transactionId,
-            'date' => $this->created_at->format('Y-m-d H:i:s'),
+            'transactionId' => $this->resource->transactionId,
+            'status' => $this->resource->status->value,
+            'date' => getFormatedDate($this->resource->created_at),
         ];
     }
 }

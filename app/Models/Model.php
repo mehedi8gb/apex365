@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Enums\WithdrawStatus;
 use Exception;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model as MainModel;
@@ -9,17 +10,18 @@ use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Arr;
 use Illuminate\Support\Carbon;
+use Illuminate\Support\Str;
+use Illuminate\Validation\Rules\Enum;
 
 /**
  * Class Model
  *
  * @property int $id
- * @property string $academic_year
- * @property bool|null $status
+ * @property string $user_id
+ * @property WithdrawStatus $status
  * @property string|null $createdBy
  * @property Carbon|null $created_at
  * @property Carbon|null $updated_at
- * @method static \Database\Factories\AcademicYearFactory factory($count = null, $state = [])
  * @method static Builder<static>|Model newModelQuery()
  * @method static Builder<static>|Model newQuery()
  * @method static Builder<static>|Model query()
@@ -60,12 +62,14 @@ class Model extends MainModel
     public static function findOrCustomFail($id, $message = 'not found'): null|Model|Builder|ModelNotFoundException
     {
         try {
-            if (!$id) return null;
-
             return static::findOrFail($id);
         } catch (ModelNotFoundException $e) {
             $modelName = class_basename(static::class);
-            $customMessage = "{$modelName} {$message}";
+            $normalized = Str::of($modelName)
+                ->headline()
+                ->lower()
+                ->ucfirst();
+            $customMessage = "{$normalized} {$message}";
 
             throw new ModelNotFoundException($customMessage, 404);
         }

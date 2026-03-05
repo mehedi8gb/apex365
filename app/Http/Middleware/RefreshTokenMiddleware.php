@@ -17,7 +17,15 @@ class RefreshTokenMiddleware
     {
         try {
             // Check if the token is valid
-            JWTAuth::parseToken()->authenticate();
+            $user = JWTAuth::parseToken()->authenticate();
+            $payload = JWTAuth::parseToken()->getPayload();
+
+            $issuedAt = $payload->get('iat');
+            $userUpdatedAt = $user->updated_at?->timestamp;
+
+            if ($userUpdatedAt && $userUpdatedAt > $issuedAt) {
+                return sendErrorResponse('Token invalid due to recent account update. Please login again.', 401);
+            }
         } catch (JWTException $e) {
             // If token is expired, refresh it
             if ($e instanceof \Tymon\JWTAuth\Exceptions\TokenExpiredException) {
@@ -25,7 +33,8 @@ class RefreshTokenMiddleware
                     $newToken = JWTAuth::refresh();
                     // Add the refreshed token to the response header
                     $response = $next($request);
-                    $response->headers->set('Authorization', 'Bearer ' . $newToken);
+                    $response->headers->set('Authorization', 'Bearer '.$newToken);
+
                     return $response;
                 } catch (JWTException $e) {
                     // Unable to refresh the token

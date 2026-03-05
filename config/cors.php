@@ -21,9 +21,8 @@ return [
     'allowed_methods' => ['*'],
 
     'allowed_origins' => [
-        'https://dashboard.apexdrive365.com',
-        'https://dev-dashboard.apexdrive365.com',
-        'https://staging-dashboard.apexdrive365.com',
+        'https://backoffice.akhishahiguramasala.com',
+        'https://staging-backoffice.akhishahiguramasala.com',
         'http://localhost:3000'
     ],
 

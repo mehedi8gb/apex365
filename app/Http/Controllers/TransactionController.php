@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Helpers\ReferralHelper;
 use App\Http\Resources\TransactionResource;
 use App\Http\Resources\UserTransactionsIdResource;
+use App\Jobs\ProcessPurchaseReferralChain;
 use App\Models\Transaction;
 use App\Models\User;
 use Exception;
@@ -16,6 +17,7 @@ class TransactionController extends Controller
 {
     /**
      * List all transactions
+     * @throws Exception
      */
     public function index(Request $request): JsonResponse
     {
@@ -136,17 +138,12 @@ class TransactionController extends Controller
             'userId' => 'required|integer|exists:users,id',
         ]);
 
-        $transaction = Transaction::where('transactionId', $request->transactionId)->first();
+        $transaction = Transaction::where('transactionId', $request->transactionId)->firstOrFail();
 
         if (! isset($transaction->userId)) {
 
-            $referralHelper = new ReferralHelper;
-
-            // Use the same method calls, just on the instance
-            $referralHelper->updateReferralChain($request->userId);
-            $referralHelper->distributeReferralPoints('purchase');
-            $referralHelper->updateReferralLeaderboard();
-
+            $user = User::findOrFail($request->userId);
+            ProcessPurchaseReferralChain::dispatch($user);
             $transaction->update(['userId' => $request->userId]);
 
             return sendSuccessResponse('Commissions applied successfully');

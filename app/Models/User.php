@@ -3,6 +3,7 @@
 namespace App\Models;
 
 // use Illuminate\Contracts\Auth\MustVerifyEmail;
+use App\Enums\UserStatus;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\HasOne;
@@ -22,10 +23,12 @@ class User extends Authenticatable implements JWTSubject
     protected $fillable = [
         'name',
         'email',
+        'status',
         'phone',
         'password',
         'nid',
         'address',
+        'date_of_birth',
         'points',             // points associated with the user
 
         'business_name',
@@ -58,6 +61,11 @@ class User extends Authenticatable implements JWTSubject
         return $this->hasMany(ReferralUser::class, 'referrer_id'); // Referrals made by this user
     }
 
+    public function referredBy(): HasOne
+    {
+        return $this->hasOne(ReferralUser::class, 'user_id');
+    }
+
     public function leaderboard(): HasOne
     {
         return $this->hasOne(Leaderboard::class);
@@ -66,6 +74,11 @@ class User extends Authenticatable implements JWTSubject
     public function commissions(): HasMany
     {
         return $this->hasMany(Commission::class);
+    }
+
+    public function withdraws(): HasMany
+    {
+        return $this->hasMany(Withdraw::class);
     }
 
     public function account(): HasOne
@@ -100,6 +113,10 @@ class User extends Authenticatable implements JWTSubject
         return [
             'email_verified_at' => 'datetime',
             'password' => 'hashed',
+            'date_of_birth' => 'datetime',
+            'created_at' => 'datetime',
+            'updated_at' => 'datetime',
+            'status' => UserStatus::class,
         ];
     }
 
@@ -122,5 +139,10 @@ class User extends Authenticatable implements JWTSubject
         return $this->profile_photo_path
             ? url('storage/'.$this->profile_photo_path)
             : null;
+    }
+
+    public function primaryRole(): string
+    {
+        return $this->getRoleNames()?->first();
     }
 }

@@ -2,6 +2,7 @@
 
 use App\Helpers\SearchParamMapper;
 use App\Http\Resources\DefaultResource;
+use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Illuminate\Database\QueryException;
@@ -11,22 +12,35 @@ use Illuminate\Pagination\LengthAwarePaginator;
 use Illuminate\Support\Facades\Schema;
 use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
 
+
+if (!function_exists('getProfileImageUrl')) {
+    function getProfileImageUrl(int|string $userId): string
+    {
+        return rtrim(config('apex365.microservice.file_api_server'), '/') .
+            '/data/profile/' . $userId;
+    }
+}
+
 function getResourceClass($model): string
 {
-    // Derive the model class name without namespace
+    // Base model class name without namespace
     $modelClassName = class_basename($model);
 
-    // Construct the corresponding resource class name
-    $resourceClass = "App\\Http\\Resources\\{$modelClassName}Resource";
+    // Possible suffixes in order of priority
+    $suffixes = ['Resource', 'ResourceV1'];
 
-    // Check if the resource class exists
-    if (class_exists($resourceClass)) {
-        return $resourceClass;
+    foreach ($suffixes as $suffix) {
+        $resourceClass = "App\\Http\\Resources\\{$modelClassName}{$suffix}";
+
+        if (class_exists($resourceClass)) {
+            return $resourceClass;
+        }
     }
 
-    // Fallback to a default resource class if not found
+    // Fallback if none exist
     return DefaultResource::class;
 }
+
 
 /**
  * Convert boolean status to 1/0.
@@ -78,8 +92,8 @@ function processNestedArray(array $existingArray, array $payloadArray): array
 
     // Filter existing array to retain only indexes present in the payload
     $filteredArray = collect($existingArray)
-        ->filter(fn ($item) => $payloadMap->has($item['id']))
-        ->map(fn ($item) => array_merge($item, $payloadMap->get($item['id'])))
+        ->filter(fn($item) => $payloadMap->has($item['id']))
+        ->map(fn($item) => array_merge($item, $payloadMap->get($item['id'])))
         ->values()
         ->toArray();
 
@@ -186,7 +200,7 @@ function sendSuccessResponse(string $message, mixed $data = null, int $statusCod
         'success' => true,
         'message' => $message,
         'data' => $data,
-    ], $statusCode);
+    ], $statusCode, [], JSON_PRESERVE_ZERO_FRACTION);
 }
 
 /**
@@ -210,7 +224,7 @@ function handleApiRequest(Request $request, Builder $query, array $with = [], $r
     new SearchParamMapper($request);
 
     // Eager load relationships
-    if (! empty($with)) {
+    if (!empty($with)) {
         $query->with($with);
     }
 
@@ -221,20 +235,20 @@ function handleApiRequest(Request $request, Builder $query, array $with = [], $r
     }
 
     // Apply filters
-    foreach ($request->query() as $key => $value) {
-        // Match keys that end with "-limit" or "-page"
-        if (! preg_match('/.*-(limit|page)$/', $key) && ! in_array($key, [
-            'page', 'limit', 'search', 'searchTerm', 'sortBy', 'sortDirection',
-            'select', 'where', 'orWhere', 'exclude', 'company', 'q', 'or', 'operator',
-        ])) {
-            $query->where($key, $value);
-        }
-    }
+//    foreach ($request->query() as $key => $value) {
+//        // Match keys that end with "-limit" or "-page"
+//        if (!preg_match('/.*-(limit|page)$/', $key) && !in_array($key, [
+//                'page', 'limit', 'search', 'searchTerm', 'sortBy', 'sortDirection',
+//                'select', 'where', 'orWhere', 'exclude', 'company', 'q', 'or', 'operator', 'commissions_page'
+//            ])) {
+//            $query->where($key, $value);
+//        }
+//    }
 
     // Apply search
-    $searchTerm = $request->query('searchTerm');
-    if ($searchTerm !== null) {
-        $columns = Schema::getColumnListing($query->getModel()->getTable());
+//    $searchTerm = $request->query('searchTerm');
+//    if ($searchTerm !== null) {
+//        $columns = Schema::getColumnListing($query->getModel()->getTable());
 
         //        if ($request->query('or')) {
         //            $query->orWhere(function ($query) use ($operator, $searchTerm, $columns) {
@@ -244,12 +258,12 @@ function handleApiRequest(Request $request, Builder $query, array $with = [], $r
         //            });
         //        }
 
-        $query->where(function ($query) use ($operator, $searchTerm, $columns) {
-            foreach ($columns as $column) {
-                $query->orWhere($column, $operator, "%$searchTerm%");
-            }
-        });
-    }
+//        $query->where(function ($query) use ($operator, $searchTerm, $columns) {
+//            foreach ($columns as $column) {
+//                $query->orWhere($column, $operator, "%$searchTerm%");
+//            }
+//        });
+//    }
 
     // Check for the 'where' parameter
     if ($request->query('where')) {
@@ -270,20 +284,20 @@ function handleApiRequest(Request $request, Builder $query, array $with = [], $r
                 $relationParts = [];
 
                 // Extract multiple 'with:' relations dynamically
-                while (! empty($parts) && str_starts_with($parts[0], 'with:')) {
+                while (!empty($parts) && str_starts_with($parts[0], 'with:')) {
                     $relationParts[] = str_replace('with:', '', array_shift($parts));
                 }
 
                 $column = $parts[0] ?? null;
                 $value = $parts[1] ?? null;
 
-                if (! $column || $value === null) {
+                if (!$column || $value === null) {
                     throw new Exception(response()->json([
                         'error' => 'Invalid where format. Use where=column,value or where=with:relation,column,value',
                     ], 400));
                 }
 
-                if (! empty($relationParts)) {
+                if (!empty($relationParts)) {
                     // Handle nested relational filtering with where condition
                     $q->whereHas(implode('.', $relationParts), function ($relationQuery) use ($operator, $column, $value) {
                         $relationQuery->where($column, $operator, $value);
@@ -312,18 +326,18 @@ function handleApiRequest(Request $request, Builder $query, array $with = [], $r
 
                 $relationParts = [];
 
-                while (! empty($parts) && str_starts_with($parts[0], 'with:')) {
+                while (!empty($parts) && str_starts_with($parts[0], 'with:')) {
                     $relationParts[] = str_replace('with:', '', array_shift($parts));
                 }
 
                 $column = $parts[0] ?? null;
                 $value = $parts[1] ?? null;
 
-                if (! $column || $value === null) {
+                if (!$column || $value === null) {
                     return ['error' => 'Invalid orWhere format. Use orWhere=column,value or orWhere=with:relation,column,value'];
                 }
 
-                if (! empty($relationParts)) {
+                if (!empty($relationParts)) {
                     $orQuery->orWhereHas(implode('.', $relationParts), function ($relationQuery) use ($operator, $column, $value) {
                         $relationQuery->where($column, $operator, $value);
                     });
@@ -357,14 +371,14 @@ function handleApiRequest(Request $request, Builder $query, array $with = [], $r
 
     // Meta information for pagination
     $meta = [
-        'page' => $page,
+        'page' => (int) $page,
         'limit' => $limit === 'all' ? $total : $limit,
         'total' => $total,
         'totalPage' => $limit === 'all' ? 1 : $results->lastPage(),
     ];
 
     // Apply dynamic resource transformation
-    if (! $resourceClass) {
+    if (!$resourceClass) {
         $resourceClass = getResourceClass($query->getModel());
     }
 
@@ -395,4 +409,17 @@ function isAgent(): bool
 function isAdmin(): bool
 {
     return auth()->check() && auth()->user()->hasRole('admin');
+}
+
+
+/**
+ * @param Carbon $date
+ * @return string
+ */
+function getFormatedDate(Carbon $date): string
+{
+    // Format: 14th September at 08:21 AM in 2025
+    $formatted = $date->format('jS F \a\t h:i A \i\n Y');
+
+    return $date->diffForHumans() . " ({$formatted})";
 }

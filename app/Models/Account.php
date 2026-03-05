@@ -9,10 +9,11 @@ class Account extends Model
 {
     use HasFactory;
 
-    protected $fillable = ['user_id', 'balance'];
+    protected $fillable = ['user_id', 'balance', 'total_withdrawn'];
 
     protected $casts = [
         'balance' => 'decimal:2',
+        'total_withdrawn' => 'decimal:2',
     ];
 
     public function user(): BelongsTo
