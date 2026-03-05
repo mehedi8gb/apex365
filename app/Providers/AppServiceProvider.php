@@ -34,7 +34,7 @@ class AppServiceProvider extends ServiceProvider
     public function boot(CommissionService $service): void
     {
         // Only run after DB + table exists
-        if (app()->runningInConsole() && !Schema::hasTable('commissions')) {
+        if (app()->runningInConsole() && !Schema::hasTable('commissions') && !Schema::hasTable('commission_settings')) {
             return;
         }
 
