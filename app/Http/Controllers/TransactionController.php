@@ -12,6 +12,7 @@ use App\Models\User;
 use Exception;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 use Throwable;
 
 class TransactionController extends Controller
@@ -136,7 +137,7 @@ class TransactionController extends Controller
     {
         $request->validate([
             'transactionId' => 'required|string|exists:transactions,transactionId',
-            'userId'        => 'required|integer|exists:users,id',
+            'userId'        => 'nullable|integer|exists:users,id',
         ]);
 
         $transaction = Transaction::where('transactionId', $request->transactionId)
@@ -154,7 +155,8 @@ class TransactionController extends Controller
             return sendErrorResponse('Commissions already applied.', 422);
         }
 
-        $user = User::findOrFail($request->userId);
+        $userId = $request->filled('userId') ? $request->userId : Auth::id();
+        $user = User::findOrFail($userId);
         ProcessPurchaseReferralChain::dispatch($user);
         $transaction->update(['userId' => $request->userId]);
 
