@@ -2,13 +2,12 @@
 
 namespace App\Http\Controllers;
 
-use App\Enums\TransactionStatus;
-use App\Helpers\ReferralHelper;
 use App\Http\Resources\TransactionResource;
 use App\Http\Resources\UserTransactionsIdResource;
 use App\Jobs\ProcessPurchaseReferralChain;
 use App\Models\Transaction;
 use App\Models\User;
+use App\Services\TransactionValidatorService;
 use Exception;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -17,8 +16,11 @@ use Throwable;
 
 class TransactionController extends Controller
 {
+    public function __construct(private readonly TransactionValidatorService $transactionValidator) {}
+
     /**
      * List all transactions
+     *
      * @throws Exception
      */
     public function index(Request $request): JsonResponse
@@ -116,11 +118,12 @@ class TransactionController extends Controller
 
     /**
      * Get all transactions for all users
+     *
      * @throws Exception
      */
     public function usersTransactions(Request $request): JsonResponse
     {
-        $users =  User::query();
+        $users = User::query();
 
         $results = handleApiRequest($request, $users, ['transactionIds'], UserTransactionsIdResource::class);
 
@@ -137,28 +140,16 @@ class TransactionController extends Controller
     {
         $request->validate([
             'transactionId' => 'required|string|exists:transactions,transactionId',
-            'userId'        => 'nullable|integer|exists:users,id',
+            'userId' => 'nullable|integer|exists:users,id',
         ]);
 
-        $transaction = Transaction::where('transactionId', $request->transactionId)
-            ->firstOrFail();
-
-        if ($transaction->status === TransactionStatus::Suspend) {
-            return sendErrorResponse('This transaction is suspended. Commissions cannot be applied.', 403);
-        }
-
-        if ($transaction->status !== TransactionStatus::Activate) {
-            return sendErrorResponse('Transaction is not active.', 422);
-        }
-
-        if (isset($transaction->userId)) {
-            return sendErrorResponse('Commissions already applied.', 422);
-        }
+        $transaction = $this->transactionValidator->validateForCommission($request->transactionId);
 
         $userId = $request->filled('userId') ? $request->userId : Auth::id();
         $user = User::findOrFail($userId);
+
         ProcessPurchaseReferralChain::dispatch($user);
-        $transaction->update(['userId' => $request->userId]);
+        $transaction->update(['userId' => $userId]);
 
         return sendSuccessResponse('Commissions applied successfully');
     }

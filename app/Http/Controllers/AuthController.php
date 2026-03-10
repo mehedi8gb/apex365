@@ -19,21 +19,20 @@ use Illuminate\Support\Str;
 use libphonenumber\NumberParseException;
 use libphonenumber\PhoneNumberFormat;
 use libphonenumber\PhoneNumberUtil;
+use Throwable;
 use Tymon\JWTAuth\Exceptions\JWTException;
 use Tymon\JWTAuth\Facades\JWTAuth;
 
 class AuthController extends Controller
 {
+    /**
+     * @throws Throwable
+     */
     public function register(RegisterRequest $request): JsonResponse
     {
-        try {
-            $data = AuthAction::register($request->validated());
+        $data = AuthAction::register($request->validated());
 
-            return sendSuccessResponse('Customer registered successfully', $data, 201);
-
-        } catch (\Throwable $e) {
-            return sendErrorResponse('Registration failed: '.$e->getMessage(), 500);
-        }
+        return sendSuccessResponse('Customer registered successfully', $data, 201);
     }
 
     /**

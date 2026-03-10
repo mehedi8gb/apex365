@@ -6,6 +6,7 @@ use App\Jobs\ProcessReferralChain;
 use App\Models\ReferralCode;
 use App\Models\Transaction;
 use App\Models\User;
+use App\Services\TransactionValidatorService;
 use Exception;
 use Illuminate\Support\Facades\App;
 use Illuminate\Support\Facades\Auth;
@@ -21,7 +22,8 @@ class AuthAction
      */
     public static function register(array $validated): array
     {
-        $transaction = self::validateTransaction($validated['transactionId']);
+        $validator   = app(TransactionValidatorService::class);
+        $transaction = $validator->validateForCommission($validated['transactionId']);
 
         $referrerAndCode = ReferralCode::where('code', $validated['referralId'])->firstOrFail();
 
