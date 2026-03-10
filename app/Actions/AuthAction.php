@@ -6,6 +6,7 @@ use App\Jobs\ProcessReferralChain;
 use App\Models\ReferralCode;
 use App\Models\Transaction;
 use App\Models\User;
+use App\Services\TransactionValidatorService;
 use Exception;
 use Illuminate\Support\Facades\App;
 use Illuminate\Support\Facades\Auth;
@@ -21,7 +22,8 @@ class AuthAction
      */
     public static function register(array $validated): array
     {
-        $transaction = self::validateTransaction($validated['transactionId']);
+        $validator   = app(TransactionValidatorService::class);
+        $transaction = $validator->validateForCommission($validated['transactionId']);
 
         $referrerAndCode = ReferralCode::where('code', $validated['referralId'])->firstOrFail();
 
@@ -46,20 +48,6 @@ class AuthAction
         ];
     }
 
-    /**
-     * @throws Exception
-     */
-    private static function validateTransaction(string $transactionId): Transaction
-    {
-        $transaction = Transaction::where('transactionId', $transactionId)->firstOrFail();
-
-        if (! App::isLocal() && $transaction->userId !== null) {
-            throw new Exception('Transaction id already used, try with a new one');
-        }
-
-        return $transaction;
-    }
-
     private static function createUser(array $data): User
     {
         return User::create([
@@ -72,18 +60,6 @@ class AuthAction
             'password' => Hash::make($data['password']),
         ]);
     }
-
-    /**
-     * @throws Throwable
-     */
-    //    private static function applyReferralChain(User $user, ReferralCode $referrer): void
-    //    {
-    //        $helper = new ReferralHelper();
-    //        $helper->createReferralChain($user, $referrer);
-    //        $helper->distributeReferralPoints();
-    //        $helper->updateReferralLeaderboard();
-    //        $helper->generateReferralCode();
-    //    }
 
     /**
      * @throws Exception

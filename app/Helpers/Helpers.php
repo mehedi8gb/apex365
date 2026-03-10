@@ -104,7 +104,7 @@ function processNestedArray(array $existingArray, array $payloadArray): array
 /**
  * Format error response.
  */
-function sendErrorResponse(NotFoundHttpException|ModelNotFoundException|ErrorException|Exception|string $e, int $statusCode): JsonResponse
+function sendErrorResponse(NotFoundHttpException|ModelNotFoundException|ErrorException|Exception|string $e, int $statusCode = 500): JsonResponse
 {
     // Check if the environment is 'local' (for detailed error messages in dev)
     $isLocal = app()->environment('local');
@@ -113,7 +113,7 @@ function sendErrorResponse(NotFoundHttpException|ModelNotFoundException|ErrorExc
         return response()->json([
             'success' => false,
             'message' => is_string($e) ? $e : $e->getMessage(),
-        ], 500);
+        ], $statusCode);
     }
 
     if ($e instanceof QueryException) {
