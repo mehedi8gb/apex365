@@ -48,20 +48,6 @@ class AuthAction
         ];
     }
 
-    /**
-     * @throws Exception
-     */
-    private static function validateTransaction(string $transactionId): Transaction
-    {
-        $transaction = Transaction::where('transactionId', $transactionId)->firstOrFail();
-
-        if (! App::isLocal() && $transaction->userId !== null) {
-            throw new Exception('Transaction id already used, try with a new one');
-        }
-
-        return $transaction;
-    }
-
     private static function createUser(array $data): User
     {
         return User::create([
@@ -74,18 +60,6 @@ class AuthAction
             'password' => Hash::make($data['password']),
         ]);
     }
-
-    /**
-     * @throws Throwable
-     */
-    //    private static function applyReferralChain(User $user, ReferralCode $referrer): void
-    //    {
-    //        $helper = new ReferralHelper();
-    //        $helper->createReferralChain($user, $referrer);
-    //        $helper->distributeReferralPoints();
-    //        $helper->updateReferralLeaderboard();
-    //        $helper->generateReferralCode();
-    //    }
 
     /**
      * @throws Exception
