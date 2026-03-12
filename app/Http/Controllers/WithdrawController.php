@@ -104,15 +104,22 @@ class WithdrawController extends Controller
     public function suspend($id): JsonResponse
     {
         return DB::transaction(function () use ($id) {
-            $withdraw = Withdraw::with('user')->findOrFail($id);
-            if ($withdraw->status === WithdrawStatus::Approved || $withdraw->status === WithdrawStatus::Suspended) {
-                return sendErrorResponse('Withdraw request is already '.$withdraw->status->value, 422);
+            $withdraw = Withdraw::with('user.account')->lockForUpdate()->findOrFail($id);
+
+            if (
+                $withdraw->status === WithdrawStatus::Approved ||
+                $withdraw->status === WithdrawStatus::Suspended
+            ) {
+                return sendErrorResponse(
+                    'Withdraw request is already ' . $withdraw->status->value, 422
+                );
             }
 
             $withdraw->update(['status' => WithdrawStatus::Suspended]);
-            $withdraw->user->account->update(['balance' => $withdraw->user->account->balance + $withdraw->amount]);
+            $withdraw->user->account->increment('balance', abs($withdraw->amount));
 
-            return sendSuccessResponse('Withdraw request suspended successfully',
+            return sendSuccessResponse(
+                'Withdraw request suspended successfully',
                 WithdrawResource::make($withdraw)
             );
         });
