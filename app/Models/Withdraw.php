@@ -22,6 +22,7 @@ class Withdraw extends Model
     {
         return [
             'status' => WithdrawStatus::class,
+            'amount' => 'decimal:2'
         ];
     }
 
